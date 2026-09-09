@@ -1,15 +1,82 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* Shell administrativo: barra superior fija, menú lateral y área de contenido. */
 
-  &:hover {
-    border-color: var(--accent-border);
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -100px;
+  z-index: 20;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  transition: top 0.15s ease-in-out;
+
+  &:focus-visible {
+    top: 8px;
+    outline: 2px solid var(--text-h);
+    outline-offset: 2px;
+  }
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  text-align: start;
+}
+
+/* ---------- Barra superior ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-family: var(--heading);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text-h);
+}
+
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -17,168 +84,204 @@
   }
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+.sesion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline-start: auto;
+  font-size: 14px;
 }
 
-#center {
+.sesion-usuario {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
+  line-height: 1.25;
+  color: var(--text-h);
+}
 
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+.sesion-rol {
+  font-size: 12px;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.boton-sesion {
+  padding: 7px 12px;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 }
 
-#next-steps {
+/* ---------- Menú lateral ---------- */
+
+.cuerpo {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+.lateral {
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 12px;
+  border-inline-end: 1px solid var(--border);
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
+.nav-list {
   list-style: none;
+  margin: 0;
   padding: 0;
   display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
+  flex-direction: column;
+  gap: 2px;
+}
 
-  .logo {
-    height: 18px;
-  }
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-inline-start: 3px solid transparent;
+  font-size: 15px;
+  color: var(--text);
+  text-decoration: none;
 
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
+  &:hover {
     background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
+    color: var(--text-h);
   }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 }
 
-#spacer {
-  height: 88px;
+/* El módulo activo se marca con color, peso y una barra lateral, no solo color. */
+.nav-link.is-active {
+  background: var(--accent-bg);
+  border-inline-start-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.pie-lateral {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text);
   border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
+
+  strong {
+    color: var(--text-h);
   }
 }
 
-.ticks {
-  position: relative;
-  width: 100%;
+/* ---------- Contenido ---------- */
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+.contenido {
+  padding: 32px;
+  min-width: 0;
+
+  &:focus {
+    outline: none;
+  }
+  /* El foco programático tras navegar sí debe verse para quien usa teclado. */
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -4px;
+  }
+}
+
+.modulo-titulo {
+  font-size: 34px;
+  letter-spacing: -1px;
+  margin: 0 0 8px;
+}
+
+.modulo-descripcion {
+  margin-bottom: 24px;
+}
+
+.modulo-placeholder {
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--social-bg);
+  font-size: 15px;
+}
+
+.enlace-volver {
+  color: var(--accent);
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- Viewport angosto ---------- */
+
+@media (max-width: 860px) {
+  .menu-toggle {
+    display: inline-flex;
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  .cuerpo {
+    grid-template-columns: 1fr;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .lateral {
+    display: none;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lateral.is-abierto {
+    display: flex;
+  }
+
+  .contenido {
+    padding: 24px 20px;
+  }
+}
+
+/* En pantallas muy angostas la barra prioriza marca y acción de sesión. */
+@media (max-width: 560px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .sesion-usuario {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
   }
 }
