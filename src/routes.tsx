@@ -1,23 +1,27 @@
-import type { RouteObject } from 'react-router'
-import { AppLayout } from './components/AppLayout'
-import { MODULES } from './modules/catalog'
-import { ModulePage } from './pages/ModulePage'
-import { NotFound } from './pages/NotFound'
+import type { RouteObject } from "react-router";
+import { AppLayout } from "./components/AppLayout";
+import { MODULES } from "./modules/catalog";
+import { DashboardPage } from "./pages/DashboardPage";
+import { ModulePage } from "./pages/ModulePage";
+import { NotFound } from "./pages/NotFound";
 
 /**
- * Las rutas se derivan del catálogo: un módulo nuevo en `MODULES` aparece a la
- * vez en el menú y en el enrutador, sin poder quedar desincronizados.
+ * El dashboard tiene reglas especiales de seguridad y se renderiza en su propia
+ * página, distinta del contenido genérico de los módulos.
  */
 const moduleRoutes: RouteObject[] = MODULES.map((module) =>
-  module.path === '/'
-    ? { index: true, element: <ModulePage module={module} /> }
-    : { path: module.path.slice(1), element: <ModulePage module={module} /> },
-)
+    module.path === "/"
+        ? { index: true, element: <DashboardPage /> }
+        : {
+              path: module.path.slice(1),
+              element: <ModulePage module={module} />,
+          },
+);
 
 export const routes: RouteObject[] = [
-  {
-    path: '/',
-    Component: AppLayout,
-    children: [...moduleRoutes, { path: '*', Component: NotFound }],
-  },
-]
+    {
+        path: "/",
+        Component: AppLayout,
+        children: [...moduleRoutes, { path: "*", Component: NotFound }],
+    },
+];

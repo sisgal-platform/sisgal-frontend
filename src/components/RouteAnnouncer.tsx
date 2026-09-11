@@ -24,7 +24,8 @@ export function RouteAnnouncer() {
       module ? `${module.label}. Módulo cargado.` : 'Página no encontrada.',
     )
 
-    document.getElementById('contenido')?.focus()
+    const contenido = document.getElementById('contenido')
+    contenido?.focus({ preventScroll: true })
   }, [pathname])
 
   return (

@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { MODULES } from '../modules/catalog'
 import { renderApp } from '../test/render'
 
@@ -45,6 +45,18 @@ describe('Navegación entre módulos', () => {
     }
 
     expect(router.state.location.pathname).toBe('/configuracion')
+  })
+
+  it('no hace scroll al enfocar el contenido tras navegar', async () => {
+    const { user } = renderApp()
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus')
+
+    await user.click(screen.getByRole('link', { name: 'Reportes' }))
+    await screen.findByRole('heading', { level: 1, name: 'Reportes' })
+
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true })
+
+    focusSpy.mockRestore()
   })
 
   it('respeta el historial del navegador al volver atrás', async () => {

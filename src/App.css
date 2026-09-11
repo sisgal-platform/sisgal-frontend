@@ -202,7 +202,7 @@
 /* ---------- Contenido ---------- */
 
 .contenido {
-  padding: 32px;
+  padding: 0px;
   min-width: 0;
 
   &:focus {
