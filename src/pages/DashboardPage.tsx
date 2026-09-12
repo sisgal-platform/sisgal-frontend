@@ -1,12 +1,11 @@
 import { ArrowRight, FileText, Plus, Users, Wallet } from "lucide-react";
 import { DashboardCard } from "../components/DashboardCard";
 import { useSession } from "../session/useSession";
-import { useNavigate } from 'react-router';
+import { useNavigate } from "react-router";
 
 export function DashboardPage() {
     const { user } = useSession();
     const navigate = useNavigate();
-
 
     if (!user || user.rol !== "administrador") {
         return (
@@ -34,10 +33,10 @@ export function DashboardPage() {
     };
 
     return (
-        <main className="min-h-screen bg-secondary px-5 py-8 sm:px-6 lg:px-8">
+        <section className="min-h-screen bg-secondary px-5 py-8 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
                 {/* Page header */}
-                <header className="mb-8">
+                <div className="mb-8">
                     <h1 className="text-4xl font-bold tracking-tight text-primary">
                         Panel Administrativo
                     </h1>
@@ -45,7 +44,7 @@ export function DashboardPage() {
                     <p className="mt-2 text-base text-primary-light">
                         Resumen general del sistema de gestión
                     </p>
-                </header>
+                </div>
 
                 {/* Dashboard cards */}
                 <section
@@ -84,10 +83,8 @@ export function DashboardPage() {
                         actionIcon={Plus}
                         onAction={handleRegisterLoan}
                     />
-
-                    
                 </section>
             </div>
-        </main>
+        </section>
     );
 }

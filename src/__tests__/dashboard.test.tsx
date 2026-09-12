@@ -7,7 +7,10 @@ describe("Dashboard", () => {
         renderApp({ ruta: "/" });
 
         expect(
-            screen.getByRole("heading", { level: 1, name: /dashboard/i }),
+            screen.getByRole("heading", {
+                level: 1,
+                name: /panel administrativo/i,
+            }),
         ).toBeInTheDocument();
     });
 
