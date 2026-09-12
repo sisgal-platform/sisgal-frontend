@@ -33,15 +33,15 @@ export function DashboardPage() {
     };
 
     return (
-        <section className="min-h-screen bg-secondary px-5 py-8 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-7xl">
+        <section className="min-h-screen bg-secondary px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10 2xl:px-10">
+            <div className="mx-auto max-w-7xl 2xl:max-w-[1600px]">
                 {/* Page header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold tracking-tight text-primary">
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
                         Panel Administrativo
                     </h1>
 
-                    <p className="mt-2 text-base text-primary-light">
+                    <p className="mt-2 text-sm text-primary-light sm:text-base">
                         Resumen general del sistema de gestión
                     </p>
                 </div>
@@ -49,7 +49,7 @@ export function DashboardPage() {
                 {/* Dashboard cards */}
                 <section
                     aria-label="Resumen administrativo"
-                    className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-3 xl:grid-cols-4"
                 >
                     <DashboardCard
                         title="Empleados"
