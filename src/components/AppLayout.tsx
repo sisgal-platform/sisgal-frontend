@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { logout as logoutApi } from '../auth/api'
+import { clearTokens } from '../auth/tokenStorage'
 import { findModuleByPath, MODULES } from '../modules/catalog'
 import { useSession } from '../session/useSession'
 import { NavMenu } from './NavMenu'
@@ -13,6 +15,14 @@ export function AppLayout() {
   const { pathname } = useLocation()
   const { user, lastModule, setLastModule, logout } = useSession()
   const [menuAbierto, setMenuAbierto] = useState(false)
+
+  function handleLogout() {
+    clearTokens()
+    logout()
+    void logoutApi().catch(() => {
+      // best-effort: el cierre local ya se hizo.
+    })
+  }
 
   const moduloActual = findModuleByPath(pathname)
   const etiquetaUltimo = MODULES.find((m) => m.id === lastModule)?.label
@@ -59,7 +69,7 @@ export function AppLayout() {
               {user.nombre}
               <span className="sesion-rol">{user.rol}</span>
             </span>
-            <button type="button" className="boton-sesion" onClick={logout}>
+            <button type="button" className="boton-sesion" onClick={handleLogout}>
               Cerrar sesión
             </button>
           </div>

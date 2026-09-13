@@ -1,6 +1,5 @@
 import { refresh } from './api'
 import type { AuthTokens } from './types'
-
 const TOKENS_KEY = 'sisgal.tokens'
 
 export function readTokens(): AuthTokens | null {
@@ -17,6 +16,7 @@ export function writeTokens(tokens: AuthTokens): void {
   try {
     window.localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens))
   } catch {
+     // best-effort: no romper la app si el storage no está disponible.
   }
 }
 
@@ -24,6 +24,7 @@ export function clearTokens(): void {
   try {
     window.localStorage.removeItem(TOKENS_KEY)
   } catch {
+    // best-effort: ver writeTokens.
   }
 }
 
