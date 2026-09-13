@@ -27,13 +27,15 @@ la aplicación ni pierde el estado de sesión.
 ```
 src/
   modules/catalog.ts    Catálogo de módulos: menú y rutas salen de aquí
-  routes.tsx            Rutas derivadas del catálogo
+  routes.tsx            Rutas derivadas del catálogo + rutas de auth
+  auth/                 Autenticación: tipos, cliente HTTP, tokens y guards
+  config/env.ts         Base URL del backend (VITE_API_BASE_URL)
   components/
     AppLayout.tsx       Barra superior, menú lateral y área de contenido
     NavMenu.tsx         Menú principal (aria-current en el módulo activo)
     RouteAnnouncer.tsx  Anuncio y foco al cambiar de ruta
   session/              Estado de sesión persistido en sessionStorage
-  pages/                Marco de cada módulo
+  pages/                Marco de cada módulo + LoginPage y SignupPage
 ```
 
 ### Agregar un módulo
@@ -41,13 +43,22 @@ src/
 Basta con añadir una entrada a `MODULES` en `src/modules/catalog.ts`. El menú y
 el enrutador se derivan del mismo arreglo, así que no pueden desincronizarse.
 
-### Estado de sesión
+### Autenticación y sesión
 
-`SessionProvider` conserva el usuario, el momento de inicio y el último módulo
-visitado. El estado vive en contexto de React durante la navegación y se
-persiste en `sessionStorage`, de modo que sobrevive a una recarga. La
-autenticación real llega con el Feature #19 ("Métodos de autenticación"); por
-ahora se abre una sesión de administrador de demostración al arrancar.
+La autenticación se delega en el backend NestJS (`/auth/*`), que a su vez usa
+Supabase como fuente de verdad. El flujo es:
+
+1. `LoginPage` llama a `POST /auth/login` y guarda `user` + `tokens`.
+2. Los tokens viven en `localStorage` (`sisgal.tokens`) y la sesión de usuario
+   en `sessionStorage` (`sisgal.session`), por lo que ambas sobreviven a una
+   recarga.
+3. Antes de un endpoint autenticado (solo `signup`), `getValidAccessToken()`
+   refresca el `accessToken` si está por expirar.
+4. `RequireAuth` redirige a `/login` cuando no hay sesión; `RequireAdmin` limita
+   `/signup` al rol administrador. El logout limpia tokens y sesión.
+
+Las rutas protegidas son las del shell (`AppLayout`) y `/signup`; `/login` es
+pública. El contrato completo está en `sisgal-core-service/BACKEND_CONTEXT.md`.
 
 ### Accesibilidad
 
@@ -71,9 +82,14 @@ src/__tests__/
   modulo-activo → indicación del módulo actual
   sesion      → persistencia, rehidratación y cierre de sesión
   accesibilidad → foco, anuncios, landmarks y teclado
+  autenticacion → login (éxito + errores), guards y signup
 ```
 
 ## Notas de configuración
+
+- La URL del backend se configura con `VITE_API_BASE_URL` (default
+  `http://localhost:3000`) en un archivo `.env` en la raíz. Ver
+  `src/config/env.ts`.
 
 Para endurecer el linter con reglas que requieren tipos, ver la
 [guía de configuración type-aware de typescript-eslint](https://typescript-eslint.io/getting-started/typed-linting/).
