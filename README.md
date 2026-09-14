@@ -30,6 +30,7 @@ src/
   routes.tsx            Rutas derivadas del catálogo + rutas de auth
   auth/                 Autenticación: tipos, cliente HTTP, tokens y guards
   config/env.ts         Base URL del backend (VITE_API_BASE_URL)
+  toast/                Notificaciones flotantes (useToast / ToastProvider)
   components/
     AppLayout.tsx       Barra superior, menú lateral y área de contenido
     NavMenu.tsx         Menú principal (aria-current en el módulo activo)
@@ -59,6 +60,14 @@ Supabase como fuente de verdad. El flujo es:
 
 Las rutas protegidas son las del shell (`AppLayout`) y `/signup`; `/login` es
 pública. El contrato completo está en `sisgal-core-service/BACKEND_CONTEXT.md`.
+
+El cliente HTTP vive en `src/auth/api.ts` y usa `axios` contra la base URL de
+`VITE_API_BASE_URL`; los errores del servidor se propagan como `ApiError`
+(`statusCode` + `message`) para que las vistas decidan por código de estado.
+
+Los errores de login/signup (credenciales inválidas, cuenta bloqueada, campos
+vacíos, etc.) se muestran de dos formas: junto al formulario (`role="alert"`) y
+como notificación flotante vía `useToast()`.
 
 ### Accesibilidad
 

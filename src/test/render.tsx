@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { routes } from '../routes'
 import { SessionProvider } from '../session/SessionProvider'
 import type { SessionState } from '../session/types'
+import { ToastProvider } from '../toast/ToastProvider'
 
 const SESION_ADMIN: SessionState = {
   user: { id: 'admin-test', nombre: 'Ana Ruiz', rol: 'administrador' },
@@ -27,7 +28,9 @@ export function renderApp({ ruta = '/', sesion = SESION_ADMIN }: Opciones = {}) 
 
   const utils = render(
     <SessionProvider initialState={sesion}>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </SessionProvider>,
   )
 

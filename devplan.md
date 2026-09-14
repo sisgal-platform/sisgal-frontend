@@ -10,7 +10,7 @@ Plan de desarrollo del frontend (React + TypeScript + Vite) del sistema SISGAL.
 | Build | Vite |
 | Routing | react-router v7 (data router) |
 | Estilos | Tailwind CSS (tema en `tailwind.config.js`) |
-| HTTP | `fetch` nativo (sin axios) |
+| HTTP | axios |
 | Pruebas | Vitest + Testing Library |
 
 ## Módulo de autenticación (completado)
@@ -31,6 +31,8 @@ src/
     RequireAdmin.tsx  Guard de rol (solo administrador)
   config/
     env.ts            Lee VITE_API_BASE_URL (default http://localhost:3000)
+  toast/
+    ToastProvider.tsx Notificaciones flotantes (useToast) con auto-cierre
   pages/
     LoginPage.tsx     Formulario de inicio de sesión
     SignupPage.tsx    Creación de administrador (solo admin)
@@ -47,6 +49,9 @@ src/
   423 cuenta bloqueada, 429 rate limit, 400 validación, 409 email duplicado (signup).
 - **Protección de rutas**: `/login` es pública; todo lo demás queda bajo `RequireAuth`;
   `/signup` además bajo `RequireAdmin`.
+- **Notificaciones flotantes**: sistema propio (`ToastProvider` + `useToast`) sin
+  dependencias. Los errores de login/signup se muestran inline (`role="alert"`) y
+  además como toast; los campos vacíos disparan un toast de advertencia.
 
 ## Deuda técnica / alineación con backend
 
@@ -63,10 +68,10 @@ que la sesión interna del frontend usa `nombre` y `rol` (valores en minúscula)
 
 ```
 src/__tests__/
-  autenticacion.test.tsx  login (éxito + errores 401/423), guards y signup
+  autenticacion.test.tsx  login (éxito + errores/toasts 401/423), guards y signup
 ```
 
-El cliente HTTP se prueba mockeando `fetch` con `vi.stubGlobal('fetch', ...)`.
+El cliente HTTP se prueba mockeando el módulo `api` con `vi.mock('../auth/api', ...)`.
 
 ## Verificación
 

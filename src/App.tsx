@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { routes } from './routes'
 import { SessionProvider } from './session/SessionProvider'
+import { ToastProvider } from './toast/ToastProvider'
 import './App.css'
 
 const router = createBrowserRouter(routes)
@@ -8,7 +9,9 @@ const router = createBrowserRouter(routes)
 function App() {
   return (
     <SessionProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </SessionProvider>
   )
 }

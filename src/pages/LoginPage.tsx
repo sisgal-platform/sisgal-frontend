@@ -5,6 +5,7 @@ import { mapUserDtoToSessionUser } from '../auth/mapUser'
 import { writeTokens } from '../auth/tokenStorage'
 import type { ApiError } from '../auth/types'
 import { useSession } from '../session/useSession'
+import { useToast } from '../toast/useToast'
 
 function mensajeDeError(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'statusCode' in error) {
@@ -26,26 +27,32 @@ function mensajeDeError(error: unknown): string {
 
 export function LoginPage() {
   const { login } = useSession()
+  const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
+
+    if (!email.trim() || !password) {
+      showToast('Completa todos los campos.', 'warning')
+      return
+    }
+
     setEnviando(true)
     try {
       const { user, tokens } = await loginApi({ email, password })
       writeTokens(tokens)
       login(mapUserDtoToSessionUser(user))
+      showToast('Inicio de sesión exitoso.', 'success')
       const from = (location.state as { from?: { pathname?: string } } | null)
         ?.from?.pathname
       navigate(from ?? '/', { replace: true })
     } catch (err) {
-      setError(mensajeDeError(err))
+      showToast(mensajeDeError(err), 'error')
     } finally {
       setEnviando(false)
     }
@@ -55,7 +62,7 @@ export function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-secondary px-4">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-surface p-6 shadow-sm sm:p-8">
         <h1 className="mb-6 text-2xl font-bold text-primary">Iniciar sesión</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm text-text-muted">
             Correo electrónico
             <input
@@ -79,11 +86,6 @@ export function LoginPage() {
               className="rounded-lg border border-gray-300 px-3 py-2 text-text"
             />
           </label>
-          {error && (
-            <p role="alert" className="rounded-lg bg-error-light px-3 py-2 text-sm text-error">
-              {error}
-            </p>
-          )}
           <button
             type="submit"
             disabled={enviando}

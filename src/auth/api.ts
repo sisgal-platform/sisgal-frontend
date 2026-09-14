@@ -1,52 +1,53 @@
-import { AUTH_URL } from "../config/env";
-import type { ApiError, AuthResponseDto, LoginDto, RefreshTokenDto, SignupDto } from "./types";
+import axios from 'axios'
+import { AUTH_URL } from '../config/env'
+import type {
+  ApiError,
+  AuthResponseDto,
+  LoginDto,
+  RefreshTokenDto,
+  SignupDto,
+} from './types'
 
+const client = axios.create({
+  baseURL: AUTH_URL,
+  headers: { 'Content-Type': 'application/json' },
+})
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T>{
-    const response = await fetch(`${AUTH_URL}${path}`,{
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-    })
-
-    const body = (await response.json().catch(()=>null)) as ApiError |T| null
-
-    if (!response.ok) {
-        throw (body as ApiError) ?? {
-            statusCode: response.status,
-            message: 'Error inesperado del servidor',
-        }
+async function request<T>(promise: Promise<{ data: T }>): Promise<T> {
+  try {
+    const { data } = await promise
+    return data
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw (error.response.data as ApiError) ?? {
+        statusCode: error.response.status,
+        message: 'Error inesperado del servidor',
+      }
     }
-
-    return body as T
+    throw error
+  }
 }
 
-export async function login(dto:LoginDto):Promise<AuthResponseDto> {
-    return request<AuthResponseDto>('/login', {
-        method: 'POST',
-        body: JSON.stringify(dto),
-    })
+export function login(dto: LoginDto): Promise<AuthResponseDto> {
+  return request(client.post<AuthResponseDto>('/login', dto))
 }
 
-export async function signup(dto:SignupDto , accessToken: string,): Promise<AuthResponseDto> {
-    return request<AuthResponseDto>('/signup',{
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}`},
-        body: JSON.stringify(dto),
-    })
+export function signup(
+  dto: SignupDto,
+  accessToken: string,
+): Promise<AuthResponseDto> {
+  return request(
+    client.post<AuthResponseDto>('/signup', dto, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }),
+  )
 }
 
-export async function refresh(refreshToken:string,): Promise<AuthResponseDto> {
-    const body: RefreshTokenDto = {refreshToken}
-
-    return request<AuthResponseDto>('/refresh', {
-        method: 'POST',
-        body: JSON.stringify(body),
-    })
+export function refresh(refreshToken: string): Promise<AuthResponseDto> {
+  const body: RefreshTokenDto = { refreshToken }
+  return request(client.post<AuthResponseDto>('/refresh', body))
 }
 
-export async function logout(): Promise<{success: boolean}> {
-    return request <{success: boolean}>('/logout', {method:'POST'})
+export function logout(): Promise<{ success: boolean }> {
+  return request(client.post<{ success: boolean }>('/logout'))
 }

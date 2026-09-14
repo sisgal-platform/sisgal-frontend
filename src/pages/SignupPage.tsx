@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { signup as signupApi } from '../auth/api'
 import { getValidAccessToken } from '../auth/tokenStorage'
 import type { ApiError } from '../auth/types'
+import { useToast } from '../toast/useToast'
 
 function mensajeDeError(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'statusCode' in error) {
@@ -23,23 +24,28 @@ function mensajeDeError(error: unknown): string {
 }
 
 export function SignupPage() {
+  const { showToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [exito, setExito] = useState(false)
   const [enviando, setEnviando] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
+
+    if (!email.trim() || !password) {
+      showToast('Completa los campos obligatorios.', 'warning')
+      return
+    }
+
     setEnviando(true)
     try {
       const accessToken = await getValidAccessToken()
       await signupApi({ email, password, fullName }, accessToken)
       setExito(true)
     } catch (err) {
-      setError(mensajeDeError(err))
+      showToast(mensajeDeError(err), 'error')
     } finally {
       setEnviando(false)
     }
@@ -63,7 +69,7 @@ export function SignupPage() {
     <main className="flex min-h-screen items-center justify-center bg-secondary px-4">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-surface p-6 shadow-sm sm:p-8">
         <h1 className="mb-6 text-2xl font-bold text-primary">Crear administrador</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm text-text-muted">
             Nombre completo
             <input
@@ -96,11 +102,6 @@ export function SignupPage() {
               className="rounded-lg border border-gray-300 px-3 py-2 text-text"
             />
           </label>
-          {error && (
-            <p role="alert" className="rounded-lg bg-error-light px-3 py-2 text-sm text-error">
-              {error}
-            </p>
-          )}
           <button
             type="submit"
             disabled={enviando}

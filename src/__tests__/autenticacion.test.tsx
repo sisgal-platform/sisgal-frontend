@@ -1,8 +1,16 @@
 import { screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { login, signup } from '../auth/api'
 import type { AuthResponseDto, AuthTokens } from '../auth/types'
 import { EMPTY_SESSION } from '../session/types'
 import { renderApp } from '../test/render'
+
+vi.mock('../auth/api', () => ({
+  login: vi.fn(),
+  signup: vi.fn(),
+  refresh: vi.fn(),
+  logout: vi.fn(),
+}))
 
 const USUARIO_ADMIN: AuthResponseDto = {
   user: {
@@ -27,26 +35,14 @@ const TOKENS_FUTUROS: AuthTokens = {
   tokenType: 'bearer',
 }
 
-function jsonResponse(status: number, body: unknown) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-  }
-}
-
-function stubFetch(status: number, body: unknown) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(status, body)))
-}
-
 afterEach(() => {
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
   window.localStorage.clear()
 })
 
 describe('Autenticación', () => {
   it('inicia sesión con credenciales válidas y accede al dashboard', async () => {
-    stubFetch(200, USUARIO_ADMIN)
+    vi.mocked(login).mockResolvedValue(USUARIO_ADMIN)
     const { user } = renderApp({ ruta: '/login', sesion: EMPTY_SESSION })
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'maria@example.com')
@@ -56,10 +52,13 @@ describe('Autenticación', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: /panel administrativo/i }),
     ).toBeInTheDocument()
+    expect(await screen.findByTestId('toast')).toHaveTextContent(
+      'Inicio de sesión exitoso.',
+    )
   })
 
   it('muestra un mensaje genérico ante credenciales inválidas (401)', async () => {
-    stubFetch(401, {
+    vi.mocked(login).mockRejectedValue({
       statusCode: 401,
       message: 'Invalid credentials',
       error: 'Unauthorized',
@@ -70,13 +69,13 @@ describe('Autenticación', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'incorrecta1')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    expect(await screen.findByTestId('toast')).toHaveTextContent(
       'Credenciales incorrectas.',
     )
   })
 
   it('informa el bloqueo temporal de la cuenta (423)', async () => {
-    stubFetch(423, {
+    vi.mocked(login).mockRejectedValue({
       statusCode: 423,
       message: 'Too many failed attempts. Try again later.',
     })
@@ -86,8 +85,18 @@ describe('Autenticación', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'secret123')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    expect(await screen.findByTestId('toast')).toHaveTextContent(
       'Cuenta bloqueada temporalmente.',
+    )
+  })
+
+  it('notifica cuando faltan campos obligatorios', async () => {
+    const { user } = renderApp({ ruta: '/login', sesion: EMPTY_SESSION })
+
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(await screen.findByTestId('toast')).toHaveTextContent(
+      'Completa todos los campos.',
     )
   })
 
@@ -127,7 +136,7 @@ describe('Autenticación', () => {
 
   it('crea un administrador y muestra la confirmación', async () => {
     window.localStorage.setItem('sisgal.tokens', JSON.stringify(TOKENS_FUTUROS))
-    stubFetch(201, USUARIO_ADMIN)
+    vi.mocked(signup).mockResolvedValue(USUARIO_ADMIN)
     const { user } = renderApp({ ruta: '/signup' })
 
     await user.type(screen.getByLabelText('Nombre completo'), 'Carlos Rodríguez')
