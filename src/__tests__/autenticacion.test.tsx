@@ -5,11 +5,6 @@ import { signInWithPassword } from '../auth/auth'
 import { EMPTY_SESSION } from '../session/types'
 import { renderApp } from '../test/render'
 
-vi.mock('../auth/auth', () => ({
-  signInWithPassword: vi.fn(),
-  signOut: vi.fn(),
-}))
-
 const usuario: User = {
   id: 'u-1',
   user_metadata: { full_name: 'María González' },
