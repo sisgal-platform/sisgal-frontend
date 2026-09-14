@@ -6,6 +6,7 @@ import { mapSupabaseUser } from '../auth/mapUser'
 import { useSession } from '../session/useSession'
 import { useToast } from '../toast/useToast'
 
+/** Traduce un error de Supabase a un mensaje amigable para el usuario. */
 function mensajeDeError(error: AuthError | null): string {
   if (!error) return 'Ocurrió un error. Inténtalo de nuevo.'
   if (error.status === 429 || /rate limit/i.test(error.message)) {
@@ -23,6 +24,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [enviando, setEnviando] = useState(false)
 
+  /** Valida campos, inicia sesión y redirige al dashboard (o a la ruta de origen). */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
