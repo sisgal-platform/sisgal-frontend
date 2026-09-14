@@ -1,16 +1,20 @@
-import type { SessionUser } from "../session/types";
-import type { UserDto, UserRole } from "./types";
+import type { User } from '@supabase/supabase-js'
+import type { SessionUser } from '../session/types'
 
+export function mapSupabaseUser(user: User): SessionUser {
+  const metadata = user.user_metadata ?? {}
 
+  const nombre =
+    ([metadata['full_name'], metadata['fullName'], metadata['name']].find(
+      (value): value is string =>
+        typeof value === 'string' && value.length > 0,
+    ) as string | undefined) ?? ''
 
-const ROLE_MAP: Record<UserRole, SessionUser['rol']>={
-    ADMINISTRADOR: 'administrador',
-}
+  const role = user.app_metadata?.role
 
-export function mapUserDtoToSessionUser(user: UserDto) {
-    return {
-        id: user.id,
-        nombre: user.fullName,
-        rol: ROLE_MAP[user.role],
-    }
+  return {
+    id: user.id,
+    nombre,
+    rol: role === 'ADMINISTRADOR' ? 'administrador' : 'empleado',
+  }
 }

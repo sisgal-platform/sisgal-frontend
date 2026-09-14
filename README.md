@@ -28,15 +28,15 @@ la aplicación ni pierde el estado de sesión.
 src/
   modules/catalog.ts    Catálogo de módulos: menú y rutas salen de aquí
   routes.tsx            Rutas derivadas del catálogo + rutas de auth
-  auth/                 Autenticación: tipos, cliente HTTP, tokens y guards
-  config/env.ts         Base URL del backend (VITE_API_BASE_URL)
+  auth/                 Autenticación con Supabase (login, guards, sesión)
+  supabase/client.ts    Cliente de Supabase (createClient)
   toast/                Notificaciones flotantes (useToast / ToastProvider)
   components/
     AppLayout.tsx       Barra superior, menú lateral y área de contenido
     NavMenu.tsx         Menú principal (aria-current en el módulo activo)
     RouteAnnouncer.tsx  Anuncio y foco al cambiar de ruta
   session/              Estado de sesión persistido en sessionStorage
-  pages/                Marco de cada módulo + LoginPage y SignupPage
+  pages/                Marco de cada módulo + LoginPage
 ```
 
 ### Agregar un módulo
@@ -46,28 +46,21 @@ el enrutador se derivan del mismo arreglo, así que no pueden desincronizarse.
 
 ### Autenticación y sesión
 
-La autenticación se delega en el backend NestJS (`/auth/*`), que a su vez usa
-Supabase como fuente de verdad. El flujo es:
+La autenticación se hace directo contra Supabase (`@supabase/supabase-js`), sin
+backend intermedio. El flujo es:
 
-1. `LoginPage` llama a `POST /auth/login` y guarda `user` + `tokens`.
-2. Los tokens viven en `localStorage` (`sisgal.tokens`) y la sesión de usuario
-   en `sessionStorage` (`sisgal.session`), por lo que ambas sobreviven a una
-   recarga.
-3. Antes de un endpoint autenticado (solo `signup`), `getValidAccessToken()`
-   refresca el `accessToken` si está por expirar.
-4. `RequireAuth` redirige a `/login` cuando no hay sesión; `RequireAdmin` limita
-   `/signup` al rol administrador. El logout limpia tokens y sesión.
+1. `LoginPage` llama a `supabase.auth.signInWithPassword`.
+2. Al autenticarse, se mapea el `User` de Supabase a la sesión interna (`nombre`
+   desde `user_metadata`, `rol` desde `app_metadata.role`).
+3. `AuthSync` rehidrata la sesión al arrancar (`getSession`) y se suscribe a
+   `onAuthStateChange` para sincronizar login, logout y refresco de token.
+4. `RequireAuth` redirige a `/login` cuando no hay sesión; el logout llama a
+   `supabase.auth.signOut()`.
 
-Las rutas protegidas son las del shell (`AppLayout`) y `/signup`; `/login` es
-pública. El contrato completo está en `sisgal-core-service/BACKEND_CONTEXT.md`.
+Las rutas protegidas son las del shell (`AppLayout`); `/login` es pública.
 
-El cliente HTTP vive en `src/auth/api.ts` y usa `axios` contra la base URL de
-`VITE_API_BASE_URL`; los errores del servidor se propagan como `ApiError`
-(`statusCode` + `message`) para que las vistas decidan por código de estado.
-
-Los errores de login/signup (credenciales inválidas, cuenta bloqueada, campos
-vacíos, etc.) se muestran de dos formas: junto al formulario (`role="alert"`) y
-como notificación flotante vía `useToast()`.
+Los errores de login (credenciales inválidas, rate limit, campos vacíos) se
+muestran como notificación flotante vía `useToast()`.
 
 ### Accesibilidad
 
@@ -91,14 +84,14 @@ src/__tests__/
   modulo-activo → indicación del módulo actual
   sesion      → persistencia, rehidratación y cierre de sesión
   accesibilidad → foco, anuncios, landmarks y teclado
-  autenticacion → login (éxito + errores), guards y signup
+  autenticacion → login (éxito + errores), toast y guard
 ```
 
 ## Notas de configuración
 
-- La URL del backend se configura con `VITE_API_BASE_URL` (default
-  `http://localhost:3000`) en un archivo `.env` en la raíz. Ver
-  `src/config/env.ts`.
+- La conexión a Supabase se configura con `VITE_SUPABASE_URL` y
+  `VITE_SUPABASE_ANON_KEY` en un archivo `.env` en la raíz. Ver
+  `src/supabase/client.ts`.
 
 Para endurecer el linter con reglas que requieren tipos, ver la
 [guía de configuración type-aware de typescript-eslint](https://typescript-eslint.io/getting-started/typed-linting/).

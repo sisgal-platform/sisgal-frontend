@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
+import { AuthSync } from './auth/AuthSync'
 import { routes } from './routes'
 import { SessionProvider } from './session/SessionProvider'
 import { ToastProvider } from './toast/ToastProvider'
@@ -10,6 +11,7 @@ function App() {
   return (
     <SessionProvider>
       <ToastProvider>
+        <AuthSync />
         <RouterProvider router={router} />
       </ToastProvider>
     </SessionProvider>

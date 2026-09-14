@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
-import { logout as logoutApi } from '../auth/api'
-import { clearTokens } from '../auth/tokenStorage'
+import { signOut } from '../auth/auth'
 import { findModuleByPath, MODULES } from '../modules/catalog'
 import { useSession } from '../session/useSession'
 import { NavMenu } from './NavMenu'
@@ -17,9 +16,8 @@ export function AppLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   function handleLogout() {
-    clearTokens()
     logout()
-    void logoutApi().catch(() => {
+    void signOut().catch(() => {
       // best-effort: el cierre local ya se hizo.
     })
   }

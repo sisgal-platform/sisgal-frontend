@@ -1,28 +1,17 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { login as loginApi } from '../auth/api'
-import { mapUserDtoToSessionUser } from '../auth/mapUser'
-import { writeTokens } from '../auth/tokenStorage'
-import type { ApiError } from '../auth/types'
+import type { AuthError } from '@supabase/supabase-js'
+import { signInWithPassword } from '../auth/auth'
+import { mapSupabaseUser } from '../auth/mapUser'
 import { useSession } from '../session/useSession'
 import { useToast } from '../toast/useToast'
 
-function mensajeDeError(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'statusCode' in error) {
-    switch ((error as ApiError).statusCode) {
-      case 401:
-        return 'Credenciales incorrectas.'
-      case 423:
-        return 'Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.'
-      case 429:
-        return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
-      case 400:
-        return 'Revisa el correo y la contraseña e inténtalo de nuevo.'
-      default:
-        return 'Ocurrió un error. Inténtalo de nuevo.'
-    }
+function mensajeDeError(error: AuthError | null): string {
+  if (!error) return 'Ocurrió un error. Inténtalo de nuevo.'
+  if (error.status === 429 || /rate limit/i.test(error.message)) {
+    return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
   }
-  return 'No se pudo conectar con el servidor.'
+  return 'Credenciales incorrectas.'
 }
 
 export function LoginPage() {
@@ -44,15 +33,19 @@ export function LoginPage() {
 
     setEnviando(true)
     try {
-      const { user, tokens } = await loginApi({ email, password })
-      writeTokens(tokens)
-      login(mapUserDtoToSessionUser(user))
+      const { user, error } = await signInWithPassword(email, password)
+      if (error || !user) {
+        showToast(mensajeDeError(error), 'error')
+        return
+      }
+
+      login(mapSupabaseUser(user))
       showToast('Inicio de sesión exitoso.', 'success')
       const from = (location.state as { from?: { pathname?: string } } | null)
         ?.from?.pathname
       navigate(from ?? '/', { replace: true })
-    } catch (err) {
-      showToast(mensajeDeError(err), 'error')
+    } catch {
+      showToast('Ocurrió un error. Inténtalo de nuevo.', 'error')
     } finally {
       setEnviando(false)
     }

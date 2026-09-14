@@ -1,39 +1,32 @@
 import { screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { login, signup } from '../auth/api'
-import type { AuthResponseDto, AuthTokens } from '../auth/types'
+import type { AuthError, User } from '@supabase/supabase-js'
+import { signInWithPassword } from '../auth/auth'
 import { EMPTY_SESSION } from '../session/types'
 import { renderApp } from '../test/render'
 
-vi.mock('../auth/api', () => ({
-  login: vi.fn(),
-  signup: vi.fn(),
-  refresh: vi.fn(),
-  logout: vi.fn(),
+vi.mock('../auth/auth', () => ({
+  signInWithPassword: vi.fn(),
+  signOut: vi.fn(),
 }))
 
-const USUARIO_ADMIN: AuthResponseDto = {
-  user: {
-    id: 'u-1',
-    fullName: 'María González',
-    email: 'maria@example.com',
-    emailConfirmed: true,
-    role: 'ADMINISTRADOR',
-  },
-  tokens: {
-    accessToken: 'access-token',
-    refreshToken: 'refresh-token',
-    expiresAt: Math.floor(Date.now() / 1000) + 3600,
-    tokenType: 'bearer',
-  },
-}
+const usuario: User = {
+  id: 'u-1',
+  user_metadata: { full_name: 'María González' },
+  app_metadata: { role: 'ADMINISTRADOR' },
+} as unknown as User
 
-const TOKENS_FUTUROS: AuthTokens = {
-  accessToken: 'access-token',
-  refreshToken: 'refresh-token',
-  expiresAt: Math.floor(Date.now() / 1000) + 3600,
-  tokenType: 'bearer',
-}
+const errorCredenciales: AuthError = {
+  name: 'AuthApiError',
+  message: 'Invalid login credentials',
+  status: 400,
+} as AuthError
+
+const errorRateLimit: AuthError = {
+  name: 'AuthApiError',
+  message: 'Request rate limit reached',
+  status: 429,
+} as AuthError
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -42,7 +35,10 @@ afterEach(() => {
 
 describe('Autenticación', () => {
   it('inicia sesión con credenciales válidas y accede al dashboard', async () => {
-    vi.mocked(login).mockResolvedValue(USUARIO_ADMIN)
+    vi.mocked(signInWithPassword).mockResolvedValue({
+      user: usuario,
+      error: null,
+    })
     const { user } = renderApp({ ruta: '/login', sesion: EMPTY_SESSION })
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'maria@example.com')
@@ -57,11 +53,10 @@ describe('Autenticación', () => {
     )
   })
 
-  it('muestra un mensaje genérico ante credenciales inválidas (401)', async () => {
-    vi.mocked(login).mockRejectedValue({
-      statusCode: 401,
-      message: 'Invalid credentials',
-      error: 'Unauthorized',
+  it('muestra un mensaje genérico ante credenciales inválidas', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({
+      user: null,
+      error: errorCredenciales,
     })
     const { user } = renderApp({ ruta: '/login', sesion: EMPTY_SESSION })
 
@@ -74,10 +69,10 @@ describe('Autenticación', () => {
     )
   })
 
-  it('informa el bloqueo temporal de la cuenta (423)', async () => {
-    vi.mocked(login).mockRejectedValue({
-      statusCode: 423,
-      message: 'Too many failed attempts. Try again later.',
+  it('informa demasiados intentos ante rate limit (429)', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({
+      user: null,
+      error: errorRateLimit,
     })
     const { user } = renderApp({ ruta: '/login', sesion: EMPTY_SESSION })
 
@@ -86,7 +81,7 @@ describe('Autenticación', () => {
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
 
     expect(await screen.findByTestId('toast')).toHaveTextContent(
-      'Cuenta bloqueada temporalmente.',
+      'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
     )
   })
 
@@ -105,47 +100,6 @@ describe('Autenticación', () => {
 
     expect(
       await screen.findByRole('heading', { level: 1, name: /iniciar sesión/i }),
-    ).toBeInTheDocument()
-  })
-
-  it('permite a un administrador acceder al signup', async () => {
-    renderApp({ ruta: '/signup' })
-
-    expect(
-      await screen.findByRole('heading', { level: 1, name: /crear administrador/i }),
-    ).toBeInTheDocument()
-  })
-
-  it('impide el signup a un rol no administrador', async () => {
-    renderApp({
-      ruta: '/signup',
-      sesion: {
-        user: { id: 'u-2', nombre: 'Laura Gómez', rol: 'supervisor' },
-        lastModule: null,
-        startedAt: '2026-01-02T08:00:00.000Z',
-      },
-    })
-
-    expect(
-      await screen.findByRole('heading', { level: 1, name: /dashboard/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: /crear administrador/i }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('crea un administrador y muestra la confirmación', async () => {
-    window.localStorage.setItem('sisgal.tokens', JSON.stringify(TOKENS_FUTUROS))
-    vi.mocked(signup).mockResolvedValue(USUARIO_ADMIN)
-    const { user } = renderApp({ ruta: '/signup' })
-
-    await user.type(screen.getByLabelText('Nombre completo'), 'Carlos Rodríguez')
-    await user.type(screen.getByLabelText('Correo electrónico'), 'carlos@example.com')
-    await user.type(screen.getByLabelText('Contraseña'), 'clave123')
-    await user.click(screen.getByRole('button', { name: 'Crear' }))
-
-    expect(
-      await screen.findByRole('heading', { level: 1, name: /administrador creado/i }),
     ).toBeInTheDocument()
   })
 })
