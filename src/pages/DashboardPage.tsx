@@ -1,4 +1,4 @@
-import { ArrowRight, FileText, Plus, Users, Wallet } from "lucide-react";
+import { ArrowRight, Plus, Users, Wallet } from "lucide-react";
 import { DashboardCard } from "../components/DashboardCard";
 import { useSession } from "../session/useSession";
 import { useNavigate } from "react-router";
