@@ -17,6 +17,6 @@ export function mapSupabaseUser(user: User): SessionUser {
   return {
     id: user.id,
     nombre,
-    rol: role === 'ADMINISTRADOR' ? 'administrador' : 'empleado',
+    rol: role,
   }
 }

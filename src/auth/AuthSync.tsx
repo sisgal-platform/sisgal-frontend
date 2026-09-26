@@ -1,30 +1,64 @@
-import { useEffect } from 'react'
-import { useSession } from '../session/useSession'
-import { supabase } from './auth'
-import { mapSupabaseUser } from './mapUser'
+import { useEffect } from "react";
+
+import { useSession } from "../session/useSession";
+
+import { supabase } from "./auth";
+import { mapSupabaseUser } from "./mapUser";
+
+import { writeAccessToken, clearAccessToken } from "./accessTokenStorage";
 
 /**
- * Puente entre Supabase y la sesión de React: rehidrata la sesión al arrancar
- * y la mantiene sincronizada ante login, logout y refresco de token.
+ * Puente entre Supabase y la sesión de React:
+ * rehidrata la sesión al arrancar y la mantiene sincronizada
+ * ante login, logout y refresco de token.
  */
 export function AuthSync() {
-  const { login, logout } = useSession()
+    const { login, logout } = useSession();
 
-  useEffect(() => {
-    // Al arrancar restaura la sesión si hay un usuario activo en Supabase.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) login(mapSupabaseUser(data.session.user))
-      else logout()
-    })
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => {
+            console.log("AUTH SYNC - getSession:", data.session);
 
-    // En vivo: refleja cambios de estado (SIGNED_IN / SIGNED_OUT / TOKEN_REFRESHED).
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) login(mapSupabaseUser(session.user))
-      else logout()
-    })
+            if (data.session?.user) {
+                login(mapSupabaseUser(data.session.user));
 
-    return () => data.subscription.unsubscribe()
-  }, [login, logout])
+                console.log(
+                    "AUTH SYNC - access token:",
+                    data.session.access_token,
+                );
 
-  return null
+                if (data.session.access_token) {
+                    writeAccessToken(data.session.access_token);
+                }
+            } else {
+                clearAccessToken();
+                logout();
+            }
+        });
+
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log("AUTH SYNC - evento:", event);
+            console.log("AUTH SYNC - sesión:", session);
+
+            if (session?.user) {
+                login(mapSupabaseUser(session.user));
+
+                console.log(
+                    "AUTH SYNC - access token evento:",
+                    session.access_token,
+                );
+
+                if (session.access_token) {
+                    writeAccessToken(session.access_token);
+                }
+            } else {
+                clearAccessToken();
+                logout();
+            }
+        });
+
+        return () => data.subscription.unsubscribe();
+    }, [login, logout]);
+
+    return null;
 }
