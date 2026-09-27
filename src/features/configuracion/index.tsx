@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CargosFeature } from "@/features/cargos";
 import { SucursalesFeature } from "@/features/sucursales";
 
 export function ConfiguracionFeature() {
@@ -17,10 +18,15 @@ export function ConfiguracionFeature() {
             <Tabs defaultValue="sucursales" className="w-full">
                 <TabsList>
                     <TabsTrigger value="sucursales">Sucursales</TabsTrigger>
+                    <TabsTrigger value="cargos">Cargos</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sucursales" className="p-4">
                     <SucursalesFeature />
+                </TabsContent>
+
+                <TabsContent value="cargos" className="p-4">
+                    <CargosFeature />
                 </TabsContent>
             </Tabs>
         </section>
