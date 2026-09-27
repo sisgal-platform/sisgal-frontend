@@ -1,43 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { SectionHeader } from "@/components/atoms/SectionHeader";
 
 import { SucursalTable } from "./components/SucursalTable";
+import { useSucursales } from "./hooks/useSucursales";
 
 export function SucursalesFeature() {
+    const { sucursales, loading, error } = useSucursales();
+
+    if (loading) {
+        return <div>Cargando sucursales...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <section className="space-y-6">
             <div className="flex items-start justify-between gap-4">
-                <SectionHeader
-                    eyebrow="Configuración"
-                    title="Sucursales"
-                    description="Administración de sedes, estados y configuración de cada sucursal."
-                />
+                <SectionHeader title="Sucursales" />
 
                 <Button type="button" variant="default">
                     Nueva sucursal
                 </Button>
             </div>
 
-            <Tabs defaultValue="listado" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="listado">Listado</TabsTrigger>
-                    <TabsTrigger value="configuracion">
-                        Configuración
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="listado" className="pt-4">
-                    <SucursalTable />
-                </TabsContent>
-
-                <TabsContent value="configuracion" className="pt-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                        Aquí se gestionará la configuración general de cada
-                        sucursal.
-                    </div>
-                </TabsContent>
-            </Tabs>
+            <SucursalTable sucursales={sucursales} />
         </section>
     );
 }
