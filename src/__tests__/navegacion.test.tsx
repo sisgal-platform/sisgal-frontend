@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { MODULES } from "../modules/catalog";
+import { MODULES } from "../config/modules.catalog";
 import { renderApp } from "../test/render";
 
 describe("Navegación entre módulos", () => {
