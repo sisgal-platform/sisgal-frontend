@@ -39,6 +39,31 @@ const initialForm = {
     ciudad: "",
 };
 
+const getValidationError = ({ form }: { form: typeof initialForm }) => {
+    const nombre = form.nombre.trim();
+    const direccion = form.direccion.trim();
+    const telefono = form.telefono.trim();
+    const ciudad = form.ciudad.trim();
+
+    if (!nombre) {
+        return "El nombre es obligatorio.";
+    }
+
+    if (!direccion) {
+        return "La dirección es obligatoria.";
+    }
+
+    if (!ciudad) {
+        return "La ciudad es obligatoria.";
+    }
+
+    if (telefono && !/^\d+$/.test(telefono)) {
+        return "El teléfono solo puede contener números.";
+    }
+
+    return null;
+};
+
 export function CreateSucursalDialog({
     open,
     mode = "create",
@@ -77,26 +102,33 @@ export function CreateSucursalDialog({
     const handleChange =
         (field: keyof typeof initialForm) =>
         (event: ChangeEvent<HTMLInputElement>) => {
+            const nextValue =
+                field === "telefono"
+                    ? event.target.value.replace(/\D/g, "")
+                    : event.target.value;
+
             setForm((current) => ({
                 ...current,
-                [field]: event.target.value,
+                [field]: nextValue,
             }));
         };
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        console.log("🔥 HANDLE SUBMIT EJECUTADO");
+        const validationError = getValidationError({
+            form,
+        });
+
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
         const nombre = form.nombre.trim();
         const direccion = form.direccion.trim();
         const telefono = form.telefono.trim();
         const ciudad = form.ciudad.trim();
-
-        if (!nombre || !direccion || !telefono || !ciudad) {
-            setError("Todos los campos son obligatorios.");
-            return;
-        }
 
         try {
             setError(null);
@@ -124,10 +156,25 @@ export function CreateSucursalDialog({
                 `Error al ${mode === "edit" ? "actualizar" : "crear"} la sucursal:`,
                 submitError,
             );
+
+            const backendMessage =
+                typeof submitError === "object" &&
+                submitError !== null &&
+                "response" in submitError &&
+                submitError.response &&
+                typeof submitError.response === "object" &&
+                "data" in submitError.response &&
+                submitError.response.data &&
+                typeof submitError.response.data === "object" &&
+                "message" in submitError.response.data
+                    ? String(submitError.response.data.message)
+                    : null;
+
             setError(
-                mode === "edit"
-                    ? "No fue posible actualizar la sucursal. Inténtalo nuevamente."
-                    : "No fue posible crear la sucursal. Inténtalo nuevamente.",
+                backendMessage ||
+                    (mode === "edit"
+                        ? "No fue posible actualizar la sucursal. Inténtalo nuevamente."
+                        : "No fue posible crear la sucursal. Inténtalo nuevamente."),
             );
         } finally {
             setIsSubmitting(false);
@@ -165,6 +212,7 @@ export function CreateSucursalDialog({
                                 value={form.nombre}
                                 onChange={handleChange("nombre")}
                                 placeholder="Sucursal Centro"
+                                required
                                 className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
                             />
                         </label>
@@ -176,6 +224,7 @@ export function CreateSucursalDialog({
                                 value={form.direccion}
                                 onChange={handleChange("direccion")}
                                 placeholder="Carrera 43A # 10-15"
+                                required
                                 className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
                             />
                         </label>
@@ -184,6 +233,7 @@ export function CreateSucursalDialog({
                             <span>Teléfono</span>
                             <input
                                 type="tel"
+                                inputMode="numeric"
                                 value={form.telefono}
                                 onChange={handleChange("telefono")}
                                 placeholder="6041234567"
@@ -198,6 +248,7 @@ export function CreateSucursalDialog({
                                 value={form.ciudad}
                                 onChange={handleChange("ciudad")}
                                 placeholder="Medellín"
+                                required
                                 className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
                             />
                         </label>
