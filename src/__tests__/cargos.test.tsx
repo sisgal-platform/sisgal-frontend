@@ -1,12 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError } from "../api/http";
-import { cargosApi } from "../cargos/cargosApi";
-import type { Cargo } from "../cargos/types";
+import type { Cargo } from "../features/cargos/interfaces/types";
+import { cargosService } from "../features/cargos/services/cargosService";
+import { ApiError } from "../lib/apiError";
 import { renderApp } from "../test/render";
 
-vi.mock("../cargos/cargosApi", () => ({
-    cargosApi: {
+vi.mock("../features/cargos/services/cargosService", () => ({
+    cargosService: {
         listar: vi.fn(),
         listarActivos: vi.fn(),
         crear: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock("../cargos/cargosApi", () => ({
     },
 }));
 
-const api = vi.mocked(cargosApi);
+const api = vi.mocked(cargosService);
 
 const COCINERO: Cargo = {
     id: 1,
@@ -31,7 +31,12 @@ const MESERO: Cargo = {
     is_active: false,
 };
 
-const RUTA = "/configuracion/cargos";
+/** Abre Configuración y selecciona la pestaña de cargos. */
+async function abrirCargos() {
+    const utils = renderApp({ ruta: "/configuracion" });
+    await utils.user.click(screen.getByRole("tab", { name: "Cargos" }));
+    return utils;
+}
 
 async function esperarListado() {
     return screen.findByRole("table", { name: "Catálogo de cargos" });
@@ -50,12 +55,12 @@ describe("Parametrización de cargos (HU41)", () => {
 
     describe("CA01 – Consultar cargos", () => {
         it("muestra los cargos registrados con su estado", async () => {
-            renderApp({ ruta: RUTA });
+            await abrirCargos();
 
             await esperarListado();
 
             expect(
-                screen.getByRole("heading", { level: 1, name: "Cargos" }),
+                screen.getByRole("heading", { level: 2, name: "Cargos" }),
             ).toBeInTheDocument();
             expect(within(fila("Cocinero")).getByText("Activo")).toBeInTheDocument();
             expect(within(fila("Mesero")).getByText("Inactivo")).toBeInTheDocument();
@@ -63,7 +68,7 @@ describe("Parametrización de cargos (HU41)", () => {
         });
 
         it("filtra los cargos por estado", async () => {
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             api.listar.mockResolvedValue([MESERO]);
@@ -78,7 +83,7 @@ describe("Parametrización de cargos (HU41)", () => {
         it("informa cuando no hay cargos", async () => {
             api.listar.mockResolvedValue([]);
 
-            renderApp({ ruta: RUTA });
+            await abrirCargos();
 
             expect(await screen.findByText("No hay cargos para mostrar.")).toBeInTheDocument();
         });
@@ -87,7 +92,7 @@ describe("Parametrización de cargos (HU41)", () => {
             api.listar.mockRejectedValueOnce(
                 new ApiError(0, "No fue posible conectar con el servidor. Intenta de nuevo."),
             );
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
 
             const alerta = await screen.findByRole("alert");
             expect(alerta).toHaveTextContent("No fue posible conectar con el servidor");
@@ -98,9 +103,9 @@ describe("Parametrización de cargos (HU41)", () => {
             expect(api.listar).toHaveBeenCalledTimes(2);
         });
 
-        it("bloquea el acceso a usuarios no administradores", () => {
-            renderApp({
-                ruta: RUTA,
+        it("bloquea el acceso a usuarios no administradores", async () => {
+            const { router } = renderApp({
+                ruta: "/configuracion",
                 sesion: {
                     user: { id: "u-2", nombre: "Laura Gómez", rol: "supervisor" },
                     lastModule: null,
@@ -108,9 +113,8 @@ describe("Parametrización de cargos (HU41)", () => {
                 },
             });
 
-            expect(
-                screen.getByText("No tienes permisos para administrar el catálogo de cargos."),
-            ).toBeInTheDocument();
+            await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+            expect(screen.queryByRole("tab", { name: "Cargos" })).not.toBeInTheDocument();
             expect(api.listar).not.toHaveBeenCalled();
         });
     });
@@ -118,7 +122,7 @@ describe("Parametrización de cargos (HU41)", () => {
     describe("CA02 / CA05 / CA08 – Registrar cargo", () => {
         it("registra un cargo, confirma la operación y refresca el listado", async () => {
             api.crear.mockResolvedValue({ id: 3, name: "Cajero", description: null, is_active: true });
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Nuevo cargo" }));
@@ -138,7 +142,7 @@ describe("Parametrización de cargos (HU41)", () => {
         });
 
         it("exige el nombre del cargo", async () => {
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Nuevo cargo" }));
@@ -154,7 +158,7 @@ describe("Parametrización de cargos (HU41)", () => {
             api.crear.mockRejectedValue(
                 new ApiError(409, 'Ya existe un cargo con el nombre "Cocinero".'),
             );
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Nuevo cargo" }));
@@ -169,7 +173,7 @@ describe("Parametrización de cargos (HU41)", () => {
 
         it("muestra los errores inesperados sin cerrar el formulario", async () => {
             api.crear.mockRejectedValue(new ApiError(500, "Internal server error"));
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Nuevo cargo" }));
@@ -184,7 +188,7 @@ describe("Parametrización de cargos (HU41)", () => {
         });
 
         it("cierra el formulario con Escape sin registrar", async () => {
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Nuevo cargo" }));
@@ -198,7 +202,7 @@ describe("Parametrización de cargos (HU41)", () => {
     describe("CA03 – Actualizar cargo", () => {
         it("muestra la información actual y guarda los cambios", async () => {
             api.actualizar.mockResolvedValue({ ...COCINERO, name: "Jefe de cocina" });
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Actualizar Cocinero" }));
@@ -225,7 +229,7 @@ describe("Parametrización de cargos (HU41)", () => {
     describe("CA04 / CA08 – Desactivar cargo", () => {
         it("solicita confirmación antes de desactivar", async () => {
             api.desactivar.mockResolvedValue(undefined);
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Desactivar Cocinero" }));
@@ -243,7 +247,7 @@ describe("Parametrización de cargos (HU41)", () => {
         });
 
         it("no desactiva cuando el administrador cancela", async () => {
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Desactivar Cocinero" }));
@@ -260,7 +264,7 @@ describe("Parametrización de cargos (HU41)", () => {
                     "No se puede desactivar el cargo porque tiene empleados o registros históricos asociados.",
                 ),
             );
-            const { user } = renderApp({ ruta: RUTA });
+            const { user } = await abrirCargos();
             await esperarListado();
 
             await user.click(screen.getByRole("button", { name: "Desactivar Cocinero" }));
@@ -277,7 +281,7 @@ describe("Parametrización de cargos (HU41)", () => {
         });
 
         it("no ofrece desactivar un cargo que ya está inactivo", async () => {
-            renderApp({ ruta: RUTA });
+            await abrirCargos();
             await esperarListado();
 
             expect(
@@ -289,13 +293,11 @@ describe("Parametrización de cargos (HU41)", () => {
         });
     });
 
-    it("se accede desde el módulo de Configuración", async () => {
-        const { user, router } = renderApp({ ruta: "/configuracion" });
+    it("se accede desde una pestaña del módulo de Configuración", async () => {
+        await abrirCargos();
 
-        await user.click(screen.getByRole("link", { name: /Cargos/ }));
-
-        expect(router.state.location.pathname).toBe(RUTA);
         await esperarListado();
+        expect(screen.getByRole("tab", { name: "Cargos", selected: true })).toBeInTheDocument();
         expect(
             screen.getByRole("link", { name: "Configuración", current: "page" }),
         ).toBeInTheDocument();

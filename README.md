@@ -92,8 +92,8 @@ src/__tests__/
 - La conexión a Supabase se configura con `VITE_SUPABASE_URL` y
   `VITE_SUPABASE_ANON_KEY` en un archivo `.env` en la raíz. Ver
   `src/supabase/client.ts`.
-- La URL del backend (sisgal-core-service) se configura con `VITE_API_URL`
-  (por defecto `http://localhost:3000`). Ver `src/api/http.ts`.
+- La URL del backend (sisgal-core-service) se configura con `VITE_API_URL`.
+  Ver `src/lib/axios.ts`.
 
 Para endurecer el linter con reglas que requieren tipos, ver la
 [guía de configuración type-aware de typescript-eslint](https://typescript-eslint.io/getting-started/typed-linting/).
