@@ -5,13 +5,15 @@ import { FloatingInput } from "@/components/molecules/FloatingInput"
 import { FloatingSelect } from "@/components/molecules/FloatingSelect"
 
 import { useRegisterEmployee } from "../hooks/useRegisterEmployee"
+import { useActivePositions } from "../hooks/useActivePositions"
+import { useActiveBranches } from "../hooks/useActiveBranches"
 import {
   validateEmployeeForm,
   EMPTY_EMPLOYEE_FORM,
   type EmployeeFormValues,
   type EmployeeFormErrors,
 } from "../validation/validateEmployeeForm"
-import { DOCUMENT_TYPES, POSITIONS, DEMO_BRANCHES, FIELD_LIMITS } from "../constants/employee"
+import { DOCUMENT_TYPES, FIELD_LIMITS } from "../constants/employee"
 import type { RegisterEmployeePayload } from "../interfaces/types"
 
 type EmployeeFormProps = {
@@ -27,6 +29,9 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
     setErrors({})
     onSuccess()
   })
+
+  const { positions, cargando: cargandoCargos } = useActivePositions()
+  const { branches, cargando: cargandoSucursales } = useActiveBranches()
 
   function handleChange<K extends keyof EmployeeFormValues>(campo: K, valor: string) {
     setValues((prev) => ({ ...prev, [campo]: valor }))
@@ -146,13 +151,15 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
             value={values.position}
             onChange={(e) => handleChange("position", e.target.value)}
             onBlur={() => handleBlur("position")}
-            disabled={enviando}
+            disabled={enviando || cargandoCargos}
             error={errors.position}
           >
-            <option value="">Selecciona…</option>
-            {POSITIONS.map((cargo) => (
-              <option key={cargo} value={cargo}>
-                {cargo}
+            <option value="">
+              {cargandoCargos ? "Cargando cargos…" : "Selecciona…"}
+            </option>
+            {positions.map((cargo) => (
+              <option key={cargo.id} value={cargo.name}>
+                {cargo.name}
               </option>
             ))}
           </FloatingSelect>
@@ -163,11 +170,13 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
             value={values.branchId}
             onChange={(e) => handleChange("branchId", e.target.value)}
             onBlur={() => handleBlur("branchId")}
-            disabled={enviando}
+            disabled={enviando || cargandoSucursales}
             error={errors.branchId}
           >
-            <option value="">Selecciona…</option>
-            {DEMO_BRANCHES.map((sucursal) => (
+            <option value="">
+              {cargandoSucursales ? "Cargando sucursales…" : "Selecciona…"}
+            </option>
+            {branches.map((sucursal) => (
               <option key={sucursal.id} value={sucursal.id}>
                 {sucursal.name}
               </option>
