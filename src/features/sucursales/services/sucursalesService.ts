@@ -1,59 +1,54 @@
-import apiClient from '@/lib/axios';
+import apiClient from "@/lib/axios";
 
-import type { Sucursal, SucursalPayload } from '../interfaces/types';
+import type {
+    Sucursal,
+    SucursalCreatePayload,
+    SucursalUpdatePayload,
+} from "../interfaces/types";
 
 export const sucursalesService = {
-  async list(soloActivas?: boolean): Promise<Sucursal[]> {
-    const params =
-      soloActivas === undefined
-        ? undefined
-        : { activas: soloActivas };
+    async list(soloActivas?: boolean): Promise<Sucursal[]> {
+        const params =
+            soloActivas === undefined ? undefined : { activas: soloActivas };
 
-    const { data } = await apiClient.get<Sucursal[]>('/sucursales', {
-      params,
-    });
+        const { data } = await apiClient.get<Sucursal[]>("/sucursales", {
+            params,
+        });
 
-    return data;
-  },
+        return data;
+    },
 
-  async listActive(): Promise<Sucursal[]> {
-    const { data } = await apiClient.get<Sucursal[]>(
-      '/sucursales/activas',
-    );
+    async listActive(): Promise<Sucursal[]> {
+        const { data } = await apiClient.get<Sucursal[]>("/sucursales/activas");
 
-    return data;
-  },
+        return data;
+    },
 
-  async getById(id: string): Promise<Sucursal> {
-    const { data } = await apiClient.get<Sucursal>(
-      `/sucursales/${id}`,
-    );
+    async getById(id: string): Promise<Sucursal> {
+        const { data } = await apiClient.get<Sucursal>(`/sucursales/${id}`);
 
-    return data;
-  },
+        return data;
+    },
 
-  async create(payload: SucursalPayload): Promise<Sucursal> {
-    const { data } = await apiClient.post<Sucursal>(
-      '/sucursales',
-      payload,
-    );
+    async create(payload: SucursalCreatePayload): Promise<Sucursal> {
+        const { data } = await apiClient.post<Sucursal>("/sucursales", payload);
 
-    return data;
-  },
+        return data;
+    },
 
-  async update(
-    id: string,
-    payload: Partial<SucursalPayload>,
-  ): Promise<Sucursal> {
-    const { data } = await apiClient.patch<Sucursal>(
-      `/sucursales/${id}`,
-      payload,
-    );
+    async update(
+        id: string,
+        payload: SucursalUpdatePayload,
+    ): Promise<Sucursal> {
+        const { data } = await apiClient.patch<Sucursal>(
+            `/sucursales/${id}`,
+            payload,
+        );
 
-    return data;
-  },
+        return data;
+    },
 
-  async remove(id: string): Promise<void> {
-    await apiClient.delete(`/sucursales/${id}`);
-  },
+    async remove(id: string): Promise<void> {
+        await apiClient.delete(`/sucursales/${id}`);
+    },
 };

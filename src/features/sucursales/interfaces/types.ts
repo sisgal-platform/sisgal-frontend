@@ -1,12 +1,20 @@
 export type Sucursal = {
     id: number;
     name: string;
-    city: string;
-    phone: string;
     address: string;
+    phone: string;
+    city: string;
     is_active: boolean;
     companyId: number;
-    companyName: string;
+    createdAt?: string;
 };
 
-export type SucursalPayload = Omit<Sucursal, "id" | "createdAt">;
+export type SucursalCreatePayload = {
+    nombre: string;
+    direccion: string;
+    telefono: string;
+    ciudad: string;
+    companyId: number;
+};
+
+export type SucursalUpdatePayload = Partial<SucursalCreatePayload>;
