@@ -26,6 +26,6 @@ export type RegisterEmployeePayload = {
   documentNumber: string
   phone: string
   salaryBase: number
-  position: string
+  positionId: number
   branchId: number
 }

@@ -17,5 +17,4 @@ export const FIELD_LIMITS = {
   lastName: 40,
   documentNumber: 40,
   phone: 20,
-  position: 40,
 } as const

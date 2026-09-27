@@ -7,7 +7,7 @@ export type EmployeeFormValues = {
   documentNumber: string
   phone: string
   salaryBase: string
-  position: string
+  positionId: string
   branchId: string
 }
 
@@ -62,10 +62,11 @@ export function validateEmployeeForm(values: EmployeeFormValues): EmployeeFormEr
     errors.salaryBase = "El salario debe ser mayor que cero."
   }
 
-  if (!values.position.trim()) {
-    errors.position = "Selecciona el cargo."
-  } else if (values.position.length > FIELD_LIMITS.position) {
-    errors.position = `Máximo ${FIELD_LIMITS.position} caracteres.`
+  const positionId = Number(values.positionId)
+  if (!values.positionId.trim()) {
+    errors.positionId = "Selecciona el cargo."
+  } else if (!Number.isInteger(positionId) || positionId < 1) {
+    errors.positionId = "Selecciona un cargo válido."
   }
 
   const branchId = Number(values.branchId)
@@ -85,6 +86,6 @@ export const EMPTY_EMPLOYEE_FORM: EmployeeFormValues = {
   documentNumber: "",
   phone: "",
   salaryBase: "",
-  position: "",
+  positionId: "",
   branchId: "",
 }

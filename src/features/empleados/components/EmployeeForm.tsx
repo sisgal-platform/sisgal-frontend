@@ -59,7 +59,7 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
       documentNumber: values.documentNumber.trim(),
       phone: values.phone.trim(),
       salaryBase: Number(values.salaryBase),
-      position: values.position,
+      positionId: Number(values.positionId),
       branchId: Number(values.branchId),
     }
 
@@ -148,17 +148,17 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
           <FloatingSelect
             label="Cargo"
             required
-            value={values.position}
-            onChange={(e) => handleChange("position", e.target.value)}
-            onBlur={() => handleBlur("position")}
+            value={values.positionId}
+            onChange={(e) => handleChange("positionId", e.target.value)}
+            onBlur={() => handleBlur("positionId")}
             disabled={enviando || cargandoCargos}
-            error={errors.position}
+            error={errors.positionId}
           >
             <option value="">
               {cargandoCargos ? "Cargando cargos…" : "Selecciona…"}
             </option>
             {positions.map((cargo) => (
-              <option key={cargo.id} value={cargo.name}>
+              <option key={cargo.id} value={cargo.id}>
                 {cargo.name}
               </option>
             ))}
