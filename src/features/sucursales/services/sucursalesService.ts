@@ -1,29 +1,54 @@
-import apiClient from '@/lib/axios'
+import apiClient from "@/lib/axios";
 
-import type { Sucursal, SucursalPayload } from '../interfaces/types'
+import type {
+    Sucursal,
+    SucursalCreatePayload,
+    SucursalUpdatePayload,
+} from "../interfaces/types";
 
 export const sucursalesService = {
-  async list(): Promise<Sucursal[]> {
-    const { data } = await apiClient.get<Sucursal[]>('/sucursales')
-    return data
-  },
+    async list(soloActivas?: boolean): Promise<Sucursal[]> {
+        const params =
+            soloActivas === undefined ? undefined : { activas: soloActivas };
 
-  async getById(id: string): Promise<Sucursal> {
-    const { data } = await apiClient.get<Sucursal>(`/sucursales/${id}`)
-    return data
-  },
+        const { data } = await apiClient.get<Sucursal[]>("/sucursales", {
+            params,
+        });
 
-  async create(payload: SucursalPayload): Promise<Sucursal> {
-    const { data } = await apiClient.post<Sucursal>('/sucursales', payload)
-    return data
-  },
+        return data;
+    },
 
-  async update(id: string, payload: Partial<SucursalPayload>): Promise<Sucursal> {
-    const { data } = await apiClient.put<Sucursal>(`/sucursales/${id}`, payload)
-    return data
-  },
+    async listActive(): Promise<Sucursal[]> {
+        const { data } = await apiClient.get<Sucursal[]>("/sucursales/activas");
 
-  async remove(id: string): Promise<void> {
-    await apiClient.delete(`/sucursales/${id}`)
-  },
-}
+        return data;
+    },
+
+    async getById(id: string): Promise<Sucursal> {
+        const { data } = await apiClient.get<Sucursal>(`/sucursales/${id}`);
+
+        return data;
+    },
+
+    async create(payload: SucursalCreatePayload): Promise<Sucursal> {
+        const { data } = await apiClient.post<Sucursal>("/sucursales", payload);
+
+        return data;
+    },
+
+    async update(
+        id: string,
+        payload: SucursalUpdatePayload,
+    ): Promise<Sucursal> {
+        const { data } = await apiClient.patch<Sucursal>(
+            `/sucursales/${id}`,
+            payload,
+        );
+
+        return data;
+    },
+
+    async remove(id: string): Promise<void> {
+        await apiClient.delete(`/sucursales/${id}`);
+    },
+};

@@ -1,43 +1,124 @@
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SectionHeader } from "@/components/atoms/SectionHeader";
+import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { SectionHeader } from "@/components/atoms/SectionHeader";
+import { useToast } from "@/toast/hooks/useToast";
+
+import { CreateSucursalDialog } from "./components/CreateSucursalDialog";
+import { InactivateSucursalDialog } from "./components/InactivateSucursalDialog";
 import { SucursalTable } from "./components/SucursalTable";
+import { useSucursales } from "./hooks/useSucursales";
+import { sucursalesService } from "./services/sucursalesService";
+
+import type { Sucursal } from "./interfaces/types";
 
 export function SucursalesFeature() {
+    const { sucursales, loading, error, reload } = useSucursales();
+
+    const { showToast } = useToast();
+
+    const [selectedSucursal, setSelectedSucursal] = useState<Sucursal | null>(
+        null,
+    );
+
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(
+        null,
+    );
+    const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+
+    const handleDeleteRequest = (sucursal: Sucursal) => {
+        setSelectedSucursal(sucursal);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async (id: number | string) => {
+        await sucursalesService.remove(String(id));
+
+        await reload();
+
+        showToast("Sucursal inactivada correctamente.", "success");
+
+        setIsDeleteDialogOpen(false);
+        setSelectedSucursal(null);
+    };
+
+    const handleEditRequest = (sucursal: Sucursal) => {
+        setEditingSucursal(sucursal);
+        setDialogMode("edit");
+        setIsCreateDialogOpen(true);
+    };
+
+    const handleSucursalCreated = async () => {
+        await reload();
+        showToast("Sucursal creada correctamente.", "success");
+    };
+
+    const handleSucursalUpdated = async () => {
+        await reload();
+        showToast("Sucursal actualizada correctamente.", "success");
+    };
+
+    if (loading) {
+        return <div>Cargando sucursales...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <section className="space-y-6">
             <div className="flex items-start justify-between gap-4">
-                <SectionHeader
-                    eyebrow="Configuración"
-                    title="Sucursales"
-                    description="Administración de sedes, estados y configuración de cada sucursal."
-                />
+                <SectionHeader title="Sucursales" />
 
-                <Button type="button" variant="default">
+                <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => {
+                        setDialogMode("create");
+                        setEditingSucursal(null);
+                        setIsCreateDialogOpen(true);
+                    }}
+                >
                     Nueva sucursal
                 </Button>
             </div>
 
-            <Tabs defaultValue="listado" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="listado">Listado</TabsTrigger>
-                    <TabsTrigger value="configuracion">
-                        Configuración
-                    </TabsTrigger>
-                </TabsList>
+            <SucursalTable
+                sucursales={sucursales}
+                onDelete={handleDeleteRequest}
+                onEdit={handleEditRequest}
+            />
 
-                <TabsContent value="listado" className="pt-4">
-                    <SucursalTable />
-                </TabsContent>
+            <InactivateSucursalDialog
+                sucursal={selectedSucursal}
+                open={isDeleteDialogOpen}
+                onOpenChange={(nextOpen) => {
+                    setIsDeleteDialogOpen(nextOpen);
 
-                <TabsContent value="configuracion" className="pt-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                        Aquí se gestionará la configuración general de cada
-                        sucursal.
-                    </div>
-                </TabsContent>
-            </Tabs>
+                    if (!nextOpen) {
+                        setSelectedSucursal(null);
+                    }
+                }}
+                onConfirm={handleDeleteConfirm}
+            />
+
+            <CreateSucursalDialog
+                open={isCreateDialogOpen}
+                mode={dialogMode}
+                sucursal={editingSucursal}
+                onOpenChange={(nextOpen) => {
+                    setIsCreateDialogOpen(nextOpen);
+                    if (!nextOpen) {
+                        setEditingSucursal(null);
+                        setDialogMode("create");
+                    }
+                }}
+                onCreated={handleSucursalCreated}
+                onUpdated={handleSucursalUpdated}
+            />
         </section>
     );
 }
