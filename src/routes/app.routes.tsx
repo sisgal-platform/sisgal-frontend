@@ -9,9 +9,9 @@ import { LoginPage } from "@/pages/login/LoginPage";
 import { NotFoundPage } from "@/pages/not-found/NotFoundPage";
 
 import { ConfiguracionPage } from "@/pages/configuracion/ConfiguracionPage";
+import { PersonalPage } from "@/pages/personal/PersonalPage";
 // import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
 // import { NominaPage } from "@/pages/nomina/NominaPage";
-// import { PersonalPage } from "@/pages/personal/PersonalPage";
 // etc.
 
 export const routes: RouteObject[] = [
@@ -33,6 +33,10 @@ export const routes: RouteObject[] = [
                         path: "configuracion",
                         element: <ConfiguracionPage />,
                     },
+                    {
+                        path: "personal",
+                        element: <PersonalPage />,
+                    },
                     /*
                     {
                         path: "asistencia",
@@ -41,10 +45,6 @@ export const routes: RouteObject[] = [
                     {
                         path: "nomina",
                         element: <NominaPage />,
-                    },
-                    {
-                        path: "personal",
-                        element: <PersonalPage />,
                     },
                     */
                     {
