@@ -10,7 +10,7 @@ import { SucursalTable } from "./components/SucursalTable";
 import { useSucursales } from "./hooks/useSucursales";
 import { sucursalesService } from "./services/sucursalesService";
 
-import type { Sucursal, SucursalCreatePayload } from "./interfaces/types";
+import type { Sucursal } from "./interfaces/types";
 
 export function SucursalesFeature() {
     const { sucursales, loading, error, reload } = useSucursales();
@@ -22,8 +22,11 @@ export function SucursalesFeature() {
     );
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(
+        null,
+    );
+    const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
 
     const handleDeleteRequest = (sucursal: Sucursal) => {
         setSelectedSucursal(sucursal);
@@ -41,9 +44,20 @@ export function SucursalesFeature() {
         setSelectedSucursal(null);
     };
 
+    const handleEditRequest = (sucursal: Sucursal) => {
+        setEditingSucursal(sucursal);
+        setDialogMode("edit");
+        setIsCreateDialogOpen(true);
+    };
+
     const handleSucursalCreated = async () => {
         await reload();
         showToast("Sucursal creada correctamente.", "success");
+    };
+
+    const handleSucursalUpdated = async () => {
+        await reload();
+        showToast("Sucursal actualizada correctamente.", "success");
     };
 
     if (loading) {
@@ -62,7 +76,11 @@ export function SucursalesFeature() {
                 <Button
                     type="button"
                     variant="default"
-                    onClick={() => setIsCreateDialogOpen(true)}
+                    onClick={() => {
+                        setDialogMode("create");
+                        setEditingSucursal(null);
+                        setIsCreateDialogOpen(true);
+                    }}
                 >
                     Nueva sucursal
                 </Button>
@@ -71,6 +89,7 @@ export function SucursalesFeature() {
             <SucursalTable
                 sucursales={sucursales}
                 onDelete={handleDeleteRequest}
+                onEdit={handleEditRequest}
             />
 
             <InactivateSucursalDialog
@@ -88,8 +107,17 @@ export function SucursalesFeature() {
 
             <CreateSucursalDialog
                 open={isCreateDialogOpen}
-                onOpenChange={setIsCreateDialogOpen}
+                mode={dialogMode}
+                sucursal={editingSucursal}
+                onOpenChange={(nextOpen) => {
+                    setIsCreateDialogOpen(nextOpen);
+                    if (!nextOpen) {
+                        setEditingSucursal(null);
+                        setDialogMode("create");
+                    }
+                }}
                 onCreated={handleSucursalCreated}
+                onUpdated={handleSucursalUpdated}
             />
         </section>
     );

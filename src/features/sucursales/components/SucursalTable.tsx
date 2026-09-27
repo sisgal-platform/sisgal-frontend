@@ -7,9 +7,14 @@ import { Pencil, Trash2 } from "lucide-react";
 interface SucursalTableProps {
     sucursales: Sucursal[];
     onDelete: (sucursal: Sucursal) => void;
+    onEdit: (sucursal: Sucursal) => void;
 }
 
-export function SucursalTable({ sucursales, onDelete }: SucursalTableProps) {
+export function SucursalTable({
+    sucursales,
+    onDelete,
+    onEdit,
+}: SucursalTableProps) {
     return (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
@@ -64,6 +69,7 @@ export function SucursalTable({ sucursales, onDelete }: SucursalTableProps) {
                                             aria-label={`Editar ${sucursal.name}`}
                                             title={`Editar ${sucursal.name}`}
                                             className="text-text-muted hover:bg-primary/10 hover:text-primary"
+                                            onClick={() => onEdit(sucursal)}
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </Button>

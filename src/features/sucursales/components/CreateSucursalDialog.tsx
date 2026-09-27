@@ -2,7 +2,6 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -11,8 +10,10 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { sucursalesService } from "../services/sucursalesService";
 import { Button } from "@/components/ui/button";
+
+import { sucursalesService } from "../services/sucursalesService";
+import type { Sucursal } from "../interfaces/types";
 
 export type CreateSucursalPayload = {
     nombre: string;
@@ -24,8 +25,11 @@ export type CreateSucursalPayload = {
 
 type CreateSucursalDialogProps = {
     open: boolean;
+    mode?: "create" | "edit";
+    sucursal?: Sucursal | null;
     onOpenChange: (open: boolean) => void;
     onCreated?: () => void;
+    onUpdated?: () => void;
 };
 
 const initialForm = {
@@ -37,8 +41,11 @@ const initialForm = {
 
 export function CreateSucursalDialog({
     open,
+    mode = "create",
+    sucursal = null,
     onOpenChange,
     onCreated,
+    onUpdated,
 }: CreateSucursalDialogProps) {
     const [form, setForm] = useState(initialForm);
     const [error, setError] = useState<string | null>(null);
@@ -49,8 +56,23 @@ export function CreateSucursalDialog({
             setForm(initialForm);
             setError(null);
             setIsSubmitting(false);
+            return;
         }
-    }, [open]);
+
+        if (mode === "edit" && sucursal) {
+            setForm({
+                nombre: sucursal.name ?? "",
+                direccion: sucursal.address ?? "",
+                telefono: sucursal.phone ?? "",
+                ciudad: sucursal.city ?? "",
+            });
+            return;
+        }
+
+        setForm(initialForm);
+        setError(null);
+        setIsSubmitting(false);
+    }, [open, mode, sucursal]);
 
     const handleChange =
         (field: keyof typeof initialForm) =>
@@ -80,19 +102,33 @@ export function CreateSucursalDialog({
             setError(null);
             setIsSubmitting(true);
 
-            await sucursalesService.create({
+            const payload: CreateSucursalPayload = {
                 nombre,
                 direccion,
                 telefono,
                 ciudad,
                 companyId: 1,
-            });
+            };
 
-            onCreated?.();
+            if (mode === "edit" && sucursal) {
+                await sucursalesService.update(String(sucursal.id), payload);
+                onUpdated?.();
+            } else {
+                await sucursalesService.create(payload);
+                onCreated?.();
+            }
+
             onOpenChange(false);
         } catch (submitError) {
-            console.error("Error al crear la sucursal:", submitError);
-            setError("No fue posible crear la sucursal. Inténtalo nuevamente.");
+            console.error(
+                `Error al ${mode === "edit" ? "actualizar" : "crear"} la sucursal:`,
+                submitError,
+            );
+            setError(
+                mode === "edit"
+                    ? "No fue posible actualizar la sucursal. Inténtalo nuevamente."
+                    : "No fue posible crear la sucursal. Inténtalo nuevamente.",
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -109,11 +145,14 @@ export function CreateSucursalDialog({
         >
             <AlertDialogContent className="max-w-xl">
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Nueva sucursal</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        {mode === "edit" ? "Editar sucursal" : "Nueva sucursal"}
+                    </AlertDialogTitle>
 
                     <AlertDialogDescription>
-                        Completa los datos de la nueva sucursal. La compañía se
-                        asigna automáticamente.
+                        {mode === "edit"
+                            ? "Actualiza la información de esta sucursal."
+                            : "Completa los datos de la nueva sucursal. La compañía se asigna automáticamente."}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -182,10 +221,13 @@ export function CreateSucursalDialog({
                         </AlertDialogCancel>
 
                         <Button type="submit" disabled={isSubmitting}>
-                            {" "}
                             {isSubmitting
-                                ? "Creando..."
-                                : "Crear sucursal"}{" "}
+                                ? mode === "edit"
+                                    ? "Guardando..."
+                                    : "Creando..."
+                                : mode === "edit"
+                                  ? "Guardar cambios"
+                                  : "Crear sucursal"}
                         </Button>
                     </AlertDialogFooter>
                 </form>
