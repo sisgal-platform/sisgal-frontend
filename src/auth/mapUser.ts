@@ -12,11 +12,16 @@ export function mapSupabaseUser(user: User): SessionUser {
         typeof value === 'string' && value.length > 0,
     ) as string | undefined) ?? ''
 
-  const role = user.app_metadata?.role
-
   return {
     id: user.id,
     nombre,
-    rol: role,
+    rol: mapRole(user.app_metadata?.role),
   }
+}
+
+/** El backend y Supabase usan el rol en mayúsculas (`ADMINISTRADOR`); la UI en minúsculas. */
+function mapRole(role: unknown): SessionUser['rol'] {
+  if (role === 'ADMINISTRADOR') return 'administrador'
+  if (role === 'SUPERVISOR') return 'supervisor'
+  return 'empleado'
 }
