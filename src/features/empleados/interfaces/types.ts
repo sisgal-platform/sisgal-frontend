@@ -13,6 +13,15 @@ export type Employee = {
   status: string
   branchId: number | null
   positionId: number | null
+  branchName: string | null
+  positionName: string | null
+}
+
+/** Filtros opcionales del listado. Se envían como query params. */
+export type EmployeeListFilters = {
+  search?: string
+  branchId?: number
+  positionId?: number
 }
 
 /**

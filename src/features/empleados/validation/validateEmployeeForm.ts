@@ -16,7 +16,7 @@ export type EmployeeFormErrors = Partial<Record<keyof EmployeeFormValues, string
 const SOLO_DIGITOS = /^\d+$/
 
 /**
- * Reglas puras del formulario de registro de empleados (CA04, CA05, UI/UX).
+ * Reglas puras del formulario de registro de empleados.
  * Espejo de las validaciones del backend (RegisterEmployeeDto + value objects),
  * para dar feedback inmediato antes de llamar a la API.
  */
