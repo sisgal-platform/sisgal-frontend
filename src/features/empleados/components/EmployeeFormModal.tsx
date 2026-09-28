@@ -11,12 +11,17 @@ import {
 
 import { EmployeeForm } from "./EmployeeForm"
 
+type EmployeeFormModalProps = {
+  /** Se ejecuta además de cerrar el modal, por ejemplo para refrescar la tabla. */
+  onSuccess?: () => void
+}
+
 /**
  * Botón "Registrar empleado" + modal con el formulario.
  * El scroll queda dentro del modal (DialogContent) para que el formulario
  * no desborde la pantalla en dispositivos pequeños.
  */
-export function EmployeeFormModal() {
+export function EmployeeFormModal({ onSuccess }: EmployeeFormModalProps = {}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -32,7 +37,12 @@ export function EmployeeFormModal() {
           <DialogTitle>Agregar nuevo empleado</DialogTitle>
         </DialogHeader>
 
-        <EmployeeForm onSuccess={() => setOpen(false)} />
+        <EmployeeForm
+          onSuccess={() => {
+            setOpen(false)
+            onSuccess?.()
+          }}
+        />
       </DialogContent>
     </Dialog>
   )

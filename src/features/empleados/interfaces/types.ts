@@ -13,6 +13,31 @@ export type Employee = {
   status: string
   branchId: number | null
   positionId: number | null
+  branchName: string | null
+  positionName: string | null
+}
+
+/** Filtros opcionales del listado. Se envían como query params. */
+export type EmployeeListFilters = {
+  search?: string
+  branchId?: number
+  positionId?: number
+  status?: 'ACTIVO' | 'INACTIVO'
+}
+
+/**
+ * Espejo exacto de UpdateEmployeeDto (backend). Si se envía branchId, el
+ * backend cierra la asignación de sucursal vigente y abre una nueva.
+ */
+export type UpdateEmployeePayload = {
+  firstName?: string
+  lastName?: string
+  documentType?: DocumentType
+  documentNumber?: string
+  phone?: string
+  salaryBase?: number
+  positionId?: number
+  branchId?: number
 }
 
 /**

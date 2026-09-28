@@ -115,6 +115,8 @@ describe("EmployeeForm", () => {
       status: "ACTIVO",
       branchId: 3,
       positionId: 4,
+      branchName: "Sucursal Centro",
+      positionName: "Mesero",
     })
 
     const { user, onSuccess } = renderFormulario()

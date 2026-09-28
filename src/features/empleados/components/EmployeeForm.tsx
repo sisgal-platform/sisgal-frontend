@@ -5,6 +5,7 @@ import { FloatingInput } from "@/components/molecules/FloatingInput"
 import { FloatingSelect } from "@/components/molecules/FloatingSelect"
 
 import { useRegisterEmployee } from "../hooks/useRegisterEmployee"
+import { useUpdateEmployee } from "../hooks/useUpdateEmployee"
 import { useActivePositions } from "../hooks/useActivePositions"
 import { useActiveBranches } from "../hooks/useActiveBranches"
 import {
@@ -14,21 +15,43 @@ import {
   type EmployeeFormErrors,
 } from "../validation/validateEmployeeForm"
 import { DOCUMENT_TYPES, FIELD_LIMITS } from "../constants/employee"
-import type { RegisterEmployeePayload } from "../interfaces/types"
+import type { Employee, RegisterEmployeePayload, UpdateEmployeePayload } from "../interfaces/types"
 
 type EmployeeFormProps = {
+  /** Si se recibe, el formulario edita ese empleado en vez de crear uno nuevo. */
+  employee?: Employee
   onSuccess: () => void
 }
 
-export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
-  const [values, setValues] = useState<EmployeeFormValues>(EMPTY_EMPLOYEE_FORM)
+/** Valores iniciales cuando el formulario edita un empleado existente. */
+function valoresDesdeEmpleado(employee: Employee): EmployeeFormValues {
+  return {
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    documentType: employee.documentType,
+    documentNumber: employee.document,
+    phone: employee.phone,
+    salaryBase: String(employee.salaryBase),
+    positionId: employee.positionId ? String(employee.positionId) : "",
+    branchId: employee.branchId ? String(employee.branchId) : "",
+  }
+}
+
+export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
+  const esEdicion = employee !== undefined
+
+  const [values, setValues] = useState<EmployeeFormValues>(() =>
+    employee ? valoresDesdeEmpleado(employee) : EMPTY_EMPLOYEE_FORM,
+  )
   const [errors, setErrors] = useState<EmployeeFormErrors>({})
 
-  const { registerEmployee, enviando } = useRegisterEmployee(() => {
+  const { registerEmployee, enviando: creando } = useRegisterEmployee(() => {
     setValues(EMPTY_EMPLOYEE_FORM)
     setErrors({})
     onSuccess()
   })
+  const { updateEmployee, enviando: actualizando } = useUpdateEmployee(onSuccess)
+  const enviando = creando || actualizando
 
   const { positions, cargando: cargandoCargos } = useActivePositions()
   const { branches, cargando: cargandoSucursales } = useActiveBranches()
@@ -51,6 +74,21 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
     setErrors(erroresValidacion)
 
     if (Object.keys(erroresValidacion).length > 0) {
+      return
+    }
+
+    if (esEdicion && employee) {
+      const payload: UpdateEmployeePayload = {
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        documentType: values.documentType as UpdateEmployeePayload["documentType"],
+        documentNumber: values.documentNumber.trim(),
+        phone: values.phone.trim(),
+        salaryBase: Number(values.salaryBase),
+        positionId: Number(values.positionId),
+        branchId: Number(values.branchId),
+      }
+      await updateEmployee(employee.id, payload)
       return
     }
 
@@ -215,7 +253,13 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button type="submit" disabled={enviando} className="bg-primary hover:bg-primary-light">
-          {enviando ? "Registrando…" : "Registrar empleado"}
+          {enviando
+            ? esEdicion
+              ? "Guardando…"
+              : "Registrando…"
+            : esEdicion
+              ? "Guardar cambios"
+              : "Registrar empleado"}
         </Button>
       </div>
     </form>
