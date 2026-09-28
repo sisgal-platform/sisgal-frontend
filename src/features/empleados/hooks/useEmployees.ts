@@ -23,7 +23,7 @@ export function useEmployees(filters: EmployeeListFilters) {
       setCargando(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.branchId, filters.positionId])
+  }, [filters.search, filters.branchId, filters.positionId, filters.status])
 
   useEffect(() => {
     void cargar()

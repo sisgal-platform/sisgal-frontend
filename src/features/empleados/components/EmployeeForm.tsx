@@ -63,14 +63,14 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
   // Valida solo el campo que perdió el foco, para no mostrar errores de los
   // demás antes de que el usuario haya llegado a ellos.
   function handleBlur(campo: keyof EmployeeFormValues) {
-    const erroresActuales = validateEmployeeForm(values, { requiereSucursal: !esEdicion })
+    const erroresActuales = validateEmployeeForm(values)
     setErrors((prev) => ({ ...prev, [campo]: erroresActuales[campo] }))
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const erroresValidacion = validateEmployeeForm(values, { requiereSucursal: !esEdicion })
+    const erroresValidacion = validateEmployeeForm(values)
     setErrors(erroresValidacion)
 
     if (Object.keys(erroresValidacion).length > 0) {
@@ -78,7 +78,6 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
     }
 
     if (esEdicion && employee) {
-      // La sucursal no se edita por este medio; el resto de los campos sí.
       const payload: UpdateEmployeePayload = {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
@@ -87,6 +86,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
         phone: values.phone.trim(),
         salaryBase: Number(values.salaryBase),
         positionId: Number(values.positionId),
+        branchId: Number(values.branchId),
       }
       await updateEmployee(employee.id, payload)
       return
@@ -212,8 +212,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.branchId}
             onChange={(e) => handleChange("branchId", e.target.value)}
             onBlur={() => handleBlur("branchId")}
-            // La sucursal no se puede reasignar desde este formulario todavía.
-            disabled={enviando || cargandoSucursales || esEdicion}
+            disabled={enviando || cargandoSucursales}
             error={errors.branchId}
           >
             <option value="">

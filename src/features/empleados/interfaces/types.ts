@@ -22,11 +22,12 @@ export type EmployeeListFilters = {
   search?: string
   branchId?: number
   positionId?: number
+  status?: 'ACTIVO' | 'INACTIVO'
 }
 
 /**
- * Espejo exacto de UpdateEmployeeDto (backend). La sucursal no se edita por
- * este medio (implicaría cerrar la asignación vigente y abrir una nueva).
+ * Espejo exacto de UpdateEmployeeDto (backend). Si se envía branchId, el
+ * backend cierra la asignación de sucursal vigente y abre una nueva.
  */
 export type UpdateEmployeePayload = {
   firstName?: string
@@ -36,6 +37,7 @@ export type UpdateEmployeePayload = {
   phone?: string
   salaryBase?: number
   positionId?: number
+  branchId?: number
 }
 
 /**
