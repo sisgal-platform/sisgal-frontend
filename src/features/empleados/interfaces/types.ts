@@ -12,6 +12,7 @@ export type Employee = {
   position: string
   status: string
   branchId: number | null
+  positionId: number | null
 }
 
 /**

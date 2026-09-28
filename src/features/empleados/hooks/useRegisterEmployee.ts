@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useToast } from "@/toast/hooks/useToast";
+import { useToast } from "@/toast";
 import { employeesService } from "../services/employeesService";
 import type { RegisterEmployeePayload } from "../interfaces/types";
 

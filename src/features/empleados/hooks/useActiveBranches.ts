@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { useToast } from "@/toast/hooks/useToast"
+import { useToast } from "@/toast"
 import { sucursalesService } from "@/features/sucursales/services/sucursalesService"
 import type { Sucursal } from "@/features/sucursales/interfaces/types"
 
