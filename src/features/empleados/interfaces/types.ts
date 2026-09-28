@@ -25,6 +25,20 @@ export type EmployeeListFilters = {
 }
 
 /**
+ * Espejo exacto de UpdateEmployeeDto (backend). La sucursal no se edita por
+ * este medio (implicaría cerrar la asignación vigente y abrir una nueva).
+ */
+export type UpdateEmployeePayload = {
+  firstName?: string
+  lastName?: string
+  documentType?: DocumentType
+  documentNumber?: string
+  phone?: string
+  salaryBase?: number
+  positionId?: number
+}
+
+/**
  * Espejo exacto de RegisterEmployeeDto (backend). No se deriva de Employee
  * con Omit porque el campo de documento tiene un nombre distinto en la
  * petición (documentNumber) y en la respuesta (document).

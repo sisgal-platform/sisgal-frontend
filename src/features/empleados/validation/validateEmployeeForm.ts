@@ -13,14 +13,22 @@ export type EmployeeFormValues = {
 
 export type EmployeeFormErrors = Partial<Record<keyof EmployeeFormValues, string>>
 
+export type ValidateEmployeeFormOptions = {
+  /** false cuando el campo de sucursal está deshabilitado (modo edición). */
+  requiereSucursal?: boolean
+}
+
 const SOLO_DIGITOS = /^\d+$/
 
 /**
- * Reglas puras del formulario de registro de empleados.
- * Espejo de las validaciones del backend (RegisterEmployeeDto + value objects),
- * para dar feedback inmediato antes de llamar a la API.
+ * Reglas puras del formulario de registro/edición de empleados.
+ * Espejo de las validaciones del backend (DTOs + value objects), para dar
+ * feedback inmediato antes de llamar a la API.
  */
-export function validateEmployeeForm(values: EmployeeFormValues): EmployeeFormErrors {
+export function validateEmployeeForm(
+  values: EmployeeFormValues,
+  { requiereSucursal = true }: ValidateEmployeeFormOptions = {},
+): EmployeeFormErrors {
   const errors: EmployeeFormErrors = {}
 
   if (!values.firstName.trim()) {
@@ -69,11 +77,13 @@ export function validateEmployeeForm(values: EmployeeFormValues): EmployeeFormEr
     errors.positionId = "Selecciona un cargo válido."
   }
 
-  const branchId = Number(values.branchId)
-  if (!values.branchId.trim()) {
-    errors.branchId = "Selecciona la sucursal."
-  } else if (!Number.isInteger(branchId) || branchId < 1) {
-    errors.branchId = "Selecciona una sucursal válida."
+  if (requiereSucursal) {
+    const branchId = Number(values.branchId)
+    if (!values.branchId.trim()) {
+      errors.branchId = "Selecciona la sucursal."
+    } else if (!Number.isInteger(branchId) || branchId < 1) {
+      errors.branchId = "Selecciona una sucursal válida."
+    }
   }
 
   return errors

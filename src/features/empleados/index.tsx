@@ -4,10 +4,12 @@ import { SectionHeader } from "@/components/atoms/SectionHeader"
 import { useToast } from "@/toast"
 
 import { EmployeeFormModal } from "./components/EmployeeFormModal"
+import { EmployeeEditModal } from "./components/EmployeeEditModal"
 import { EmployeeTable } from "./components/EmployeeTable"
 import { useEmployees } from "./hooks/useEmployees"
 import { useActiveBranches } from "./hooks/useActiveBranches"
 import { useActivePositions } from "./hooks/useActivePositions"
+import type { Employee } from "./interfaces/types"
 
 const EMPLEADOS_POR_PAGINA = 10
 
@@ -18,6 +20,7 @@ export function EmpleadosFeature() {
   const [branchId, setBranchId] = useState<number | undefined>(undefined)
   const [positionId, setPositionId] = useState<number | undefined>(undefined)
   const [pagina, setPagina] = useState(1)
+  const [empleadoEditando, setEmpleadoEditando] = useState<Employee | null>(null)
 
   // Espera a que el usuario deje de escribir antes de consultar al backend
   useEffect(() => {
@@ -108,12 +111,19 @@ export function EmpleadosFeature() {
         cargando={cargando}
         error={error}
         onReintentar={recargar}
-        // TODO: reemplazar por el modal de edición (tarea 424) y PATCH /empleados/:id (428)
-        onEditar={() => showToast("La edición de empleados está en construcción.", "info")}
+        onEditar={setEmpleadoEditando}
         // TODO: reemplazar por el diálogo de confirmación (tarea 425) y el endpoint de desactivar (429)
         onDesactivar={() =>
           showToast("La desactivación de empleados está en construcción.", "info")
         }
+      />
+
+      <EmployeeEditModal
+        employee={empleadoEditando}
+        onOpenChange={(open) => {
+          if (!open) setEmpleadoEditando(null)
+        }}
+        onSuccess={recargar}
       />
 
       {employees.length > EMPLEADOS_POR_PAGINA && (
