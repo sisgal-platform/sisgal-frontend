@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import {
   Dialog,
   DialogContent,
@@ -20,16 +22,28 @@ export function EmployeeEditModal({
   onOpenChange,
   onSuccess,
 }: EmployeeEditModalProps) {
+  // Al seleccionar un empleado se abre primero en modo detalle
+  // (solo lectura); "Actualizar" habilita la edición de los campos.
+  const [modoEdicion, setModoEdicion] = useState(false)
+
+  useEffect(() => {
+    if (employee) setModoEdicion(false)
+  }, [employee])
+
   return (
     <Dialog open={employee !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar empleado</DialogTitle>
+          <DialogTitle>
+            {modoEdicion ? "Editar empleado" : "Detalle del empleado"}
+          </DialogTitle>
         </DialogHeader>
 
         {employee && (
           <EmployeeForm
             employee={employee}
+            soloLectura={!modoEdicion}
+            onSolicitarEdicion={() => setModoEdicion(true)}
             onSuccess={() => {
               onOpenChange(false)
               onSuccess()

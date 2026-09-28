@@ -150,7 +150,7 @@ export function EmpleadosFeature() {
         cargando={cargando}
         error={error}
         onReintentar={recargar}
-        onEditar={setEmpleadoEditando}
+        onVerDetalle={setEmpleadoEditando}
         onDesactivar={handleDesactivarRequest}
       />
 

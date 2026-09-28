@@ -1,4 +1,4 @@
-import { Pencil, Power } from "lucide-react"
+import { Eye, Power } from "lucide-react"
 
 import type { Employee } from "../interfaces/types"
 
@@ -26,7 +26,7 @@ type EmployeeTableProps = {
   cargando: boolean
   error: string | null
   onReintentar: () => void
-  onEditar: (employee: Employee) => void
+  onVerDetalle: (employee: Employee) => void
   onDesactivar: (employee: Employee) => void
 }
 
@@ -35,7 +35,7 @@ export function EmployeeTable({
   cargando,
   error,
   onReintentar,
-  onEditar,
+  onVerDetalle,
   onDesactivar,
 }: EmployeeTableProps) {
   if (error) {
@@ -130,12 +130,12 @@ export function EmployeeTable({
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => onEditar(employee)}
-                      aria-label={`Editar ${employee.firstName} ${employee.lastName}`}
-                      title="Editar"
+                      onClick={() => onVerDetalle(employee)}
+                      aria-label={`Ver detalle de ${employee.firstName} ${employee.lastName}`}
+                      title="Ver detalle"
                       className="flex h-9 w-9 items-center justify-center rounded-lg text-primary hover:bg-secondary"
                     >
-                      <Pencil size={18} aria-hidden="true" />
+                      <Eye size={18} aria-hidden="true" />
                     </button>
                     {employee.status === "ACTIVO" && (
                       <button
