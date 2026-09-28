@@ -5,11 +5,15 @@ import { useToast } from "@/toast"
 
 import { EmployeeFormModal } from "./components/EmployeeFormModal"
 import { EmployeeEditModal } from "./components/EmployeeEditModal"
+import { DeactivateEmployeeDialog } from "./components/DeactivateEmployeeDialog"
 import { EmployeeTable } from "./components/EmployeeTable"
 import { useEmployees } from "./hooks/useEmployees"
 import { useActiveBranches } from "./hooks/useActiveBranches"
 import { useActivePositions } from "./hooks/useActivePositions"
+import { employeesService } from "./services/employeesService"
 import type { Employee } from "./interfaces/types"
+
+type EstadoFiltro = "ACTIVO" | "INACTIVO" | undefined
 
 const EMPLEADOS_POR_PAGINA = 10
 
@@ -19,8 +23,11 @@ export function EmpleadosFeature() {
   const [search, setSearch] = useState("")
   const [branchId, setBranchId] = useState<number | undefined>(undefined)
   const [positionId, setPositionId] = useState<number | undefined>(undefined)
+  const [status, setStatus] = useState<EstadoFiltro>(undefined)
   const [pagina, setPagina] = useState(1)
   const [empleadoEditando, setEmpleadoEditando] = useState<Employee | null>(null)
+  const [empleadoADesactivar, setEmpleadoADesactivar] = useState<Employee | null>(null)
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false)
 
   // Espera a que el usuario deje de escribir antes de consultar al backend
   useEffect(() => {
@@ -31,22 +38,39 @@ export function EmpleadosFeature() {
   // Cualquier cambio en los filtros vuelve a la primera página
   useEffect(() => {
     setPagina(1)
-  }, [search, branchId, positionId])
+  }, [search, branchId, positionId, status])
 
   const { employees, cargando, error, recargar } = useEmployees({
     search: search || undefined,
     branchId,
     positionId,
+    status,
   })
   const { branches } = useActiveBranches()
   const { positions } = useActivePositions()
+
+  const handleDesactivarRequest = (employee: Employee) => {
+    setEmpleadoADesactivar(employee)
+    setIsDeactivateDialogOpen(true)
+  }
+
+  const handleDesactivarConfirm = async (id: number) => {
+    await employeesService.deactivate(id)
+
+    await recargar()
+
+    showToast("Empleado desactivado correctamente.", "success")
+
+    setIsDeactivateDialogOpen(false)
+    setEmpleadoADesactivar(null)
+  }
 
   const totalPaginas = Math.max(1, Math.ceil(employees.length / EMPLEADOS_POR_PAGINA))
   const inicio = (pagina - 1) * EMPLEADOS_POR_PAGINA
   const empleadosPagina = employees.slice(inicio, inicio + EMPLEADOS_POR_PAGINA)
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 p-4">
       <div className="flex items-start justify-between gap-4">
         <SectionHeader
           eyebrow="Personal"
@@ -104,6 +128,21 @@ export function EmpleadosFeature() {
             ))}
           </select>
         </label>
+
+        <label className="flex flex-col gap-1 text-sm text-text-muted">
+          Estado
+          <select
+            value={status ?? ""}
+            onChange={(event) =>
+              setStatus(event.target.value ? (event.target.value as EstadoFiltro) : undefined)
+            }
+            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
+          >
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </label>
       </div>
 
       <EmployeeTable
@@ -112,10 +151,7 @@ export function EmpleadosFeature() {
         error={error}
         onReintentar={recargar}
         onEditar={setEmpleadoEditando}
-        // TODO: reemplazar por el diálogo de confirmación (tarea 425) y el endpoint de desactivar (429)
-        onDesactivar={() =>
-          showToast("La desactivación de empleados está en construcción.", "info")
-        }
+        onDesactivar={handleDesactivarRequest}
       />
 
       <EmployeeEditModal
@@ -124,6 +160,19 @@ export function EmpleadosFeature() {
           if (!open) setEmpleadoEditando(null)
         }}
         onSuccess={recargar}
+      />
+
+      <DeactivateEmployeeDialog
+        employee={empleadoADesactivar}
+        open={isDeactivateDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setIsDeactivateDialogOpen(nextOpen)
+
+          if (!nextOpen) {
+            setEmpleadoADesactivar(null)
+          }
+        }}
+        onConfirm={handleDesactivarConfirm}
       />
 
       {employees.length > EMPLEADOS_POR_PAGINA && (

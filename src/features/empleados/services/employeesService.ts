@@ -20,4 +20,8 @@ export const employeesService = {
 
         return data
     },
+
+    async deactivate(id: number): Promise<void> {
+        await apiClient.delete(`/empleados/${id}`)
+    },
 }
