@@ -37,6 +37,8 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
     setValues((prev) => ({ ...prev, [campo]: valor }))
   }
 
+  // Valida solo el campo que perdió el foco, para no mostrar errores de los
+  // demás antes de que el usuario haya llegado a ellos.
   function handleBlur(campo: keyof EmployeeFormValues) {
     const erroresActuales = validateEmployeeForm(values)
     setErrors((prev) => ({ ...prev, [campo]: erroresActuales[campo] }))
@@ -52,6 +54,8 @@ export function EmployeeForm({ onSuccess }: EmployeeFormProps) {
       return
     }
 
+    // Los <select> y <input> siempre devuelven string; se convierte a number
+    // recién aquí, justo antes de enviar, para que el DTO del backend coincida.
     const payload: RegisterEmployeePayload = {
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),

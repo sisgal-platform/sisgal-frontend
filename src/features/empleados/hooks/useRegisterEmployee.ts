@@ -26,6 +26,8 @@ export function useRegisterEmployee(onSuccess: () => void) {
   return { registerEmployee, enviando };
 }
 
+// Prioriza el mensaje del backend (más específico) y usa un texto genérico
+// por código como respaldo si la respuesta no trae "message".
 function mensajeDeError(error: unknown): string {
   if (isAxiosLikeError(error)) {
     const status = error.response?.status;
@@ -45,6 +47,7 @@ function mensajeDeError(error: unknown): string {
   return "No se pudo registrar el empleado. Inténtalo de nuevo.";
 }
 
+// Type guard mínimo: no depende de axios, solo verifica el shape del error.
 function isAxiosLikeError(
   error: unknown,
 ): error is { response?: { status?: number; data?: { message?: string } } } {
