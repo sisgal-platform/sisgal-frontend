@@ -21,6 +21,10 @@ type EmployeeFormProps = {
   /** Si se recibe, el formulario edita ese empleado en vez de crear uno nuevo. */
   employee?: Employee
   onSuccess: () => void
+  /** Muestra los datos sin permitir editarlos (vista de detalle). */
+  soloLectura?: boolean
+  /** Se dispara al presionar "Actualizar" cuando soloLectura está activo. */
+  onSolicitarEdicion?: () => void
 }
 
 /** Valores iniciales cuando el formulario edita un empleado existente. */
@@ -37,7 +41,12 @@ function valoresDesdeEmpleado(employee: Employee): EmployeeFormValues {
   }
 }
 
-export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
+export function EmployeeForm({
+  employee,
+  onSuccess,
+  soloLectura = false,
+  onSolicitarEdicion,
+}: EmployeeFormProps) {
   const esEdicion = employee !== undefined
 
   const [values, setValues] = useState<EmployeeFormValues>(() =>
@@ -69,6 +78,12 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    // En modo detalle no se envía nada; "Actualizar" solo cambia de modo.
+    if (soloLectura) {
+      onSolicitarEdicion?.()
+      return
+    }
 
     const erroresValidacion = validateEmployeeForm(values)
     setErrors(erroresValidacion)
@@ -121,7 +136,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.firstName}
             onChange={(e) => handleChange("firstName", e.target.value)}
             onBlur={() => handleBlur("firstName")}
-            disabled={enviando}
+            disabled={enviando || soloLectura}
             maxLength={FIELD_LIMITS.firstName}
             error={errors.firstName}
           />
@@ -132,7 +147,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.lastName}
             onChange={(e) => handleChange("lastName", e.target.value)}
             onBlur={() => handleBlur("lastName")}
-            disabled={enviando}
+            disabled={enviando || soloLectura}
             maxLength={FIELD_LIMITS.lastName}
             error={errors.lastName}
           />
@@ -145,7 +160,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.documentType}
             onChange={(e) => handleChange("documentType", e.target.value)}
             onBlur={() => handleBlur("documentType")}
-            disabled={enviando}
+            disabled={enviando || soloLectura}
             error={errors.documentType}
           >
             <option value="">Selecciona…</option>
@@ -163,7 +178,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.documentNumber}
             onChange={(e) => handleChange("documentNumber", e.target.value)}
             onBlur={() => handleBlur("documentNumber")}
-            disabled={enviando}
+            disabled={enviando || soloLectura}
             maxLength={FIELD_LIMITS.documentNumber}
             error={errors.documentNumber}
           />
@@ -176,7 +191,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
           value={values.phone}
           onChange={(e) => handleChange("phone", e.target.value)}
           onBlur={() => handleBlur("phone")}
-          disabled={enviando}
+          disabled={enviando || soloLectura}
           maxLength={FIELD_LIMITS.phone}
           error={errors.phone}
         />
@@ -193,7 +208,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.positionId}
             onChange={(e) => handleChange("positionId", e.target.value)}
             onBlur={() => handleBlur("positionId")}
-            disabled={enviando || cargandoCargos}
+            disabled={enviando || soloLectura || cargandoCargos}
             error={errors.positionId}
           >
             <option value="">
@@ -212,7 +227,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.branchId}
             onChange={(e) => handleChange("branchId", e.target.value)}
             onBlur={() => handleBlur("branchId")}
-            disabled={enviando || cargandoSucursales}
+            disabled={enviando || soloLectura || cargandoSucursales}
             error={errors.branchId}
           >
             <option value="">
@@ -237,7 +252,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             value={values.salaryBase}
             onChange={(e) => handleChange("salaryBase", e.target.value)}
             onBlur={() => handleBlur("salaryBase")}
-            disabled={enviando}
+            disabled={enviando || soloLectura}
             error={errors.salaryBase}
           />
 
@@ -253,13 +268,15 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button type="submit" disabled={enviando} className="bg-primary hover:bg-primary-light">
-          {enviando
-            ? esEdicion
-              ? "Guardando…"
-              : "Registrando…"
-            : esEdicion
-              ? "Guardar cambios"
-              : "Registrar empleado"}
+          {soloLectura
+            ? "Actualizar"
+            : enviando
+              ? esEdicion
+                ? "Guardando…"
+                : "Registrando…"
+              : esEdicion
+                ? "Guardar cambios"
+                : "Registrar empleado"}
         </Button>
       </div>
     </form>
