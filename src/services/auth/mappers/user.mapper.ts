@@ -21,7 +21,7 @@ export function mapSupabaseUser(user: User): SessionUser {
 
 /** El backend y Supabase usan el rol en mayúsculas (`ADMINISTRADOR`); la UI en minúsculas. */
 function mapRole(role: unknown): SessionUser["rol"] {
-    if (role === "ADMINISTRADOR") return "administrador";
-    if (role === "SUPERVISOR") return "supervisor";
+    if (role === "administrador") return "administrador";
+    if (role === "supervisor") return "supervisor";
     return "empleado";
 }
