@@ -1,15 +1,21 @@
 import { NavLink } from "react-router";
 import { MODULES } from "../../config/modules.catalog";
+import { useSession } from "../../session/hooks/useSession";
 
 type NavMenuProps = {
-    onNavigate?: () => void;
+    readonly onNavigate?: () => void;
 };
 
 export function NavMenu({ onNavigate }: NavMenuProps) {
+    const { user } = useSession();
+
     return (
         <nav className="nav" aria-label="Módulos del sistema">
             <ul className="nav-list">
-                {MODULES.map((module) => (
+                {MODULES.filter(
+                    (module) =>
+                        !module.adminOnly || user?.rol === "administrador",
+                ).map((module) => (
                     <li key={module.id}>
                         <NavLink
                             to={module.path}

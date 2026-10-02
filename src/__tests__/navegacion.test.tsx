@@ -27,7 +27,6 @@ describe("Navegación entre módulos", () => {
         );
         expect(router.state.location.pathname).toBe("/nomina");
     });
-
     it("navega sin recargar la app: el shell no se vuelve a montar", async () => {
         const { user } = renderApp();
 
@@ -83,6 +82,53 @@ describe("Navegación entre módulos", () => {
         expect(
             await screen.findByRole("heading", { level: 1 }),
         ).toHaveTextContent("Asistencia");
+    });
+
+    it("permite a administradores acceder a Préstamos", async () => {
+        renderApp({ ruta: "/prestamos" });
+
+        expect(
+            await screen.findByRole("heading", { level: 1, name: "Préstamos" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", {
+                level: 2,
+                name: "Préstamos Activos",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", {
+                level: 2,
+                name: "Saldo Pendiente Total",
+            }),
+        ).toBeInTheDocument();
+        expect(screen.getByText("2", { exact: true })).toBeInTheDocument();
+        expect(screen.getByText("$4,000", { exact: true })).toBeInTheDocument();
+    });
+
+    it("oculta Préstamos y bloquea el acceso a otros roles", async () => {
+        renderApp({
+            ruta: "/prestamos",
+            sesion: {
+                user: {
+                    id: "supervisor-test",
+                    nombre: "Luis Díaz",
+                    rol: "supervisor",
+                },
+                lastModule: null,
+                startedAt: "2026-01-01T08:00:00.000Z",
+            },
+        });
+
+        expect(
+            await screen.findByRole("heading", {
+                level: 1,
+                name: "Dashboard",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("link", { name: "Préstamos" }),
+        ).not.toBeInTheDocument();
     });
 
     it("muestra una página de error en una ruta desconocida", () => {
