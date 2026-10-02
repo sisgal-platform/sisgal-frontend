@@ -3,6 +3,15 @@ import { describe, expect, it, vi } from "vitest";
 import { MODULES } from "../config/modules.catalog";
 import { renderApp } from "../test/render";
 
+vi.mock("../features/prestamos/services/prestamosService", () => ({
+    prestamosService: {
+        obtenerIndicadores: vi.fn().mockResolvedValue({
+            cantidadPrestamosActivos: 2,
+            montoTotalPrestamosActivos: 4000,
+        }),
+    },
+}));
+
 describe("Navegación entre módulos", () => {
     it("muestra un enlace por cada módulo del catálogo", () => {
         renderApp();
@@ -102,8 +111,12 @@ describe("Navegación entre módulos", () => {
                 name: "Saldo Pendiente Total",
             }),
         ).toBeInTheDocument();
-        expect(screen.getByText("2", { exact: true })).toBeInTheDocument();
-        expect(screen.getByText("$4,000", { exact: true })).toBeInTheDocument();
+        expect(
+            await screen.findByText("2", { exact: true }),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText("$4,000", { exact: true }),
+        ).toBeInTheDocument();
     });
 
     it("oculta Préstamos y bloquea el acceso a otros roles", async () => {
