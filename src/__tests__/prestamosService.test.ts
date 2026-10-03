@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -47,6 +47,16 @@ describe("Servicio de préstamos", () => {
             prestamo,
         );
         expect(client.post).toHaveBeenCalledWith("/prestamos", payload);
+    });
+
+    it("consulta un préstamo por su id", async () => {
+        const prestamo = { id: 11 };
+        client.get.mockResolvedValue({ data: prestamo });
+
+        await expect(prestamosService.obtenerPorId(11)).resolves.toEqual(
+            prestamo,
+        );
+        expect(client.get).toHaveBeenCalledWith("/prestamos/11");
     });
 
     it("consulta los préstamos usando los filtros de la pantalla", async () => {
@@ -126,9 +136,18 @@ describe("Servicio de préstamos", () => {
                 cargando: false,
                 error: null,
                 onReintentar: () => undefined,
+                onVerDetalle: () => undefined,
             }),
         );
 
+        const tabla = screen.getByRole("table", {
+            name: "Listado de préstamos otorgados",
+        });
+        const encabezados = within(tabla).getAllByRole("columnheader");
+        expect(encabezados[0]).toHaveTextContent("ID");
+        expect(
+            within(tabla).getByText("1", { selector: "tbody td" }),
+        ).toBeInTheDocument();
         expect(screen.getByText("CC")).toBeInTheDocument();
         expect(screen.getByText("1234567890")).toBeInTheDocument();
     });

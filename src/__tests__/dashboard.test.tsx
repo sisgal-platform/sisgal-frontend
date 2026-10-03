@@ -1,9 +1,22 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { prestamosService } from "../features/prestamos/services/prestamosService";
 import { renderApp } from "../test/render";
 
+const obtenerIndicadores = vi.spyOn(prestamosService, "obtenerIndicadores");
+const obtenerPrestamos = vi.spyOn(prestamosService, "obtenerTodos");
+
+beforeEach(() => {
+    obtenerIndicadores.mockReset().mockResolvedValue({
+        cantidadPrestamosActivos: 12,
+        montoTotalPrestamosActivos: 4000000,
+    });
+    obtenerPrestamos.mockReset().mockResolvedValue([]);
+});
+
 describe("Dashboard", () => {
-    it("muestra el dashboard para un administrador", () => {
+    it("muestra el dashboard para un administrador", async () => {
         renderApp({ ruta: "/" });
 
         expect(
@@ -11,6 +24,21 @@ describe("Dashboard", () => {
                 level: 1,
                 name: /panel administrativo/i,
             }),
+        ).toBeInTheDocument();
+        expect(await screen.findByText("12", { exact: true })).toBeInTheDocument();
+    });
+
+    it("muestra los préstamos activos del backend y navega a su módulo", async () => {
+        const { user, router } = renderApp({ ruta: "/" });
+
+        expect(await screen.findByText("12", { exact: true })).toBeInTheDocument();
+        expect(obtenerIndicadores).toHaveBeenCalledTimes(1);
+
+        await user.click(screen.getByRole("button", { name: "Ver préstamos" }));
+
+        expect(router.state.location.pathname).toBe("/prestamos");
+        expect(
+            await screen.findByRole("heading", { level: 1, name: "Préstamos" }),
         ).toBeInTheDocument();
     });
 
@@ -27,5 +55,6 @@ describe("Dashboard", () => {
         expect(
             screen.getByText("No tienes permisos para acceder al dashboard."),
         ).toBeInTheDocument();
+        expect(obtenerIndicadores).not.toHaveBeenCalled();
     });
 });

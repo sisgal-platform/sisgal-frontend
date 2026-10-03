@@ -19,6 +19,7 @@ import { ToastProvider } from "../toast/components/ToastProvider";
 
 const obtenerTodos = vi.spyOn(prestamosService, "obtenerTodos");
 const obtenerIndicadores = vi.spyOn(prestamosService, "obtenerIndicadores");
+const obtenerPorId = vi.spyOn(prestamosService, "obtenerPorId");
 const crearPrestamo = vi.spyOn(prestamosService, "crear");
 const listarEmpleados = vi.spyOn(employeesService, "list");
 
@@ -41,6 +42,26 @@ const EMPLEADO = {
     positionId: 2,
     branchName: "Centro",
     positionName: "Mesera",
+};
+
+const PRESTAMO: Prestamo = {
+    id: 11,
+    employee: {
+        id: EMPLEADO.id,
+        firstName: EMPLEADO.firstName,
+        lastName: EMPLEADO.lastName,
+        documentType: EMPLEADO.documentType,
+        document: EMPLEADO.document,
+    },
+    totalAmount: 2500000,
+    installmentAmount: 250000,
+    totalInstallments: 10,
+    pendingInstallments: 8,
+    outstandingBalance: 2000000,
+    grantedAt: "2026-03-10T00:00:00.000Z",
+    status: "ACTIVO",
+    createdAt: "2026-03-10T00:00:00.000Z",
+    updatedAt: "2026-04-10T00:00:00.000Z",
 };
 
 function renderPrestamos() {
@@ -68,6 +89,7 @@ async function esperarCargaInicial() {
 beforeEach(() => {
     obtenerTodos.mockReset().mockResolvedValue([]);
     obtenerIndicadores.mockReset().mockResolvedValue(INDICADORES);
+    obtenerPorId.mockReset().mockResolvedValue(PRESTAMO);
     crearPrestamo.mockReset().mockResolvedValue({} as Prestamo);
     listarEmpleados.mockReset().mockResolvedValue([EMPLEADO]);
 });
@@ -182,6 +204,65 @@ describe("PrestamosFeature", () => {
                 "No hay préstamos que coincidan con los filtros.",
             ),
         ).toBeInTheDocument();
+    });
+
+    it("abre el detalle consultando el préstamo por id y solo permite cerrarlo", async () => {
+        obtenerTodos.mockResolvedValue([PRESTAMO]);
+        const user = renderPrestamos();
+
+        await user.click(
+            await screen.findByRole("button", {
+                name: "Ver detalle del préstamo 11",
+            }),
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Detalle del préstamo",
+        });
+        expect(obtenerPorId).toHaveBeenCalledWith(11);
+        expect(within(dialog).getByText("Ana Ruiz")).toBeInTheDocument();
+        expect(within(dialog).getByText("1234567890")).toBeInTheDocument();
+        expect(within(dialog).getAllByText("10/03/2026")).toHaveLength(2);
+        expect(within(dialog).getByText("10/04/2026")).toBeInTheDocument();
+        expect(within(dialog).getByText("Activo")).toBeInTheDocument();
+        expect(
+            within(dialog).getByText("Cuotas pendientes"),
+        ).toBeInTheDocument();
+        expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
+        expect(
+            within(dialog).queryByRole("spinbutton"),
+        ).not.toBeInTheDocument();
+
+        await user.click(
+            within(dialog).getAllByRole("button", { name: "Cerrar" })[0],
+        );
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("muestra el error del detalle y permite reintentar la consulta", async () => {
+        obtenerTodos.mockResolvedValue([PRESTAMO]);
+        obtenerPorId
+            .mockRejectedValueOnce(new Error("Detalle no disponible"))
+            .mockResolvedValueOnce(PRESTAMO);
+        const user = renderPrestamos();
+
+        await user.click(
+            await screen.findByRole("button", {
+                name: "Ver detalle del préstamo 11",
+            }),
+        );
+        const dialog = await screen.findByRole("dialog", {
+            name: "Detalle del préstamo",
+        });
+        const alerta = await within(dialog).findByRole("alert");
+        expect(alerta).toHaveTextContent("Detalle no disponible");
+
+        await user.click(
+            within(alerta).getByRole("button", { name: "Reintentar" }),
+        );
+
+        await waitFor(() => expect(obtenerPorId).toHaveBeenCalledTimes(2));
+        expect(await within(dialog).findByText("Ana Ruiz")).toBeInTheDocument();
     });
 
     it("refresca el listado y los indicadores al crear un préstamo", async () => {

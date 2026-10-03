@@ -56,6 +56,15 @@ function crearQueryPrestamos(filtros: FiltrosPrestamos): PrestamosQuery {
 }
 
 export const prestamosService = {
+    async obtenerPorId(id: number): Promise<Prestamo> {
+        try {
+            const { data } = await apiClient.get<Prestamo>(`/prestamos/${id}`);
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
     async crear(payload: CrearPrestamoPayload): Promise<Prestamo> {
         try {
             const { data } = await apiClient.post<Prestamo>(

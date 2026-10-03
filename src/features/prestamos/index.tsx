@@ -10,12 +10,14 @@ import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
 
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
 import { CreatePrestamoModal } from "./components/CreatePrestamoModal";
+import { PrestamoDetailDialog } from "./components/PrestamoDetailDialog";
 import { PrestamosTable } from "./components/PrestamosTable";
 import { ESTADOS_PRESTAMO } from "./estadosPrestamo";
 import { usePrestamos } from "./hooks/usePrestamos";
 import { usePrestamosIndicadores } from "./hooks/usePrestamosIndicadores";
 import type {
     FiltrosPrestamos,
+    Prestamo,
     PrestamosIndicadores,
 } from "./interfaces/types";
 import { normalizarRangoFechas } from "./services/prestamosService";
@@ -47,6 +49,9 @@ const indicadores = [
 export function PrestamosFeature() {
     const [filtros, setFiltros] = useState(filtrosVacios);
     const [filtrosAplicados, setFiltrosAplicados] = useState(filtrosVacios);
+    const [prestamoDetalle, setPrestamoDetalle] = useState<Prestamo | null>(
+        null,
+    );
     const {
         indicadores: datos,
         cargando,
@@ -281,8 +286,19 @@ export function PrestamosFeature() {
                     cargando={listado.cargando}
                     error={listado.error}
                     onReintentar={listado.recargar}
+                    onVerDetalle={setPrestamoDetalle}
                 />
             </section>
+
+            {prestamoDetalle && (
+                <PrestamoDetailDialog
+                    key={prestamoDetalle.id}
+                    prestamo={prestamoDetalle}
+                    onOpenChange={(open) => {
+                        if (!open) setPrestamoDetalle(null);
+                    }}
+                />
+            )}
         </section>
     );
 }
