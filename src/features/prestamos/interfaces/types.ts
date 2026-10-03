@@ -3,22 +3,43 @@ export type PrestamosIndicadores = {
     montoTotalPrestamosActivos: number;
 };
 
-export type EstadoPrestamo = "ACTIVO" | "PAGADO" | "VENCIDO" | "CANCELADO";
+export type EstadoPrestamo = "ACTIVO" | "SALDADO" | "CANCELADO";
 
-export type PrestamoFila = {
+export type EmpleadoPrestamo = {
     id: number;
-    empleadoNombre: string;
-    tipoDocumento: string;
-    numeroDocumento: string;
-    estado: string;
-    montoTotal: number;
-    cuota: number;
-    saldoPendiente: number;
-    ultimaActualizacion: string;
+    firstName: string;
+    lastName: string;
+    documentType?: string;
+    document: string;
+};
+
+/** Espejo de LoanResponseDto; las fechas llegan serializadas como texto. */
+export type Prestamo = {
+    id: number;
+    employee: EmpleadoPrestamo;
+    totalAmount: number;
+    installmentAmount: number;
+    totalInstallments: number;
+    pendingInstallments: number;
+    outstandingBalance: number;
+    grantedAt: string;
+    status: EstadoPrestamo;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type PrestamosQuery = {
+    empleadoId?: number;
+    nombreEmpleado?: string;
+    documento?: string;
+    estado?: EstadoPrestamo;
+    fechaDesde?: string;
+    fechaHasta?: string;
 };
 
 export type FiltrosPrestamos = {
     busqueda: string;
     estado: EstadoPrestamo | "";
-    fecha: string;
+    fechaDesde: string;
+    fechaHasta: string;
 };

@@ -8,12 +8,13 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { LoginPage } from "@/pages/login/LoginPage";
 import { NotFoundPage } from "@/pages/not-found/NotFoundPage";
 
+import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
 import { ConfiguracionPage } from "@/pages/configuracion/ConfiguracionPage";
+import { NominaPage } from "@/pages/nomina/NominaPage";
+import { NovedadesPage } from "@/pages/novedades/NovedadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
-// import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
-// import { NominaPage } from "@/pages/nomina/NominaPage";
-// etc.
+import { ReportesPage } from "@/pages/reportes/ReportesPage";
 
 export const routes: RouteObject[] = [
     {
@@ -31,8 +32,16 @@ export const routes: RouteObject[] = [
                         element: <DashboardPage />,
                     },
                     {
-                        path: "configuracion",
-                        element: <ConfiguracionPage />,
+                        path: "asistencia",
+                        element: <AsistenciaPage />,
+                    },
+                    {
+                        path: "nomina",
+                        element: <NominaPage />,
+                    },
+                    {
+                        path: "novedades",
+                        element: <NovedadesPage />,
                     },
                     {
                         path: "personal",
@@ -42,16 +51,14 @@ export const routes: RouteObject[] = [
                         path: "prestamos",
                         element: <PrestamosPage />,
                     },
-                    /*
                     {
-                        path: "asistencia",
-                        element: <AsistenciaPage />,
+                        path: "reportes",
+                        element: <ReportesPage />,
                     },
                     {
-                        path: "nomina",
-                        element: <NominaPage />,
+                        path: "configuracion",
+                        element: <ConfiguracionPage />,
                     },
-                    */
                     {
                         path: "*",
                         element: <NotFoundPage />,

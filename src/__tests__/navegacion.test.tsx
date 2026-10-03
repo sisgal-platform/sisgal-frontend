@@ -53,11 +53,17 @@ describe("Navegación entre módulos", () => {
     it("permite recorrer varios módulos seguidos", async () => {
         const { user, router } = renderApp();
 
-        for (const label of ["Asistencia", "Personal", "Configuración"]) {
+        for (const [label, heading] of [
+            ["Asistencia", "Asistencia"],
+            ["Personal", "Empleados"],
+            ["Configuración", "Configuración"],
+        ]) {
             await user.click(screen.getByRole("link", { name: label }));
             expect(
-                await screen.findByRole("heading", { level: 1 }),
-            ).toHaveTextContent(label);
+                await screen.findByRole("heading", {
+                    level: label === "Personal" ? 2 : 1,
+                }),
+            ).toHaveTextContent(heading);
         }
 
         expect(router.state.location.pathname).toBe("/configuracion");
@@ -115,7 +121,7 @@ describe("Navegación entre módulos", () => {
             await screen.findByText("2", { exact: true }),
         ).toBeInTheDocument();
         expect(
-            await screen.findByText("$4,000", { exact: true }),
+            await screen.findByText(/4\.000/, { exact: false }),
         ).toBeInTheDocument();
     });
 

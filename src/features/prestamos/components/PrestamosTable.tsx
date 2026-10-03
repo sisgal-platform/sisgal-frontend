@@ -1,42 +1,59 @@
-import type { FiltrosPrestamos, PrestamoFila } from "../interfaces/types";
+import type { Prestamo } from "../interfaces/types";
 import { obtenerConfiguracionEstadoPrestamo } from "../estadosPrestamo";
-import {
-    dateToInputValue,
-    formatCurrencyCOP,
-    formatDateCO,
-} from "@/lib/formatters";
+import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
 
-type PrestamosTableProps = {
-    prestamos: PrestamoFila[];
-    filtros: FiltrosPrestamos;
-};
+type PrestamosTableProps = Readonly<{
+    prestamos: Prestamo[];
+    cargando: boolean;
+    error: string | null;
+    onReintentar: () => void;
+}>;
 
-function normalizarBusqueda(value: string) {
-    return value
-        .trim()
-        .toLocaleLowerCase("es-CO")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-}
-
-export function PrestamosTable({ prestamos, filtros }: PrestamosTableProps) {
-    const busqueda = normalizarBusqueda(filtros.busqueda);
-    const prestamosFiltrados = prestamos.filter((prestamo) => {
-        const datosEmpleado = normalizarBusqueda(
-            `${prestamo.empleadoNombre} ${prestamo.numeroDocumento}`,
-        );
-
+export function PrestamosTable({
+    prestamos,
+    cargando,
+    error,
+    onReintentar,
+}: PrestamosTableProps) {
+    if (error) {
         return (
-            (!busqueda || datosEmpleado.includes(busqueda)) &&
-            (!filtros.estado || prestamo.estado === filtros.estado) &&
-            (!filtros.fecha ||
-                dateToInputValue(prestamo.ultimaActualizacion) ===
-                    filtros.fecha)
+            <div
+                role="alert"
+                className="flex flex-col items-start gap-3 rounded-2xl border border-error-light bg-white p-6"
+            >
+                <p className="text-base text-error">{error}</p>
+                <button
+                    type="button"
+                    onClick={onReintentar}
+                    className="h-10 rounded-xl border border-primary px-4 text-sm font-semibold text-primary hover:bg-primary hover:text-white"
+                >
+                    Reintentar
+                </button>
+            </div>
         );
-    });
+    }
+
+    if (cargando && prestamos.length === 0) {
+        return (
+            <output className="block rounded-2xl bg-white p-6 text-text-muted">
+                Cargando préstamos…
+            </output>
+        );
+    }
+
+    if (prestamos.length === 0) {
+        return (
+            <p className="rounded-2xl bg-white p-6 text-text-muted">
+                No hay préstamos que coincidan con los filtros.
+            </p>
+        );
+    }
 
     return (
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-surface shadow-sm">
+        <div
+            className="overflow-x-auto rounded-2xl border border-gray-200 bg-surface shadow-sm"
+            aria-busy={cargando}
+        >
             <table className="w-full min-w-[1000px] text-left text-sm">
                 <caption className="sr-only">
                     Listado de préstamos otorgados
@@ -70,61 +87,49 @@ export function PrestamosTable({ prestamos, filtros }: PrestamosTableProps) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                    {prestamosFiltrados.length > 0 ? (
-                        prestamosFiltrados.map((prestamo) => {
-                            const estado = obtenerConfiguracionEstadoPrestamo(
-                                prestamo.estado,
-                            );
+                    {prestamos.map((prestamo) => {
+                        const estado = obtenerConfiguracionEstadoPrestamo(
+                            prestamo.status,
+                        );
 
-                            return (
-                                <tr key={prestamo.id}>
-                                    <td className="px-4 py-3 font-medium text-text">
-                                        {prestamo.empleadoNombre}
-                                    </td>
-                                    <td className="px-4 py-3 text-text-muted">
-                                        {prestamo.tipoDocumento}
-                                    </td>
-                                    <td className="px-4 py-3 text-text-muted">
-                                        {prestamo.numeroDocumento}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span
-                                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${estado.badgeClassName}`}
-                                        >
-                                            {estado.label}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-text-muted">
-                                        {formatCurrencyCOP(prestamo.montoTotal)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-text-muted">
-                                        {formatCurrencyCOP(prestamo.cuota)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-text-muted">
-                                        {formatCurrencyCOP(
-                                            prestamo.saldoPendiente,
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-text-muted">
-                                        {formatDateCO(
-                                            prestamo.ultimaActualizacion,
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })
-                    ) : (
-                        <tr>
-                            <td
-                                colSpan={8}
-                                className="px-4 py-10 text-center text-text-muted"
-                            >
-                                {prestamos.length === 0
-                                    ? "No hay préstamos para mostrar."
-                                    : "No se encontraron préstamos con los filtros aplicados."}
-                            </td>
-                        </tr>
-                    )}
+                        return (
+                            <tr key={prestamo.id}>
+                                <td className="px-4 py-3 font-medium text-text">
+                                    {prestamo.employee.firstName}{" "}
+                                    {prestamo.employee.lastName}
+                                </td>
+                                <td className="px-4 py-3 text-text-muted">
+                                    {prestamo.employee.documentType ?? "—"}
+                                </td>
+                                <td className="px-4 py-3 text-text-muted">
+                                    {prestamo.employee.document}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span
+                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${estado.badgeClassName}`}
+                                    >
+                                        {estado.label}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 text-right text-text-muted">
+                                    {formatCurrencyCOP(prestamo.totalAmount)}
+                                </td>
+                                <td className="px-4 py-3 text-right text-text-muted">
+                                    {formatCurrencyCOP(
+                                        prestamo.installmentAmount,
+                                    )}
+                                </td>
+                                <td className="px-4 py-3 text-right text-text-muted">
+                                    {formatCurrencyCOP(
+                                        prestamo.outstandingBalance,
+                                    )}
+                                </td>
+                                <td className="px-4 py-3 text-text-muted">
+                                    {formatDateCO(prestamo.updatedAt)}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>

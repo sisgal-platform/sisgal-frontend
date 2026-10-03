@@ -1,6 +1,5 @@
 import { useState, type SubmitEvent } from "react";
 import {
-    CalendarDays,
     Plus,
     RotateCcw,
     Search,
@@ -13,19 +12,19 @@ import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
 import { PrestamosTable } from "./components/PrestamosTable";
 import { ESTADOS_PRESTAMO } from "./estadosPrestamo";
+import { usePrestamos } from "./hooks/usePrestamos";
 import { usePrestamosIndicadores } from "./hooks/usePrestamosIndicadores";
 import type {
     FiltrosPrestamos,
-    PrestamoFila,
     PrestamosIndicadores,
 } from "./interfaces/types";
-
-const prestamos: PrestamoFila[] = [];
+import { normalizarRangoFechas } from "./services/prestamosService";
 
 const filtrosVacios: FiltrosPrestamos = {
     busqueda: "",
     estado: "",
-    fecha: "",
+    fechaDesde: "",
+    fechaHasta: "",
 };
 
 const indicadores = [
@@ -54,15 +53,41 @@ export function PrestamosFeature() {
         error,
         recargar,
     } = usePrestamosIndicadores();
+    const listado = usePrestamos(filtrosAplicados);
 
     function aplicarFiltros(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
-        setFiltrosAplicados(filtros);
+        const filtrosNormalizados = {
+            ...filtros,
+            ...normalizarRangoFechas(filtros),
+        };
+        setFiltros(filtrosNormalizados);
+        setFiltrosAplicados(filtrosNormalizados);
     }
 
     function limpiarFiltros() {
         setFiltros(filtrosVacios);
         setFiltrosAplicados(filtrosVacios);
+    }
+
+    function actualizarFechaDesde(fechaDesde: string) {
+        setFiltros((actual) => ({
+            ...actual,
+            ...normalizarRangoFechas({
+                fechaDesde,
+                fechaHasta: actual.fechaHasta,
+            }),
+        }));
+    }
+
+    function actualizarFechaHasta(fechaHasta: string) {
+        setFiltros((actual) => ({
+            ...actual,
+            ...normalizarRangoFechas({
+                fechaDesde: actual.fechaDesde,
+                fechaHasta,
+            }),
+        }));
     }
 
     return (
@@ -143,95 +168,108 @@ export function PrestamosFeature() {
 
                 <form
                     onSubmit={aplicarFiltros}
-                    className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-surface p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[minmax(220px,1.5fr)_minmax(170px,1fr)_minmax(170px,1fr)_auto] xl:items-end"
+                    className="space-y-4 rounded-2xl border border-gray-200 bg-surface p-5 shadow-sm"
                 >
-                    <div className="space-y-1.5">
-                        <label
-                            htmlFor="filtro-prestamo-busqueda"
-                            className="text-sm font-medium text-text"
-                        >
-                            Nombre o número de documento
-                        </label>
-                        <input
-                            id="filtro-prestamo-busqueda"
-                            type="search"
-                            value={filtros.busqueda}
-                            onChange={(event) =>
-                                setFiltros({
-                                    ...filtros,
-                                    busqueda: event.target.value,
-                                })
-                            }
-                            placeholder="Buscar empleado o documento"
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label
-                            htmlFor="filtro-prestamo-estado"
-                            className="text-sm font-medium text-text"
-                        >
-                            Estado del préstamo
-                        </label>
-                        <select
-                            id="filtro-prestamo-estado"
-                            value={filtros.estado}
-                            onChange={(event) =>
-                                setFiltros({
-                                    ...filtros,
-                                    estado: event.target
-                                        .value as FiltrosPrestamos["estado"],
-                                })
-                            }
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        >
-                            <option value="">Todos los estados</option>
-                            {ESTADOS_PRESTAMO.map((estado) => (
-                                <option key={estado.value} value={estado.value}>
-                                    {estado.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label
-                            htmlFor="filtro-prestamo-fecha"
-                            className="text-sm font-medium text-text"
-                        >
-                            Fecha de última actualización
-                        </label>
-                        <div className="relative">
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(260px,1.8fr)_minmax(190px,1fr)_minmax(240px,1.2fr)_minmax(240px,1.2fr)]">
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="filtro-prestamo-busqueda"
+                                className="text-sm font-medium text-text"
+                            >
+                                Nombre o número de documento
+                            </label>
                             <input
-                                id="filtro-prestamo-fecha"
-                                type="date"
-                                value={filtros.fecha}
+                                id="filtro-prestamo-busqueda"
+                                type="search"
+                                value={filtros.busqueda}
                                 onChange={(event) =>
                                     setFiltros({
                                         ...filtros,
-                                        fecha: event.target.value,
+                                        busqueda: event.target.value,
                                     })
                                 }
-                                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                placeholder="Buscar empleado o documento"
+                                className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             />
-                            <CalendarDays
-                                size={17}
-                                aria-hidden="true"
-                                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                        </div>
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="filtro-prestamo-estado"
+                                className="text-sm font-medium text-text"
+                            >
+                                Estado del préstamo
+                            </label>
+                            <select
+                                id="filtro-prestamo-estado"
+                                value={filtros.estado}
+                                onChange={(event) =>
+                                    setFiltros({
+                                        ...filtros,
+                                        estado: event.target
+                                            .value as FiltrosPrestamos["estado"],
+                                    })
+                                }
+                                className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            >
+                                <option value="">Todos los estados</option>
+                                {ESTADOS_PRESTAMO.map((estado) => (
+                                    <option
+                                        key={estado.value}
+                                        value={estado.value}
+                                    >
+                                        {estado.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="relative space-y-2">
+                            <label
+                                htmlFor="filtro-prestamo-fecha-desde"
+                                className="text-sm font-medium text-text"
+                            >
+                                Fecha de otorgamiento desde
+                            </label>
+                            <input
+                                id="filtro-prestamo-fecha-desde"
+                                type="date"
+                                value={filtros.fechaDesde}
+                                onChange={(event) =>
+                                    actualizarFechaDesde(event.target.value)
+                                }
+                                className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            />                            
+                        </div>
+                        <div className="relative space-y-2">
+                            <label
+                                htmlFor="filtro-prestamo-fecha-hasta"
+                                className="text-sm font-medium text-text"
+                            >
+                                Fecha de otorgamiento hasta
+                            </label>
+                            <input
+                                id="filtro-prestamo-fecha-hasta"
+                                type="date"
+                                value={filtros.fechaHasta}
+                                onChange={(event) =>
+                                    actualizarFechaHasta(event.target.value)
+                                }
+                                className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             />
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
+
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={limpiarFiltros}
-                            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 text-sm font-semibold text-text hover:bg-secondary"
+                            className="flex h-12 items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 text-sm font-semibold text-text transition hover:bg-secondary"
                         >
                             <RotateCcw size={16} aria-hidden="true" />
                             Limpiar filtros
                         </button>
                         <button
                             type="submit"
-                            className="flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-white hover:bg-primary-dark"
+                            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-dark"
                         >
                             <Search size={16} aria-hidden="true" />
                             Aplicar filtros
@@ -240,8 +278,10 @@ export function PrestamosFeature() {
                 </form>
 
                 <PrestamosTable
-                    prestamos={prestamos}
-                    filtros={filtrosAplicados}
+                    prestamos={listado.prestamos}
+                    cargando={listado.cargando}
+                    error={listado.error}
+                    onReintentar={listado.recargar}
                 />
             </section>
         </section>

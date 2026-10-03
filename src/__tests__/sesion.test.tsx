@@ -23,7 +23,7 @@ describe("Estado de sesión durante la navegación", () => {
         const { user } = renderApp();
 
         await user.click(screen.getByRole("link", { name: "Personal" }));
-        await screen.findByRole("heading", { level: 1, name: "Personal" });
+        await screen.findByRole("heading", { level: 2, name: "Empleados" });
 
         expect(readSession().lastModule).toBe("personal");
     });

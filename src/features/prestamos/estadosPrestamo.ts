@@ -13,14 +13,9 @@ export const ESTADOS_PRESTAMO: ConfiguracionEstadoPrestamo[] = [
         badgeClassName: "bg-success-light text-success-dark",
     },
     {
-        value: "PAGADO",
-        label: "Pagado",
+        value: "SALDADO",
+        label: "Saldado",
         badgeClassName: "bg-secondary-dark text-text-muted",
-    },
-    {
-        value: "VENCIDO",
-        label: "Vencido",
-        badgeClassName: "bg-error-light text-error",
     },
     {
         value: "CANCELADO",
