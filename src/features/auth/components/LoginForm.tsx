@@ -11,10 +11,6 @@ export function LoginForm() {
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (!email.trim() || !password) {
-            return;
-        }
-
         await loginUser(email, password);
     }
 

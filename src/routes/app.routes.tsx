@@ -8,11 +8,13 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { LoginPage } from "@/pages/login/LoginPage";
 import { NotFoundPage } from "@/pages/not-found/NotFoundPage";
 
+import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
 import { ConfiguracionPage } from "@/pages/configuracion/ConfiguracionPage";
+import { NominaPage } from "@/pages/nomina/NominaPage";
+import { NovedadesPage } from "@/pages/novedades/NovedadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
-// import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
-// import { NominaPage } from "@/pages/nomina/NominaPage";
-// etc.
+import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
+import { ReportesPage } from "@/pages/reportes/ReportesPage";
 
 export const routes: RouteObject[] = [
     {
@@ -30,15 +32,6 @@ export const routes: RouteObject[] = [
                         element: <DashboardPage />,
                     },
                     {
-                        path: "configuracion",
-                        element: <ConfiguracionPage />,
-                    },
-                    {
-                        path: "personal",
-                        element: <PersonalPage />,
-                    },
-                    /*
-                    {
                         path: "asistencia",
                         element: <AsistenciaPage />,
                     },
@@ -46,7 +39,26 @@ export const routes: RouteObject[] = [
                         path: "nomina",
                         element: <NominaPage />,
                     },
-                    */
+                    {
+                        path: "novedades",
+                        element: <NovedadesPage />,
+                    },
+                    {
+                        path: "personal",
+                        element: <PersonalPage />,
+                    },
+                    {
+                        path: "prestamos",
+                        element: <PrestamosPage />,
+                    },
+                    {
+                        path: "reportes",
+                        element: <ReportesPage />,
+                    },
+                    {
+                        path: "configuracion",
+                        element: <ConfiguracionPage />,
+                    },
                     {
                         path: "*",
                         element: <NotFoundPage />,

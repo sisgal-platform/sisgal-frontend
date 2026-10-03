@@ -1,7 +1,7 @@
 import type { AppModule } from "../../config/modules.catalog";
 
 type ModulePageProps = {
-    module: AppModule;
+    readonly module: AppModule;
 };
 
 /**
@@ -16,10 +16,14 @@ export function ModulePage({ module }: ModulePageProps) {
             </h1>
             <p className="modulo-descripcion">{module.description}</p>
             <div className="modulo-placeholder">
-                <p>
-                    Pendiente: se construye en las historias del work item{" "}
-                    <code>#{module.workItem}</code>
-                </p>
+                {module.workItem ? (
+                    <p>
+                        Pendiente: se construye en las historias del work item{" "}
+                        <code>#{module.workItem}</code>
+                    </p>
+                ) : (
+                    <p>Pendiente: se construye próximamente.</p>
+                )}
             </div>
         </article>
     );

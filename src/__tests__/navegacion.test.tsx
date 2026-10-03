@@ -3,6 +3,15 @@ import { describe, expect, it, vi } from "vitest";
 import { MODULES } from "../config/modules.catalog";
 import { renderApp } from "../test/render";
 
+vi.mock("../features/prestamos/services/prestamosService", () => ({
+    prestamosService: {
+        obtenerIndicadores: vi.fn().mockResolvedValue({
+            cantidadPrestamosActivos: 2,
+            montoTotalPrestamosActivos: 4000,
+        }),
+    },
+}));
+
 describe("Navegación entre módulos", () => {
     it("muestra un enlace por cada módulo del catálogo", () => {
         renderApp();
@@ -27,7 +36,6 @@ describe("Navegación entre módulos", () => {
         );
         expect(router.state.location.pathname).toBe("/nomina");
     });
-
     it("navega sin recargar la app: el shell no se vuelve a montar", async () => {
         const { user } = renderApp();
 
@@ -45,11 +53,17 @@ describe("Navegación entre módulos", () => {
     it("permite recorrer varios módulos seguidos", async () => {
         const { user, router } = renderApp();
 
-        for (const label of ["Asistencia", "Personal", "Configuración"]) {
+        for (const [label, heading] of [
+            ["Asistencia", "Asistencia"],
+            ["Personal", "Empleados"],
+            ["Configuración", "Configuración"],
+        ]) {
             await user.click(screen.getByRole("link", { name: label }));
             expect(
-                await screen.findByRole("heading", { level: 1 }),
-            ).toHaveTextContent(label);
+                await screen.findByRole("heading", {
+                    level: label === "Personal" ? 2 : 1,
+                }),
+            ).toHaveTextContent(heading);
         }
 
         expect(router.state.location.pathname).toBe("/configuracion");
@@ -83,6 +97,57 @@ describe("Navegación entre módulos", () => {
         expect(
             await screen.findByRole("heading", { level: 1 }),
         ).toHaveTextContent("Asistencia");
+    });
+
+    it("permite a administradores acceder a Préstamos", async () => {
+        renderApp({ ruta: "/prestamos" });
+
+        expect(
+            await screen.findByRole("heading", { level: 1, name: "Préstamos" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", {
+                level: 2,
+                name: "Préstamos Activos",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", {
+                level: 2,
+                name: "Saldo Pendiente Total",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText("2", { exact: true }),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText(/4\.000/, { exact: false }),
+        ).toBeInTheDocument();
+    });
+
+    it("oculta Préstamos y bloquea el acceso a otros roles", async () => {
+        renderApp({
+            ruta: "/prestamos",
+            sesion: {
+                user: {
+                    id: "supervisor-test",
+                    nombre: "Luis Díaz",
+                    rol: "supervisor",
+                },
+                lastModule: null,
+                startedAt: "2026-01-01T08:00:00.000Z",
+            },
+        });
+
+        expect(
+            await screen.findByRole("heading", {
+                level: 1,
+                name: "Dashboard",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("link", { name: "Préstamos" }),
+        ).not.toBeInTheDocument();
     });
 
     it("muestra una página de error en una ruta desconocida", () => {
