@@ -25,13 +25,17 @@ describe("Dashboard", () => {
                 name: /panel administrativo/i,
             }),
         ).toBeInTheDocument();
-        expect(await screen.findByText("12", { exact: true })).toBeInTheDocument();
+        expect(
+            await screen.findByText("12", { exact: true }),
+        ).toBeInTheDocument();
     });
 
     it("muestra los préstamos activos del backend y navega a su módulo", async () => {
         const { user, router } = renderApp({ ruta: "/" });
 
-        expect(await screen.findByText("12", { exact: true })).toBeInTheDocument();
+        expect(
+            await screen.findByText("12", { exact: true }),
+        ).toBeInTheDocument();
         expect(obtenerIndicadores).toHaveBeenCalledTimes(1);
 
         await user.click(screen.getByRole("button", { name: "Ver préstamos" }));
