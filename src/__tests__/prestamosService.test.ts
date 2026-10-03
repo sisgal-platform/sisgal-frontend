@@ -10,7 +10,7 @@ import {
 } from "../features/prestamos/services/prestamosService";
 
 vi.mock("../lib/axios", () => ({
-    default: { get: vi.fn() },
+    default: { get: vi.fn(), post: vi.fn() },
 }));
 
 const client = vi.mocked(apiClient);
@@ -31,6 +31,22 @@ describe("Servicio de préstamos", () => {
             indicadores,
         );
         expect(client.get).toHaveBeenCalledWith("/prestamos/indicadores");
+    });
+
+    it("crea un préstamo con el empleado y las condiciones seleccionadas", async () => {
+        const payload = {
+            employeeId: 7,
+            totalAmount: 1200000,
+            totalInstallments: 6,
+            grantedAt: "2026-10-02",
+        };
+        const prestamo = { id: 3, ...payload };
+        client.post.mockResolvedValue({ data: prestamo });
+
+        await expect(prestamosService.crear(payload)).resolves.toEqual(
+            prestamo,
+        );
+        expect(client.post).toHaveBeenCalledWith("/prestamos", payload);
     });
 
     it("consulta los préstamos usando los filtros de la pantalla", async () => {

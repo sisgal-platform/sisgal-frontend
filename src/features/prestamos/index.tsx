@@ -1,6 +1,5 @@
 import { useState, type SubmitEvent } from "react";
 import {
-    Plus,
     RotateCcw,
     Search,
     TrendingDown,
@@ -10,6 +9,7 @@ import {
 import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
 
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
+import { CreatePrestamoModal } from "./components/CreatePrestamoModal";
 import { PrestamosTable } from "./components/PrestamosTable";
 import { ESTADOS_PRESTAMO } from "./estadosPrestamo";
 import { usePrestamos } from "./hooks/usePrestamos";
@@ -157,13 +157,12 @@ export function PrestamosFeature() {
                     >
                         Listado de préstamos
                     </h2>
-                    <button
-                        type="button"
-                        className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark"
-                    >
-                        <Plus size={18} aria-hidden="true" />
-                        Crear préstamo
-                    </button>
+                    <CreatePrestamoModal
+                        onSuccess={() => {
+                            listado.recargar();
+                            recargar();
+                        }}
+                    />
                 </div>
 
                 <form
