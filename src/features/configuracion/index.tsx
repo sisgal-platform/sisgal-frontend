@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CargosFeature } from "@/features/cargos";
 import { SucursalesFeature } from "@/features/sucursales";
+import { SupportInformation } from "./components/SupportInformation";
 
 export function ConfiguracionFeature() {
     return (
@@ -11,7 +12,8 @@ export function ConfiguracionFeature() {
                 </h1>
 
                 <p className="mt-2 text-sm text-primary-light sm:text-base">
-                    Administra la configuración general del sistema, incluyendo sucursales y otros parámetros importantes.
+                    Administra la configuración general del sistema, incluyendo
+                    sucursales y otros parámetros importantes.
                 </p>
             </div>
 
@@ -19,6 +21,7 @@ export function ConfiguracionFeature() {
                 <TabsList>
                     <TabsTrigger value="sucursales">Sucursales</TabsTrigger>
                     <TabsTrigger value="cargos">Cargos</TabsTrigger>
+                    <TabsTrigger value="soporte">Soporte</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sucursales" className="p-4">
@@ -27,6 +30,10 @@ export function ConfiguracionFeature() {
 
                 <TabsContent value="cargos" className="p-4">
                     <CargosFeature />
+                </TabsContent>
+
+                <TabsContent value="soporte" className="p-4">
+                    <SupportInformation />
                 </TabsContent>
             </Tabs>
         </section>

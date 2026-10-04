@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/atoms/SectionHeader";
 import { useToast } from "@/toast/hooks/useToast";
 
@@ -11,6 +10,7 @@ import { useSucursales } from "./hooks/useSucursales";
 import { sucursalesService } from "./services/sucursalesService";
 
 import type { Sucursal } from "./interfaces/types";
+import { Plus } from "lucide-react";
 
 export function SucursalesFeature() {
     const { sucursales, loading, error, reload } = useSucursales();
@@ -73,17 +73,18 @@ export function SucursalesFeature() {
             <div className="flex items-start justify-between gap-4">
                 <SectionHeader title="Sucursales" />
 
-                <Button
+                <button
                     type="button"
-                    variant="default"
                     onClick={() => {
                         setDialogMode("create");
                         setEditingSucursal(null);
                         setIsCreateDialogOpen(true);
                     }}
+                    className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark"
                 >
-                    Nueva sucursal
-                </Button>
+                    <Plus size={18} aria-hidden="true" />
+                    Crear sucursal
+                </button>
             </div>
 
             <SucursalTable
