@@ -82,6 +82,31 @@ describe("asistenciaService", () => {
         });
     });
 
+    it("consulta la asistencia del día", async () => {
+        const asistencia = {
+            fecha: "2026-10-04",
+            actualizadoEn: "2026-10-04T15:00:00.000Z",
+            totalEmpleados: 0,
+            presentes: 0,
+            ausentes: 0,
+            data: [],
+        };
+        client.get.mockResolvedValue({ data: asistencia });
+
+        await expect(asistenciaService.consultarHoy()).resolves.toEqual(
+            asistencia,
+        );
+        expect(client.get).toHaveBeenCalledWith("/asistencias/hoy");
+    });
+
+    it("normaliza los errores de la asistencia del día a ApiError", async () => {
+        client.get.mockRejectedValue(new Error("fallo"));
+
+        await expect(asistenciaService.consultarHoy()).rejects.toBeInstanceOf(
+            ApiError,
+        );
+    });
+
     it("normaliza los errores de la consulta a ApiError", async () => {
         client.get.mockRejectedValue(new Error("fallo"));
 

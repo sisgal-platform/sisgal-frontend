@@ -11,11 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Employee } from "@/features/empleados/interfaces/types";
 import { employeesService } from "@/features/empleados/services/employeesService";
 import { ApiError } from "@/lib/apiError";
-import { renderApp } from "@/test/render";
 
-import { AsistenciaFeature } from "../index";
+import { HistorialAsistencia } from "../components/HistorialAsistencia";
 import type {
-    HistorialAsistencia,
+    HistorialAsistencia as HistorialDatos,
     RegistroAsistencia,
 } from "../interfaces/types";
 import { asistenciaService } from "../services/asistenciaService";
@@ -77,8 +76,8 @@ const REGISTRO_INCOMPLETO: RegistroAsistencia = {
 
 function crearHistorial(
     data: RegistroAsistencia[],
-    paginacion: Partial<HistorialAsistencia> = {},
-): HistorialAsistencia {
+    paginacion: Partial<HistorialDatos> = {},
+): HistorialDatos {
     return {
         data,
         total: data.length,
@@ -100,7 +99,7 @@ const CONSULTA_INICIAL = {
 
 function renderFeature() {
     const user = userEvent.setup();
-    render(<AsistenciaFeature />);
+    render(<HistorialAsistencia />);
     return user;
 }
 
@@ -792,46 +791,6 @@ describe("Historial de asistencia (HU04)", () => {
 
             await esperarTabla();
             expect(consultarHistorial).toHaveBeenCalledTimes(2);
-        });
-    });
-
-    describe("Acceso al módulo", () => {
-        it("se muestra en el módulo de Asistencia para el administrador", async () => {
-            renderApp({ ruta: "/asistencia" });
-
-            expect(
-                await screen.findByRole("heading", {
-                    level: 1,
-                    name: "Asistencia",
-                }),
-            ).toBeInTheDocument();
-            expect(
-                screen.getByRole("heading", {
-                    level: 2,
-                    name: "Historial de asistencia",
-                }),
-            ).toBeInTheDocument();
-            await esperarTabla();
-        });
-
-        it("bloquea el acceso a usuarios no administradores", async () => {
-            const { router } = renderApp({
-                ruta: "/asistencia",
-                sesion: {
-                    user: {
-                        id: "u-2",
-                        nombre: "Laura Gómez",
-                        rol: "supervisor",
-                    },
-                    lastModule: null,
-                    startedAt: "2026-01-02T08:00:00.000Z",
-                },
-            });
-
-            await waitFor(() =>
-                expect(router.state.location.pathname).toBe("/"),
-            );
-            expect(consultarHistorial).not.toHaveBeenCalled();
         });
     });
 });

@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     esOtroDia,
     fechaActual,
+    formatFechaHoraActualizacion,
+    formatFechaLarga,
     formatFechaMarcacion,
     formatHoraMarcacion,
     formatHorasTrabajadas,
@@ -57,6 +59,29 @@ describe("Fechas del historial de asistencia", () => {
                     "2026-09-15T21:30:00.000Z",
                 ),
             ).toBe(false);
+        });
+    });
+
+    describe("formato de la vista del día", () => {
+        it("escribe el día con su nombre, sin cambiarlo por la zona horaria", () => {
+            expect(formatFechaLarga("2026-10-04")).toBe(
+                "domingo, 4 de octubre de 2026",
+            );
+            expect(formatFechaLarga("2026-01-01")).toBe(
+                "jueves, 1 de enero de 2026",
+            );
+        });
+
+        it("muestra la fecha y la hora de la actualización con segundos, en hora de Colombia", () => {
+            expect(
+                formatFechaHoraActualizacion("2026-10-04T20:19:31.002Z"),
+            ).toBe("04/10/2026, 3:19:31 p. m.");
+        });
+
+        it("ubica en el día anterior una actualización de la noche en Colombia", () => {
+            expect(
+                formatFechaHoraActualizacion("2026-10-05T04:30:00.000Z"),
+            ).toBe("04/10/2026, 11:30:00 p. m.");
         });
     });
 
