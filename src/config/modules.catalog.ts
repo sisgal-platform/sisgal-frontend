@@ -10,6 +10,7 @@ export type ModuleId =
     | "asistencia"
     | "nomina"
     | "novedades"
+    | "incapacidades"
     | "personal"
     | "prestamos"
     | "reportes"
@@ -61,9 +62,16 @@ export const MODULES: readonly AppModule[] = [
         id: "novedades",
         path: "/novedades",
         label: "Novedades",
-        description: "Incapacidades, licencias y otras novedades de los empleados.",
+        description: "Préstamos, incapacidades y adelantos.",
         workItem: 7,
         icon: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
+    },
+    {
+        id: "incapacidades",
+        path: "/incapacidades",
+        label: "Incapacidades",
+        description: "Registro y consulta de incapacidades y licencias de los empleados.",
+        icon: "M22 12h-4l-3 9L9 3l-3 9H2",
         adminOnly: true,
     },
     {
