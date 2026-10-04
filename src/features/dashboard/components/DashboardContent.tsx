@@ -3,6 +3,30 @@ import { useNavigate } from "react-router";
 
 import { DashboardCard } from "./DashboardCard";
 import { useSession } from "@/session/hooks/useSession";
+import { usePrestamosIndicadores } from "@/features/prestamos/hooks/usePrestamosIndicadores";
+
+function PrestamosDashboardCard({ onAction }: { onAction: () => void }) {
+    const { indicadores, cargando, error } = usePrestamosIndicadores();
+
+    return (
+        <DashboardCard
+            title="Préstamos"
+            value={
+                cargando
+                    ? "..."
+                    : error
+                      ? "—"
+                      : (indicadores?.cantidadPrestamosActivos ?? 0)
+            }
+            label={error ? "no disponibles" : "activos"}
+            icon={Wallet}
+            color="warning"
+            actionLabel="Ver préstamos"
+            actionIcon={ArrowRight}
+            onAction={onAction}
+        />
+    );
+}
 
 export function DashboardContent() {
     const { user } = useSession();
@@ -32,6 +56,10 @@ export function DashboardContent() {
 
     const handleRegisterLoan = () => {
         navigate("/novedades");
+    };
+
+    const handleViewLoans = () => {
+        navigate("/prestamos");
     };
 
     return (
@@ -73,16 +101,7 @@ export function DashboardContent() {
                         onAction={handleGeneratePayroll}
                     />
 
-                    <DashboardCard
-                        title="Préstamos"
-                        value={8}
-                        label="activos"
-                        icon={Wallet}
-                        color="warning"
-                        actionLabel="Registrar"
-                        actionIcon={Plus}
-                        onAction={handleRegisterLoan}
-                    />
+                    <PrestamosDashboardCard onAction={handleViewLoans} />
 
                     <DashboardCard
                         title="Incapacidades"

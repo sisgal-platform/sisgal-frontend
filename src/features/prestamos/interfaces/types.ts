@@ -3,6 +3,13 @@ export type PrestamosIndicadores = {
     montoTotalPrestamosActivos: number;
 };
 
+export type CrearPrestamoPayload = {
+    employeeId: number;
+    totalAmount: number;
+    totalInstallments: number;
+    grantedAt: string;
+};
+
 export type EstadoPrestamo = "ACTIVO" | "SALDADO" | "CANCELADO";
 
 export type EmpleadoPrestamo = {

@@ -1,6 +1,5 @@
 import { useState, type SubmitEvent } from "react";
 import {
-    Plus,
     RotateCcw,
     Search,
     TrendingDown,
@@ -10,12 +9,15 @@ import {
 import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
 
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
+import { CreatePrestamoModal } from "./components/CreatePrestamoModal";
+import { PrestamoDetailDialog } from "./components/PrestamoDetailDialog";
 import { PrestamosTable } from "./components/PrestamosTable";
 import { ESTADOS_PRESTAMO } from "./estadosPrestamo";
 import { usePrestamos } from "./hooks/usePrestamos";
 import { usePrestamosIndicadores } from "./hooks/usePrestamosIndicadores";
 import type {
     FiltrosPrestamos,
+    Prestamo,
     PrestamosIndicadores,
 } from "./interfaces/types";
 import { normalizarRangoFechas } from "./services/prestamosService";
@@ -47,6 +49,9 @@ const indicadores = [
 export function PrestamosFeature() {
     const [filtros, setFiltros] = useState(filtrosVacios);
     const [filtrosAplicados, setFiltrosAplicados] = useState(filtrosVacios);
+    const [prestamoDetalle, setPrestamoDetalle] = useState<Prestamo | null>(
+        null,
+    );
     const {
         indicadores: datos,
         cargando,
@@ -157,13 +162,12 @@ export function PrestamosFeature() {
                     >
                         Listado de préstamos
                     </h2>
-                    <button
-                        type="button"
-                        className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark"
-                    >
-                        <Plus size={18} aria-hidden="true" />
-                        Crear préstamo
-                    </button>
+                    <CreatePrestamoModal
+                        onSuccess={() => {
+                            listado.recargar();
+                            recargar();
+                        }}
+                    />
                 </div>
 
                 <form
@@ -282,8 +286,19 @@ export function PrestamosFeature() {
                     cargando={listado.cargando}
                     error={listado.error}
                     onReintentar={listado.recargar}
+                    onVerDetalle={setPrestamoDetalle}
                 />
             </section>
+
+            {prestamoDetalle && (
+                <PrestamoDetailDialog
+                    key={prestamoDetalle.id}
+                    prestamo={prestamoDetalle}
+                    onOpenChange={(open) => {
+                        if (!open) setPrestamoDetalle(null);
+                    }}
+                />
+            )}
         </section>
     );
 }

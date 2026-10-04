@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 
 export interface DashboardCardProps {
     title: string;
-    value: number;
+    value: number | string;
     label: string;
     icon: LucideIcon;
     color: "primary" | "success" | "warning" | "text";

@@ -1,12 +1,14 @@
 import type { Prestamo } from "../interfaces/types";
 import { obtenerConfiguracionEstadoPrestamo } from "../estadosPrestamo";
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
+import { Eye } from "lucide-react";
 
 type PrestamosTableProps = Readonly<{
     prestamos: Prestamo[];
     cargando: boolean;
     error: string | null;
     onReintentar: () => void;
+    onVerDetalle: (prestamo: Prestamo) => void;
 }>;
 
 export function PrestamosTable({
@@ -14,6 +16,7 @@ export function PrestamosTable({
     cargando,
     error,
     onReintentar,
+    onVerDetalle,
 }: PrestamosTableProps) {
     if (error) {
         return (
@@ -61,6 +64,9 @@ export function PrestamosTable({
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
                         <th scope="col" className="px-4 py-3">
+                            ID
+                        </th>
+                        <th scope="col" className="px-4 py-3">
                             Empleado
                         </th>
                         <th scope="col" className="px-4 py-3">
@@ -84,6 +90,9 @@ export function PrestamosTable({
                         <th scope="col" className="px-4 py-3">
                             Última actualización
                         </th>
+                        <th scope="col" className="px-4 py-3 text-right">
+                            Acciones
+                        </th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -94,6 +103,9 @@ export function PrestamosTable({
 
                         return (
                             <tr key={prestamo.id}>
+                                <td className="px-4 py-3 font-medium text-text">
+                                    {prestamo.id}
+                                </td>
                                 <td className="px-4 py-3 font-medium text-text">
                                     {prestamo.employee.firstName}{" "}
                                     {prestamo.employee.lastName}
@@ -126,6 +138,17 @@ export function PrestamosTable({
                                 </td>
                                 <td className="px-4 py-3 text-text-muted">
                                     {formatDateCO(prestamo.updatedAt)}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => onVerDetalle(prestamo)}
+                                        aria-label={`Ver detalle del préstamo ${prestamo.id}`}
+                                        title="Ver detalle"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-primary hover:bg-secondary"
+                                    >
+                                        <Eye size={18} aria-hidden="true" />
+                                    </button>
                                 </td>
                             </tr>
                         );
