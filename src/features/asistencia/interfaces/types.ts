@@ -55,3 +55,29 @@ export type HistorialAsistenciaQuery = {
     pagina: number;
     porPagina: ResultadosPorPagina;
 };
+
+export type EstadoAsistenciaHoy = "PRESENTE" | "AUSENTE";
+
+/** Espejo de AttendanceTodayEmployeeDto. */
+export type EmpleadoAsistenciaHoy = {
+    employeeId: number;
+    firstName: string;
+    lastName: string;
+    positionName: string | null;
+    branchName: string | null;
+    /** Primera entrada del día; null si el empleado está ausente. */
+    checkIn: string | null;
+    status: EstadoAsistenciaHoy;
+};
+
+/** Espejo de AttendanceTodayResponseDto. */
+export type AsistenciaHoy = {
+    /** Día consultado (YYYY-MM-DD). */
+    fecha: string;
+    /** Fecha y hora en que el backend generó la información. */
+    actualizadoEn: string;
+    totalEmpleados: number;
+    presentes: number;
+    ausentes: number;
+    data: EmpleadoAsistenciaHoy[];
+};

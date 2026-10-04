@@ -2,6 +2,7 @@ import apiClient from "@/lib/axios";
 import { toApiError } from "@/lib/apiError";
 
 import type {
+    AsistenciaHoy,
     ConsultaHistorial,
     HistorialAsistencia,
     HistorialAsistenciaQuery,
@@ -30,6 +31,16 @@ export const asistenciaService = {
                 "/asistencias/historial",
                 { params: crearQueryHistorial(consulta) },
             );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async consultarHoy(): Promise<AsistenciaHoy> {
+        try {
+            const { data } =
+                await apiClient.get<AsistenciaHoy>("/asistencias/hoy");
             return data;
         } catch (error) {
             throw toApiError(error);

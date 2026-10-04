@@ -23,6 +23,25 @@ const formateadorHora = new Intl.DateTimeFormat("es-CO", {
     timeZone: ZONA_HORARIA,
 });
 
+const formateadorFechaLarga = new Intl.DateTimeFormat("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+});
+
+const formateadorFechaHora = new Intl.DateTimeFormat("es-CO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: ZONA_HORARIA,
+});
+
 /** Fecha de hoy (YYYY-MM-DD) en la zona horaria de operación. */
 export function fechaActual(): string {
     return formateadorFechaISO.format(new Date());
@@ -77,4 +96,15 @@ export function validarRangoFechas(
     }
 
     return null;
+}
+
+/** Día (YYYY-MM-DD) en texto, p. ej. "domingo, 4 de octubre de 2026". */
+export function formatFechaLarga(fecha: string): string {
+    // La fecha no tiene hora: se formatea en UTC para que no cambie de día.
+    return formateadorFechaLarga.format(new Date(`${fecha}T00:00:00Z`));
+}
+
+/** Fecha y hora de una actualización, p. ej. "04/10/2026, 3:19:31 p. m.". */
+export function formatFechaHoraActualizacion(valor: string): string {
+    return formateadorFechaHora.format(new Date(valor)).replace(/\s/g, " ");
 }
