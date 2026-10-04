@@ -8,33 +8,33 @@ import type { Employee } from "@/features/empleados/interfaces/types"
 export function useActiveEmployees() {
     const { showToast } = useToast()
     const [employees, setEmployees] = useState<Employee[]>([])
-    const [cargando, setCargando] = useState(true)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        let cancelado = false
+        let cancelled = false
 
-        async function cargarEmpleados() {
-            setCargando(true)
+        async function loadEmployees() {
+            setLoading(true)
 
             try {
-                const datos = await employeesService.list({ status: "ACTIVO" })
-                if (!cancelado) setEmployees(datos)
+                const data = await employeesService.list({ status: "ACTIVO" })
+                if (!cancelled) setEmployees(data)
             } catch {
-                if (!cancelado) {
+                if (!cancelled) {
                     showToast("No se pudieron cargar los empleados disponibles.", "error")
                 }
             } finally {
-                if (!cancelado) setCargando(false)
+                if (!cancelled) setLoading(false)
             }
         }
 
-        void cargarEmpleados()
+        void loadEmployees()
 
         return () => {
-            cancelado = true
+            cancelled = true
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    return { employees, cargando }
+    return { employees, loading }
 }

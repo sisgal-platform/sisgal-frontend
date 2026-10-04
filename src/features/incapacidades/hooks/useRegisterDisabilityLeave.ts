@@ -6,13 +6,13 @@ import type { RegisterDisabilityLeavePayload } from "../interfaces/types"
 
 export function useRegisterDisabilityLeave(onSuccess: () => void) {
     const { showToast } = useToast()
-    const [enviando, setEnviando] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
 
     async function registerDisabilityLeave(payload: RegisterDisabilityLeavePayload) {
-        setEnviando(true)
+        setSubmitting(true)
 
         try {
-            await disabilityLeavesService.registrar(payload)
+            await disabilityLeavesService.register(payload)
 
             showToast("Incapacidad registrada correctamente.", "success")
             onSuccess()
@@ -23,9 +23,9 @@ export function useRegisterDisabilityLeave(onSuccess: () => void) {
                 "error",
             )
         } finally {
-            setEnviando(false)
+            setSubmitting(false)
         }
     }
 
-    return { registerDisabilityLeave, enviando }
+    return { registerDisabilityLeave, submitting }
 }

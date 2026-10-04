@@ -7,9 +7,9 @@ import { FloatingSelect } from "@/components/molecules/FloatingSelect"
 import { useRegisterDisabilityLeave } from "../hooks/useRegisterDisabilityLeave"
 import { useActiveEmployees } from "../hooks/useActiveEmployees"
 import {
-    TIPOS_INCAPACIDAD,
+    DISABILITY_TYPES,
+    type DisabilityType,
     type RegisterDisabilityLeavePayload,
-    type TipoIncapacidad,
 } from "../interfaces/types"
 
 type RegisterDisabilityLeaveFormProps = {
@@ -18,7 +18,7 @@ type RegisterDisabilityLeaveFormProps = {
 
 type DisabilityLeaveFormValues = {
     employeeId: string
-    type: TipoIncapacidad | ""
+    type: DisabilityType | ""
     otherTypeDescription: string
     startDate: string
     endDate: string
@@ -35,16 +35,16 @@ const EMPTY_DISABILITY_LEAVE_FORM: DisabilityLeaveFormValues = {
 }
 
 /** Cantidad de días del período, contando ambos extremos. Null si las fechas no son válidas. */
-function calcularDias(startDate: string, endDate: string): number | null {
+function calculateDays(startDate: string, endDate: string): number | null {
     if (!startDate || !endDate) return null
 
-    const inicio = new Date(startDate)
-    const fin = new Date(endDate)
-    if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) return null
-    if (fin < inicio) return null
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+    if (end < start) return null
 
-    const milisegundosPorDia = 1000 * 60 * 60 * 24
-    return Math.round((fin.getTime() - inicio.getTime()) / milisegundosPorDia) + 1
+    const millisecondsPerDay = 1000 * 60 * 60 * 24
+    return Math.round((end.getTime() - start.getTime()) / millisecondsPerDay) + 1
 }
 
 /**
@@ -63,7 +63,7 @@ function validateDisabilityLeaveForm(values: DisabilityLeaveFormValues): Disabil
 
     if (!values.type) {
         errors.type = "Selecciona el tipo de incapacidad o licencia."
-    } else if (!TIPOS_INCAPACIDAD.includes(values.type)) {
+    } else if (!DISABILITY_TYPES.includes(values.type)) {
         errors.type = "Selecciona un tipo válido."
     }
 
@@ -79,7 +79,7 @@ function validateDisabilityLeaveForm(values: DisabilityLeaveFormValues): Disabil
         errors.endDate = "Selecciona la fecha de finalización."
     } else if (
         values.startDate.trim() &&
-        calcularDias(values.startDate, values.endDate) === null
+        calculateDays(values.startDate, values.endDate) === null
     ) {
         errors.endDate = "La fecha de finalización debe ser igual o posterior a la fecha de inicio."
     }
@@ -91,44 +91,44 @@ export function RegisterDisabilityLeaveForm({ onSuccess }: RegisterDisabilityLea
     const [values, setValues] = useState<DisabilityLeaveFormValues>(EMPTY_DISABILITY_LEAVE_FORM)
     const [errors, setErrors] = useState<DisabilityLeaveFormErrors>({})
 
-    const { registerDisabilityLeave, enviando } = useRegisterDisabilityLeave(() => {
+    const { registerDisabilityLeave, submitting } = useRegisterDisabilityLeave(() => {
         setValues(EMPTY_DISABILITY_LEAVE_FORM)
         setErrors({})
         onSuccess()
     })
 
-    const { employees, cargando: cargandoEmpleados } = useActiveEmployees()
+    const { employees, loading: employeesLoading } = useActiveEmployees()
 
-    const esOtros = values.type === "Otros"
-    const dias = calcularDias(values.startDate, values.endDate)
+    const isOther = values.type === "Otros"
+    const days = calculateDays(values.startDate, values.endDate)
 
-    function handleChange<K extends keyof DisabilityLeaveFormValues>(campo: K, valor: string) {
-        setValues((prev) => ({ ...prev, [campo]: valor }))
+    function handleChange<K extends keyof DisabilityLeaveFormValues>(field: K, value: string) {
+        setValues((prev) => ({ ...prev, [field]: value }))
     }
 
     // Valida solo el campo que perdió el foco, para no mostrar errores de los
     // demás antes de que el usuario haya llegado a ellos.
-    function handleBlur(campo: keyof DisabilityLeaveFormValues) {
-        const erroresActuales = validateDisabilityLeaveForm(values)
-        setErrors((prev) => ({ ...prev, [campo]: erroresActuales[campo] }))
+    function handleBlur(field: keyof DisabilityLeaveFormValues) {
+        const currentErrors = validateDisabilityLeaveForm(values)
+        setErrors((prev) => ({ ...prev, [field]: currentErrors[field] }))
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        const erroresValidacion = validateDisabilityLeaveForm(values)
-        setErrors(erroresValidacion)
+        const validationErrors = validateDisabilityLeaveForm(values)
+        setErrors(validationErrors)
 
-        if (Object.keys(erroresValidacion).length > 0) {
+        if (Object.keys(validationErrors).length > 0) {
             return
         }
 
         const payload: RegisterDisabilityLeavePayload = {
             employeeId: Number(values.employeeId),
-            type: values.type as TipoIncapacidad,
+            type: values.type as DisabilityType,
             startDate: values.startDate,
             endDate: values.endDate,
-            ...(esOtros ? { otherTypeDescription: values.otherTypeDescription.trim() } : {}),
+            ...(isOther ? { otherTypeDescription: values.otherTypeDescription.trim() } : {}),
         }
 
         await registerDisabilityLeave(payload)
@@ -143,11 +143,11 @@ export function RegisterDisabilityLeaveForm({ onSuccess }: RegisterDisabilityLea
                     value={values.employeeId}
                     onChange={(e) => handleChange("employeeId", e.target.value)}
                     onBlur={() => handleBlur("employeeId")}
-                    disabled={enviando || cargandoEmpleados}
+                    disabled={submitting || employeesLoading}
                     error={errors.employeeId}
                 >
                     <option value="">
-                        {cargandoEmpleados ? "Cargando empleados…" : "Selecciona…"}
+                        {employeesLoading ? "Cargando empleados…" : "Selecciona…"}
                     </option>
                     {employees.map((employee) => (
                         <option key={employee.id} value={employee.id}>
@@ -162,25 +162,25 @@ export function RegisterDisabilityLeaveForm({ onSuccess }: RegisterDisabilityLea
                     value={values.type}
                     onChange={(e) => handleChange("type", e.target.value)}
                     onBlur={() => handleBlur("type")}
-                    disabled={enviando}
+                    disabled={submitting}
                     error={errors.type}
                 >
                     <option value="">Selecciona…</option>
-                    {TIPOS_INCAPACIDAD.map((tipo) => (
-                        <option key={tipo} value={tipo}>
-                            {tipo}
+                    {DISABILITY_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                            {type}
                         </option>
                     ))}
                 </FloatingSelect>
 
-                {esOtros && (
+                {isOther && (
                     <FloatingInput
                         label="Especifica el tipo"
                         required
                         value={values.otherTypeDescription}
                         onChange={(e) => handleChange("otherTypeDescription", e.target.value)}
                         onBlur={() => handleBlur("otherTypeDescription")}
-                        disabled={enviando}
+                        disabled={submitting}
                         error={errors.otherTypeDescription}
                     />
                 )}
@@ -193,7 +193,7 @@ export function RegisterDisabilityLeaveForm({ onSuccess }: RegisterDisabilityLea
                         value={values.startDate}
                         onChange={(e) => handleChange("startDate", e.target.value)}
                         onBlur={() => handleBlur("startDate")}
-                        disabled={enviando}
+                        disabled={submitting}
                         error={errors.startDate}
                     />
 
@@ -204,22 +204,22 @@ export function RegisterDisabilityLeaveForm({ onSuccess }: RegisterDisabilityLea
                         value={values.endDate}
                         onChange={(e) => handleChange("endDate", e.target.value)}
                         onBlur={() => handleBlur("endDate")}
-                        disabled={enviando}
+                        disabled={submitting}
                         error={errors.endDate}
                     />
                 </div>
 
                 <FloatingInput
                     label="Cantidad de días"
-                    value={dias !== null ? String(dias) : ""}
+                    value={days !== null ? String(days) : ""}
                     disabled
                     readOnly
                 />
             </fieldset>
 
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button type="submit" disabled={enviando} className="bg-primary hover:bg-primary-light">
-                    {enviando ? "Registrando…" : "Registrar incapacidad"}
+                <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary-light">
+                    {submitting ? "Registrando…" : "Registrar incapacidad"}
                 </Button>
             </div>
         </form>
