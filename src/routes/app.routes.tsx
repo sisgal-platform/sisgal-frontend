@@ -12,6 +12,7 @@ import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
 import { ConfiguracionPage } from "@/pages/configuracion/ConfiguracionPage";
 import { NominaPage } from "@/pages/nomina/NominaPage";
 import { NovedadesPage } from "@/pages/novedades/NovedadesPage";
+import { IncapacidadesPage } from "@/pages/incapacidades/IncapacidadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
 import { ReportesPage } from "@/pages/reportes/ReportesPage";
@@ -42,6 +43,10 @@ export const routes: RouteObject[] = [
                     {
                         path: "novedades",
                         element: <NovedadesPage />,
+                    },
+                    {
+                        path: "incapacidades",
+                        element: <IncapacidadesPage />,
                     },
                     {
                         path: "personal",
