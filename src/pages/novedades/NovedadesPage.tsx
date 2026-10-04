@@ -1,8 +1,10 @@
-import { MODULES } from "@/config/modules.catalog";
-import { ModulePage } from "@/pages/module/ModulePage";
+import { NovedadesFeature } from "@/features/novedades";
+import { RequireRole } from "@/routes/guards/RequireRole";
 
 export function NovedadesPage() {
-    const modulo = MODULES.find((item) => item.id === "novedades");
-    if (!modulo) return null;
-    return <ModulePage module={modulo} />;
+    return (
+        <RequireRole allowedRoles={["administrador"]}>
+            <NovedadesFeature />
+        </RequireRole>
+    );
 }
