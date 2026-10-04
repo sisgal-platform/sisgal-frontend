@@ -1,8 +1,10 @@
-import { MODULES } from "@/config/modules.catalog";
-import { ModulePage } from "@/pages/module/ModulePage";
+import { AsistenciaFeature } from "@/features/asistencia";
+import { RequireRole } from "@/routes/guards/RequireRole";
 
 export function AsistenciaPage() {
-    const modulo = MODULES.find((item) => item.id === "asistencia");
-    if (!modulo) return null;
-    return <ModulePage module={modulo} />;
+    return (
+        <RequireRole allowedRoles={["administrador"]}>
+            <AsistenciaFeature />
+        </RequireRole>
+    );
 }
