@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { DashboardCard } from "./DashboardCard";
 import { useSession } from "@/session/hooks/useSession";
 import { usePrestamosIndicadores } from "@/features/prestamos/hooks/usePrestamosIndicadores";
+import { useDisabilityLeaveIndicators } from "@/features/incapacidades/hooks/useDisabilityLeaveIndicators";
 
 function PrestamosDashboardCard({ onAction }: { onAction: () => void }) {
     const { indicadores, cargando, error } = usePrestamosIndicadores();
@@ -23,6 +24,23 @@ function PrestamosDashboardCard({ onAction }: { onAction: () => void }) {
             color="warning"
             actionLabel="Ver préstamos"
             actionIcon={ArrowRight}
+            onAction={onAction}
+        />
+    );
+}
+
+function IncapacidadesDashboardCard({ onAction }: { onAction: () => void }) {
+    const { indicators, loading, error } = useDisabilityLeaveIndicators();
+
+    return (
+        <DashboardCard
+            title="Incapacidades"
+            value={loading ? "..." : error ? "—" : (indicators?.activeCount ?? 0)}
+            label={error ? "no disponibles" : "activas"}
+            icon={FileText}
+            color="text"
+            actionLabel="Registrar"
+            actionIcon={Plus}
             onAction={onAction}
         />
     );
@@ -54,8 +72,8 @@ export function DashboardContent() {
         navigate("/nomina");
     };
 
-    const handleRegisterLoan = () => {
-        navigate("/novedades");
+    const handleRegisterDisabilityLeave = () => {
+        navigate("/incapacidades");
     };
 
     const handleViewLoans = () => {
@@ -103,16 +121,7 @@ export function DashboardContent() {
 
                     <PrestamosDashboardCard onAction={handleViewLoans} />
 
-                    <DashboardCard
-                        title="Incapacidades"
-                        value={8}
-                        label="activas"
-                        icon={FileText}
-                        color="text"
-                        actionLabel="Registrar"
-                        actionIcon={Plus}
-                        onAction={handleRegisterLoan}
-                    />
+                    <IncapacidadesDashboardCard onAction={handleRegisterDisabilityLeave} />
                 </section>
             </div>
         </section>
