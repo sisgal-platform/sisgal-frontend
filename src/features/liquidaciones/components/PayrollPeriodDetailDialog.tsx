@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Download } from "lucide-react"
 
 import {
     Dialog,
@@ -7,6 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
@@ -170,6 +172,17 @@ export function PayrollPeriodDetailDialog({
                 )}
 
                 <DialogFooter>
+                    {/* Exportación a PDF pendiente de otra historia (HU de exportación); el botón queda visible pero sin funcionalidad */}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                        title="Disponible próximamente"
+                        className="flex items-center gap-2"
+                    >
+                        <Download size={16} aria-hidden="true" />
+                        Descargar PDF
+                    </Button>
                     <button
                         type="button"
                         onClick={() => onOpenChange(false)}
