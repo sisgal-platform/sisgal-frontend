@@ -205,7 +205,7 @@ type ConceptSectionRowsProps = {
 }
 
 // Fragmento de filas de <tbody>: una fila de encabezado coloreada (devengado/deducciones)
-// seguida de sus conceptos, para que la tabla de detalle los diferencie con claridad (CA06)
+// seguida de sus conceptos, para que la tabla de detalle los diferencie con claridad
 function ConceptSectionRows({
     title,
     headerClassName,

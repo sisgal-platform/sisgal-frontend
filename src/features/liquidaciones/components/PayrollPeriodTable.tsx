@@ -94,7 +94,7 @@ export function PayrollPeriodTable({
                                 {formatCurrencyCOP(payrollPeriod.netPay)}
                             </td>
                             <td className="px-4 py-3">
-                                {/* Toda liquidación consultable ya está confirmada: se identifica como definitiva (CA08) */}
+                                {/* Toda liquidación consultable ya está confirmada: se identifica como definitiva */}
                                 <span className="inline-flex rounded-full bg-success-light px-2.5 py-0.5 text-xs font-semibold text-success-dark">
                                     {payrollPeriod.status}
                                 </span>

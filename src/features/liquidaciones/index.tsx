@@ -65,7 +65,7 @@ export function LiquidacionesFeature() {
     function applyFilters(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        // El período inicial no puede ser posterior al final (CA10); se bloquea la consulta
+        // El período inicial no puede ser posterior al final; se bloquea la consulta
         if (filters.periodStart && filters.periodEnd && filters.periodStart > filters.periodEnd) {
             setPeriodRangeError("El período inicial no puede ser posterior al período final.")
             return

@@ -111,7 +111,7 @@ export function IncapacidadesFeature() {
     function applyFilters(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        // La fecha inicial no puede ser posterior a la final (CA11); se bloquea la consulta
+        // La fecha inicial no puede ser posterior a la final; se bloquea la consulta
         if (filters.startDate && filters.endDate && filters.startDate > filters.endDate) {
             setDateRangeError("La fecha inicial no puede ser posterior a la fecha final.")
             return
