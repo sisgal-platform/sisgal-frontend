@@ -57,6 +57,9 @@ const PAYROLL_PERIOD_CARLOS: PayrollPeriod = {
 
 const PAYROLL_PERIOD_DETAIL_ANA: PayrollPeriodDetail = {
     ...PAYROLL_PERIOD_ANA,
+    employeeDocumentType: "CC",
+    employeeDocument: "1020304050",
+    employeePosition: "Mesera",
     earnings: [
         { conceptName: "Salario base", amount: 1530000 },
         { conceptName: "Horas extra", amount: 270000 },
@@ -131,6 +134,8 @@ describe("LiquidacionesFeature", () => {
         )
 
         const dialog = await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
+        expect(within(dialog).getByText("CC 1020304050")).toBeInTheDocument()
+        expect(within(dialog).getByText("Mesera")).toBeInTheDocument()
         expect(within(dialog).getByText("Salario base")).toBeInTheDocument()
         expect(within(dialog).getByText("Horas extra")).toBeInTheDocument()
         expect(within(dialog).getByText("Salud y pensión")).toBeInTheDocument()

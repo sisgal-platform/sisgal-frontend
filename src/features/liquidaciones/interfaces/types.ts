@@ -20,6 +20,9 @@ export type PayrollPeriod = {
 
 /** Espejo exacto de PayrollPeriodDetailResponseDto (backend). */
 export type PayrollPeriodDetail = PayrollPeriod & {
+    employeeDocumentType: string
+    employeeDocument: string
+    employeePosition: string | null
     earnings: PayrollLine[]
     deductions: PayrollLine[]
 }

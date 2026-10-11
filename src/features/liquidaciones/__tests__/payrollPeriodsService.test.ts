@@ -28,6 +28,9 @@ const PAYROLL_PERIOD: PayrollPeriod = {
 
 const PAYROLL_PERIOD_DETAIL: PayrollPeriodDetail = {
     ...PAYROLL_PERIOD,
+    employeeDocumentType: "CC",
+    employeeDocument: "1020304050",
+    employeePosition: "Mesera",
     earnings: [{ conceptName: "Salario base", amount: 1800000 }],
     deductions: [{ conceptName: "Salud y pensión", amount: 150000 }],
 }

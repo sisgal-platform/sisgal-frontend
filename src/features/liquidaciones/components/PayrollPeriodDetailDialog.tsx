@@ -107,6 +107,10 @@ export function PayrollPeriodDetailDialog({
                             </h3>
                             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                                 <Dato label="Empleado">{detalle.employeeName}</Dato>
+                                <Dato label="Documento">
+                                    {detalle.employeeDocumentType} {detalle.employeeDocument}
+                                </Dato>
+                                <Dato label="Cargo">{detalle.employeePosition ?? "—"}</Dato>
                                 <Dato label="Período">
                                     {formatDateCO(detalle.periodStart)} – {formatDateCO(detalle.periodEnd)}
                                 </Dato>
