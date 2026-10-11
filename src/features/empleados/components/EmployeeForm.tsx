@@ -8,6 +8,7 @@ import { useRegisterEmployee } from "../hooks/useRegisterEmployee"
 import { useUpdateEmployee } from "../hooks/useUpdateEmployee"
 import { useActivePositions } from "../hooks/useActivePositions"
 import { useActiveBranches } from "../hooks/useActiveBranches"
+import { useVigentWorkdayConfig } from "../hooks/useVigentWorkdayConfig"
 import {
   validateEmployeeForm,
   EMPTY_EMPLOYEE_FORM,
@@ -64,6 +65,7 @@ export function EmployeeForm({
 
   const { positions, cargando: cargandoCargos } = useActivePositions()
   const { branches, cargando: cargandoSucursales } = useActiveBranches()
+  const { workdayConfig, cargando: cargandoHorario } = useVigentWorkdayConfig()
 
   function handleChange<K extends keyof EmployeeFormValues>(campo: K, valor: string) {
     setValues((prev) => ({ ...prev, [campo]: valor }))
@@ -256,13 +258,19 @@ export function EmployeeForm({
             error={errors.salaryBase}
           />
 
-          <FloatingSelect label="Horario laboral" disabled>
-            <option>Próximamente</option>
+          <FloatingSelect label="Horario laboral" disabled={enviando || soloLectura}>
+            <option>
+              {cargandoHorario
+                ? "Cargando jornada laboral…"
+                : workdayConfig
+                  ? `Diurna ${workdayConfig.dayStart}–${workdayConfig.dayEnd} · Nocturna ${workdayConfig.nightStart}–${workdayConfig.nightEnd} · máx. ${workdayConfig.maxWeekHours}h/semana`
+                  : "No hay una jornada laboral configurada"}
+            </option>
           </FloatingSelect>
         </div>
 
-        <p className="rounded-lg bg-warning-light px-3 py-2 text-sm text-warning-dark">
-          La asignación de horario laboral estará disponible en una próxima entrega.
+        <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-text-muted">
+          Esta es la jornada laboral general de la empresa, configurada en Parámetros de nómina. La asignación de un horario propio por empleado estará disponible en una próxima entrega.
         </p>
       </fieldset>
 
