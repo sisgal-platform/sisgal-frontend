@@ -14,6 +14,7 @@ import { ToastProvider } from "@/toast/components/ToastProvider";
 import { ParametrosNominaFeature } from "../index";
 import type { WorkdayConfig } from "../interfaces/types";
 import { workdayConfigService } from "../services/workdayConfigService";
+import { workRatesService } from "../services/workRatesService";
 
 const findAll = vi.spyOn(workdayConfigService, "findAll");
 const register = vi.spyOn(workdayConfigService, "register");
@@ -95,10 +96,33 @@ describe("Parámetros de nómina: jornada laboral (HU45)", () => {
             expect(
                 screen.getByRole("tab", { name: "Jornada laboral" }),
             ).toHaveAttribute("aria-selected", "true");
-            expect(screen.getByRole("tab", { name: "Recargos" })).toBeDisabled();
+            expect(
+                screen.getByRole("tab", { name: "Horas y recargos" }),
+            ).toBeEnabled();
             expect(
                 screen.getByRole("tab", { name: "Deducciones" }),
             ).toBeDisabled();
+        });
+
+        it("muestra los recargos al elegir la categoría de horas y recargos", async () => {
+            const findAllRates = vi
+                .spyOn(workRatesService, "findAll")
+                .mockResolvedValue([]);
+
+            const user = renderFeature();
+            await waitForHistory();
+
+            await user.click(
+                screen.getByRole("tab", { name: "Horas y recargos" }),
+            );
+
+            expect(
+                await screen.findByRole("heading", {
+                    level: 3,
+                    name: "Horas y recargos",
+                }),
+            ).toBeInTheDocument();
+            expect(findAllRates).toHaveBeenCalledTimes(1);
         });
 
         it("muestra el valor vigente de cada parámetro y su fecha de inicio", async () => {
