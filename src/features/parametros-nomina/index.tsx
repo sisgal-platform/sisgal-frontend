@@ -2,9 +2,10 @@ import { SectionHeader } from "@/components/atoms/SectionHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { WorkdayConfigSection } from "./components/WorkdayConfigSection";
+import { WorkRatesSection } from "./components/WorkRatesSection";
 import { PAYROLL_PARAMETER_CATEGORIES } from "./constants/categories";
 
-/** HU45 — Parámetros de nómina por categoría. El acceso lo restringe `ConfiguracionPage`. */
+/** HU45, HU39 — Parámetros de nómina por categoría. El acceso lo restringe `ConfiguracionPage`. */
 export function ParametrosNominaFeature() {
     return (
         <section className="space-y-6">
@@ -39,6 +40,10 @@ export function ParametrosNominaFeature() {
 
                 <TabsContent value="jornada-laboral" className="pt-4">
                     <WorkdayConfigSection />
+                </TabsContent>
+
+                <TabsContent value="horas-recargos" className="pt-4">
+                    <WorkRatesSection />
                 </TabsContent>
             </Tabs>
         </section>

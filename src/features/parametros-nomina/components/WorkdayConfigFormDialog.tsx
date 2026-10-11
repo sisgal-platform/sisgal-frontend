@@ -1,9 +1,4 @@
-import {
-    useState,
-    type ChangeEvent,
-    type FormEvent,
-    type InputHTMLAttributes,
-} from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 
 import { Modal } from "@/components/molecules/Modal";
 import { fechaActual } from "@/features/asistencia/utils/fechas";
@@ -16,13 +11,18 @@ import type {
     WorkdayConfig,
 } from "../interfaces/types";
 import { workdayConfigService } from "../services/workdayConfigService";
-import { formatHours, formatTime, shiftDate } from "../utils/format";
+import {
+    formatHours,
+    formatTime,
+    isValidDate,
+    shiftDate,
+} from "../utils/format";
+import { FieldInput } from "./FieldInput";
 
 const MAX_WEEK_HOURS = 168;
 const MAX_DAY_HOURS = 24;
 const DAYS_PER_WEEK = 7;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 type Values = {
     maxWeekHours: string;
@@ -53,18 +53,6 @@ const TIME_FIELDS = [
 
 const parseHours = (value: string): number | null =>
     /^\d+$/.test(value.trim()) ? Number(value.trim()) : null;
-
-const isValidDate = (value: string): boolean => {
-    if (!DATE_PATTERN.test(value)) return false;
-
-    const date = new Date(`${value}T00:00:00Z`);
-
-    // Descarta fechas que no existen en el calendario, como el 30 de febrero.
-    return (
-        !Number.isNaN(date.getTime()) &&
-        date.toISOString().slice(0, 10) === value
-    );
-};
 
 const getHoursError = (
     value: string,
@@ -503,51 +491,5 @@ export function WorkdayConfigFormDialog({
                 </div>
             </form>
         </Modal>
-    );
-}
-
-type FieldInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
-    id: string;
-    label: string;
-    error?: string;
-    hint?: string;
-};
-
-/** Campo obligatorio con su etiqueta y el mensaje de validación junto a él. */
-function FieldInput({ id, label, error, hint, ...props }: FieldInputProps) {
-    const errorId = `${id}-error`;
-    const hintId = `${id}-hint`;
-    const describedBy =
-        [error ? errorId : null, hint ? hintId : null]
-            .filter(Boolean)
-            .join(" ") || undefined;
-
-    return (
-        <div className="flex flex-col gap-1">
-            <label htmlFor={id} className="text-sm font-semibold text-text">
-                {label}{" "}
-                <span aria-hidden="true" className="text-error">
-                    *
-                </span>
-            </label>
-            <input
-                id={id}
-                required
-                aria-invalid={error ? true : undefined}
-                aria-describedby={describedBy}
-                className="h-11 rounded-xl border border-gray-300 px-3 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 aria-[invalid]:border-error"
-                {...props}
-            />
-            {hint && (
-                <p id={hintId} className="text-xs text-text-muted">
-                    {hint}
-                </p>
-            )}
-            {error && (
-                <p id={errorId} className="text-sm text-error">
-                    {error}
-                </p>
-            )}
-        </div>
     );
 }
