@@ -258,7 +258,7 @@ export function EmployeeForm({
             error={errors.salaryBase}
           />
 
-          <FloatingSelect label="Horario laboral">
+          <FloatingSelect label="Horario laboral" disabled={enviando || soloLectura}>
             <option>
               {cargandoHorario
                 ? "Cargando jornada laboral…"

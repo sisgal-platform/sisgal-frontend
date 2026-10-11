@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 
-import { workdayConfigService, type WorkdayConfigVigente } from "../services/workdayConfigService"
+import { workdayConfigService } from "@/features/parametros-nomina/services/workdayConfigService"
+import type { WorkdayConfig } from "@/features/parametros-nomina/interfaces/types"
 
 /** Carga la jornada laboral general vigente, para mostrarla en la ficha del empleado. */
 export function useVigentWorkdayConfig() {
-    const [workdayConfig, setWorkdayConfig] = useState<WorkdayConfigVigente | null>(null)
+    const [workdayConfig, setWorkdayConfig] = useState<WorkdayConfig | null>(null)
     const [cargando, setCargando] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -16,8 +17,10 @@ export function useVigentWorkdayConfig() {
             setError(null)
 
             try {
-                const data = await workdayConfigService.obtenerVigente()
-                if (!cancelado) setWorkdayConfig(data)
+                const versiones = await workdayConfigService.findAll()
+                if (!cancelado) {
+                    setWorkdayConfig(versiones.find((v) => v.status === "VIGENTE") ?? null)
+                }
             } catch (error: unknown) {
                 console.error("Error al consultar la jornada laboral vigente:", error)
                 if (!cancelado) {
