@@ -1,8 +1,10 @@
-import { MODULES } from "@/config/modules.catalog";
-import { ModulePage } from "@/pages/module/ModulePage";
+import { LiquidacionesFeature } from "@/features/liquidaciones";
+import { RequireRole } from "@/routes/guards/RequireRole";
 
 export function NominaPage() {
-    const modulo = MODULES.find((item) => item.id === "nomina");
-    if (!modulo) return null;
-    return <ModulePage module={modulo} />;
+    return (
+        <RequireRole allowedRoles={["administrador"]}>
+            <LiquidacionesFeature />
+        </RequireRole>
+    );
 }
