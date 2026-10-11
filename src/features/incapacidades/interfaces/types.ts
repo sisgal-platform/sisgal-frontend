@@ -52,7 +52,7 @@ export type DisabilityLeaveQuery = {
 
 /** Valores del formulario de filtros (siempre string, se convierten antes de consultar). */
 export type DisabilityLeaveFilterValues = {
-    employeeName: string
+    employeeId: string
     document: string
     positionId: string
     status: DisabilityStatus | ""

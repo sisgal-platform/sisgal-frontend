@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { Activity, CalendarDays, RotateCcw, Search } from "lucide-react"
 
 import { SectionHeader } from "@/components/atoms/SectionHeader"
+import { Combobox } from "@/components/ui/combobox"
 import { formatNumberCO } from "@/lib/formatters"
 import { useActivePositions } from "@/features/empleados/hooks/useActivePositions"
 
 import { DisabilityLeaveIndicatorCard } from "./components/DisabilityLeaveIndicatorCard"
 import { DisabilityLeaveTable } from "./components/DisabilityLeaveTable"
 import { RegisterDisabilityLeaveModal } from "./components/RegisterDisabilityLeaveModal"
+import { useActiveEmployees } from "./hooks/useActiveEmployees"
 import { useDisabilityLeaves } from "./hooks/useDisabilityLeaves"
 import type {
     DisabilityLeave,
@@ -46,7 +48,7 @@ function calculateIndicators(disabilityLeaves: DisabilityLeave[]): DisabilityLea
 }
 
 const emptyFilters: DisabilityLeaveFilterValues = {
-    employeeName: "",
+    employeeId: "",
     document: "",
     positionId: "",
     status: "",
@@ -58,8 +60,8 @@ const emptyFilters: DisabilityLeaveFilterValues = {
 function buildQuery(filters: DisabilityLeaveFilterValues): DisabilityLeaveQuery {
     const query: DisabilityLeaveQuery = {}
 
-    if (filters.employeeName.trim()) query.employeeName = filters.employeeName.trim()
-    if (filters.document.trim()) query.document = filters.document.trim()
+    if (filters.employeeId) query.employeeId = Number(filters.employeeId)
+    if (filters.document) query.document = filters.document
     if (filters.positionId) query.positionId = Number(filters.positionId)
     if (filters.status) query.status = filters.status
     if (filters.startDate) query.startDate = filters.startDate
@@ -78,6 +80,19 @@ export function IncapacidadesFeature() {
         buildQuery(appliedFilters),
     )
     const { positions, cargando: positionsLoading } = useActivePositions()
+    const positionOptions = positions.map((position) => ({
+        value: String(position.id),
+        label: position.name,
+    }))
+    const { employees, loading: employeesLoading } = useActiveEmployees()
+    const employeeOptions = employees.map((employee) => ({
+        value: String(employee.id),
+        label: `${employee.firstName} ${employee.lastName}`,
+    }))
+    const documentOptions = employees.map((employee) => ({
+        value: employee.document,
+        label: employee.document,
+    }))
 
     // Cualquier cambio en los filtros aplicados vuelve a la primera página
     useEffect(() => {
@@ -145,48 +160,33 @@ export function IncapacidadesFeature() {
             >
                 <div className="flex flex-wrap gap-4">
                     <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-sm text-text-muted">
-                        Nombre del empleado
-                        <input
-                            type="text"
-                            value={filters.employeeName}
-                            onChange={(event) =>
-                                setFilters({ ...filters, employeeName: event.target.value })
-                            }
-                            placeholder="Nombre o apellido"
-                            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
+                        Empleado
+                        <Combobox
+                            options={employeeOptions}
+                            loading={employeesLoading}
+                            value={filters.employeeId}
+                            onChange={(employeeId) => setFilters({ ...filters, employeeId })}
                         />
                     </label>
 
                     <label className="flex w-44 flex-col gap-1 text-sm text-text-muted">
                         Número de documento
-                        <input
-                            type="text"
+                        <Combobox
+                            options={documentOptions}
+                            loading={employeesLoading}
                             value={filters.document}
-                            onChange={(event) =>
-                                setFilters({ ...filters, document: event.target.value })
-                            }
-                            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
+                            onChange={(document) => setFilters({ ...filters, document })}
                         />
                     </label>
 
                     <label className="flex w-48 flex-col gap-1 text-sm text-text-muted">
                         Cargo
-                        <select
+                        <Combobox
+                            options={positionOptions}
+                            loading={positionsLoading}
                             value={filters.positionId}
-                            onChange={(event) =>
-                                setFilters({ ...filters, positionId: event.target.value })
-                            }
-                            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
-                        >
-                            <option value="">
-                                {positionsLoading ? "Cargando cargos…" : "Todos"}
-                            </option>
-                            {positions.map((position) => (
-                                <option key={position.id} value={position.id}>
-                                    {position.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(positionId) => setFilters({ ...filters, positionId })}
+                        />
                     </label>
 
                     <label className="flex w-36 flex-col gap-1 text-sm text-text-muted">
