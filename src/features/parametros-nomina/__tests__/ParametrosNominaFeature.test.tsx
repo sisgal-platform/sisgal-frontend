@@ -13,6 +13,7 @@ import { ToastProvider } from "@/toast/components/ToastProvider";
 
 import { ParametrosNominaFeature } from "../index";
 import type { WorkdayConfig } from "../interfaces/types";
+import { legalDeductionsService } from "../services/legalDeductionsService";
 import { workdayConfigService } from "../services/workdayConfigService";
 import { workRatesService } from "../services/workRatesService";
 
@@ -100,7 +101,10 @@ describe("Parámetros de nómina: jornada laboral (HU45)", () => {
                 screen.getByRole("tab", { name: "Horas y recargos" }),
             ).toBeEnabled();
             expect(
-                screen.getByRole("tab", { name: "Deducciones" }),
+                screen.getByRole("tab", { name: "Descuentos legales" }),
+            ).toBeEnabled();
+            expect(
+                screen.getByRole("tab", { name: "Auxilio de transporte" }),
             ).toBeDisabled();
         });
 
@@ -123,6 +127,27 @@ describe("Parámetros de nómina: jornada laboral (HU45)", () => {
                 }),
             ).toBeInTheDocument();
             expect(findAllRates).toHaveBeenCalledTimes(1);
+        });
+
+        it("muestra los descuentos legales al elegir su categoría", async () => {
+            const findAllDeductions = vi
+                .spyOn(legalDeductionsService, "findAll")
+                .mockResolvedValue([]);
+
+            const user = renderFeature();
+            await waitForHistory();
+
+            await user.click(
+                screen.getByRole("tab", { name: "Descuentos legales" }),
+            );
+
+            expect(
+                await screen.findByRole("heading", {
+                    level: 3,
+                    name: "Descuentos legales",
+                }),
+            ).toBeInTheDocument();
+            expect(findAllDeductions).toHaveBeenCalledTimes(1);
         });
 
         it("muestra el valor vigente de cada parámetro y su fecha de inicio", async () => {
