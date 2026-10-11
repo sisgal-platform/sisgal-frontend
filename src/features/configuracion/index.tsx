@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CargosFeature } from "@/features/cargos";
+import { ParametrosNominaFeature } from "@/features/parametros-nomina";
 import { SucursalesFeature } from "@/features/sucursales";
 import { SupportInformation } from "./components/SupportInformation";
 
@@ -18,9 +19,12 @@ export function ConfiguracionFeature() {
             </div>
 
             <Tabs defaultValue="sucursales" className="w-full">
-                <TabsList>
+                <TabsList className="h-auto max-w-full flex-wrap justify-start">
                     <TabsTrigger value="sucursales">Sucursales</TabsTrigger>
                     <TabsTrigger value="cargos">Cargos</TabsTrigger>
+                    <TabsTrigger value="parametros-nomina">
+                        Parámetros de nómina
+                    </TabsTrigger>
                     <TabsTrigger value="soporte">Soporte</TabsTrigger>
                 </TabsList>
 
@@ -30,6 +34,10 @@ export function ConfiguracionFeature() {
 
                 <TabsContent value="cargos" className="p-4">
                     <CargosFeature />
+                </TabsContent>
+
+                <TabsContent value="parametros-nomina" className="p-4">
+                    <ParametrosNominaFeature />
                 </TabsContent>
 
                 <TabsContent value="soporte" className="p-4">
