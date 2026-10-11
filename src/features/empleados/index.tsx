@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
+import { RotateCcw } from "lucide-react"
 
 import { SectionHeader } from "@/components/atoms/SectionHeader"
+import { Combobox } from "@/components/ui/combobox"
 import { useToast } from "@/toast"
 
 import { EmployeeFormModal } from "./components/EmployeeFormModal"
@@ -19,35 +21,53 @@ const EMPLEADOS_POR_PAGINA = 10
 
 export function EmpleadosFeature() {
   const { showToast } = useToast()
-  const [searchInput, setSearchInput] = useState("")
-  const [search, setSearch] = useState("")
+  const [employeeIdFilter, setEmployeeIdFilter] = useState("")
   const [branchId, setBranchId] = useState<number | undefined>(undefined)
   const [positionId, setPositionId] = useState<number | undefined>(undefined)
+  const [documentFilter, setDocumentFilter] = useState("")
   const [status, setStatus] = useState<EstadoFiltro>(undefined)
   const [pagina, setPagina] = useState(1)
   const [empleadoEditando, setEmpleadoEditando] = useState<Employee | null>(null)
   const [empleadoADesactivar, setEmpleadoADesactivar] = useState<Employee | null>(null)
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false)
 
-  // Espera a que el usuario deje de escribir antes de consultar al backend
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setSearch(searchInput.trim()), 300)
-    return () => window.clearTimeout(timeoutId)
-  }, [searchInput])
-
   // Cualquier cambio en los filtros vuelve a la primera página
   useEffect(() => {
     setPagina(1)
-  }, [search, branchId, positionId, status])
+  }, [employeeIdFilter, branchId, positionId, status, documentFilter])
 
-  const { employees, cargando, error, recargar } = useEmployees({
-    search: search || undefined,
+  const { employees: employeesFetched, cargando, error, recargar } = useEmployees({
     branchId,
     positionId,
     status,
   })
   const { branches } = useActiveBranches()
   const { positions } = useActivePositions()
+  const branchOptions = branches.map((branch) => ({ value: String(branch.id), label: branch.name }))
+  const positionOptions = positions.map((position) => ({ value: String(position.id), label: position.name }))
+  const employeeOptions = employeesFetched.map((employee) => ({
+    value: String(employee.id),
+    label: `${employee.firstName} ${employee.lastName}`,
+  }))
+  const documentOptions = employeesFetched.map((employee) => ({
+    value: employee.document,
+    label: employee.document,
+  }))
+
+  // El backend no tiene filtros de empleado/documento separados de la búsqueda
+  // libre; como las opciones de los combobox ya vienen del listado fetched,
+  // los filtros adicionales se aplican en cliente
+  const employees = employeesFetched
+    .filter((employee) => !employeeIdFilter || String(employee.id) === employeeIdFilter)
+    .filter((employee) => !documentFilter || employee.document === documentFilter)
+
+  const limpiarFiltros = () => {
+    setEmployeeIdFilter("")
+    setBranchId(undefined)
+    setPositionId(undefined)
+    setDocumentFilter("")
+    setStatus(undefined)
+  }
 
   const handleDesactivarRequest = (employee: Employee) => {
     setEmpleadoADesactivar(employee)
@@ -83,50 +103,40 @@ export function EmpleadosFeature() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="flex flex-col gap-1 text-sm text-text-muted">
-          Buscar
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Nombre, apellido o documento"
-            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
+          Empleado
+          <Combobox
+            options={employeeOptions}
+            value={employeeIdFilter}
+            onChange={setEmployeeIdFilter}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-text-muted">
+          Número de documento
+          <Combobox
+            options={documentOptions}
+            value={documentFilter}
+            onChange={setDocumentFilter}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-text-muted">
           Sucursal
-          <select
-            value={branchId ?? ""}
-            onChange={(event) =>
-              setBranchId(event.target.value ? Number(event.target.value) : undefined)
-            }
-            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
-          >
-            <option value="">Todas</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
-              </option>
-            ))}
-          </select>
+          <Combobox
+            options={branchOptions}
+            allLabel="Todas"
+            value={branchId !== undefined ? String(branchId) : ""}
+            onChange={(value) => setBranchId(value ? Number(value) : undefined)}
+          />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-text-muted">
           Cargo
-          <select
-            value={positionId ?? ""}
-            onChange={(event) =>
-              setPositionId(event.target.value ? Number(event.target.value) : undefined)
-            }
-            className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
-          >
-            <option value="">Todos</option>
-            {positions.map((position) => (
-              <option key={position.id} value={position.id}>
-                {position.name}
-              </option>
-            ))}
-          </select>
+          <Combobox
+            options={positionOptions}
+            value={positionId !== undefined ? String(positionId) : ""}
+            onChange={(value) => setPositionId(value ? Number(value) : undefined)}
+          />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-text-muted">
@@ -143,6 +153,15 @@ export function EmpleadosFeature() {
             <option value="INACTIVO">Inactivo</option>
           </select>
         </label>
+
+        <button
+          type="button"
+          onClick={limpiarFiltros}
+          className="flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 text-sm font-semibold text-text transition hover:bg-secondary"
+        >
+          <RotateCcw size={16} aria-hidden="true" />
+          Limpiar filtros
+        </button>
       </div>
 
       <EmployeeTable
