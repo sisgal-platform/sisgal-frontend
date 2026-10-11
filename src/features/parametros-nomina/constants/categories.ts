@@ -5,12 +5,12 @@ export type PayrollParameterCategory = {
     available: boolean;
 };
 
-/** Categorías en las que se organizan los parámetros de nómina (HU45). */
+/** Categorías en las que se organizan los parámetros de nómina (HU45, HU39). */
 export const PAYROLL_PARAMETER_CATEGORIES: readonly PayrollParameterCategory[] =
     [
         { id: "jornada-laboral", label: "Jornada laboral", available: true },
-        { id: "horas", label: "Horas ordinarias y extra", available: false },
-        { id: "recargos", label: "Recargos", available: false },
+        // Los multiplicadores de horas ordinarias, extra y recargos se configuran juntos.
+        { id: "horas-recargos", label: "Horas y recargos", available: true },
         { id: "deducciones", label: "Deducciones", available: false },
         {
             id: "auxilio-transporte",
