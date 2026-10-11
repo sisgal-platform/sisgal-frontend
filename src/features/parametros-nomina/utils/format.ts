@@ -50,6 +50,15 @@ export function formatMultiplier(multiplier: number): string {
     return `× ${multiplierFormatter.format(multiplier)}`;
 }
 
+const percentageFormatter = new Intl.NumberFormat("es-CO", {
+    maximumFractionDigits: 2,
+});
+
+/** Porcentaje legible, p. ej. 4 → "4 %" y 4.5 → "4,5 %". */
+export function formatPercentage(value: number): string {
+    return `${percentageFormatter.format(value)} %`;
+}
+
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Indica si el texto es una fecha YYYY-MM-DD que existe en el calendario. */

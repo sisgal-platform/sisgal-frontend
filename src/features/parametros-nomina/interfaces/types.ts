@@ -61,3 +61,30 @@ export type RegisterWorkRatesPayload = {
     validFrom: string;
     rates: WorkRateInput[];
 };
+
+/** Descuentos legales a cargo del empleado (`LegalDeductionType` en el backend). */
+export type LegalDeductionType = "HEALTH_RATE" | "PENSION_RATE";
+
+/** Espejo de `LegalDeductionConfigResponseDto`: una versión del porcentaje de un descuento. */
+export type LegalDeduction = {
+    id: number;
+    type: LegalDeductionType;
+    /** Porcentaje sobre la base de cotización, p. ej. 4 para un 4 %. */
+    percentage: number;
+    validFrom: string;
+    /** Es null mientras no se registre una versión posterior del mismo descuento. */
+    validTo: string | null;
+    status: ValidityStatus;
+};
+
+/** Espejo de `LegalDeductionInputDto`. */
+export type LegalDeductionInput = {
+    type: LegalDeductionType;
+    percentage: number;
+};
+
+/** Espejo de `RegisterLegalDeductionsDto`: solo los descuentos que cambian. */
+export type RegisterLegalDeductionsPayload = {
+    validFrom: string;
+    deductions: LegalDeductionInput[];
+};
