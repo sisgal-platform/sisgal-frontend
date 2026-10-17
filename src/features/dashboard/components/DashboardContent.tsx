@@ -2,6 +2,7 @@ import { ArrowRight, FileText, Plus, Users, Wallet } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { DashboardCard } from "./DashboardCard";
+import { DashboardIndicatorsSection } from "./DashboardIndicatorsSection";
 import { useSession } from "@/session/hooks/useSession";
 import { usePrestamosIndicadores } from "@/features/prestamos/hooks/usePrestamosIndicadores";
 import { useDisabilityLeaveIndicators } from "@/features/incapacidades/hooks/useDisabilityLeaveIndicators";
@@ -123,6 +124,8 @@ export function DashboardContent() {
 
                     <IncapacidadesDashboardCard onAction={handleRegisterDisabilityLeave} />
                 </section>
+
+                <DashboardIndicatorsSection />
             </div>
         </section>
     );
