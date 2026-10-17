@@ -16,6 +16,7 @@ SISGAL. Repo separado del backend (`sisgal-core-service`, ver su propio
 | HTTP | Axios (`src/lib/axios.ts`), errores normalizados con `src/lib/apiError.ts` (`toApiError` → `ApiError`) |
 | Auth | Supabase (`@supabase/supabase-js`), sesión en `sessionStorage` |
 | Pruebas | Vitest + Testing Library |
+| Gráficos | Recharts (`v3.10.1`, desde HU35 — primera y única librería de gráficos del proyecto) |
 
 ## Estructura real de carpetas (la de abajo está desactualizada, usar esta)
 
@@ -133,6 +134,11 @@ equipo lo decida explícitamente**, ya se intentó una vez (anidar
 
 ## Features — estado por historia de usuario
 
+Este documento no se había actualizado desde hacía varias historias — si
+algo de lo que sigue no coincide con `develop`, confiar en
+`git log --oneline --merges develop` (trae los números de PR), no en este
+archivo.
+
 ### Auth (login, guards, sesión) — ✅ Completo
 
 `src/routes/guards/{RequireAuth,RequireRole}.tsx`, `src/session/`,
@@ -158,46 +164,110 @@ tabla).
 Features `cargos` y `prestamos`, ya mergeados a `develop`. Referencia de
 patrón para features nuevos.
 
-### HU12 "Registrar incapacidades de empleados" — ✅ Completa, pusheada
+### HU12 "Registrar incapacidades de empleados" — ✅ Completa y mergeada (PR 23)
 
 Feature `incapacidades`: formulario de registro (empleado activo, tipo con
 catálogo fijo + campo libre cuando es "Otros", fechas, cálculo de días en
 vivo), ruta propia `/incapacidades` (ítem de primer nivel del sidebar,
-`adminOnly: true`). Commits AB#150 (formulario) y AB#476 (ruta propia) ya en
-`feature/HU12`.
+`adminOnly: true`).
 
-### HU42 "Consultar incapacidades" — ✅ Completa, pendiente de commit
+### HU42 "Consultar incapacidades" — ✅ Completa y mergeada (PR 32)
 
 Mismo feature `incapacidades`, ampliado: tabla de listado (documento,
 nombre, cargo, estado, fechas, días, tipo), 2 cards de indicadores
 (incapacidades activas, total de días activos), filtros (nombre, documento,
 cargo, estado, rango de fechas con validación), botón "Registrar
 incapacidad" conectado para refrescar tabla + indicadores al crear,
-paginación client-side. Rama `feature/HU42` creada desde `feature/HU12`
-(fast-forward limpio, sin conflictos). Tareas AB#486-494.
-
-⚠️ **Todo el trabajo de HU42 en frontend sigue sin commitear** a la fecha de
-este documento — falta que Mario corra los commits (sugeridos: uno por
-tabla+indicadores, uno por filtros, uno por 492/493/494).
+paginación client-side.
 
 **Fuera de alcance, otra historia (HU40):** "Estado de préstamos" en el
 detalle de empleado — ya no aplica el gap, el feature `prestamos` de
 Tatiana lo resolvió en HU41.
 
+### HU04/HU05 "Historial de asistencia" / "Ingresos del día en tiempo real" — ✅ De Tatiana (PR 28, 30)
+
+### HU17 "Calcular deducciones legales" / HU37, HU39, HU45 "Configurar parámetros de nómina" — ✅ De Marisol (PR 37, 39, 41, 43)
+
+Feature `parametros-nomina`: jornada laboral, recargos, descuentos legales.
+`src/features/parametros-nomina/services/workdayConfigService.ts` y sus
+`interfaces/types.ts` se reutilizan directo desde HU09 (ver abajo) — no se
+duplicaron.
+
+### HU09 "Modificar horario laboral de empleado" — ✅ Completa y mergeada (PR 44)
+
+Feature `empleados`: el selector "Horario laboral" (antes deshabilitado,
+placeholder) ahora consulta
+`parametros-nomina/services/workdayConfigService.ts` (de Marisol, reutilizado
+tal cual, **no** un servicio propio duplicado) y filtra `status ===
+"VIGENTE"` en el cliente — Marisol no expone un endpoint dedicado a
+"vigente" en el frontend, así que se deriva de `findAll()`. El selector
+queda habilitado siempre (decisión explícita, aunque solo haya una opción),
+pero respeta `disabled={enviando || soloLectura}` igual que los demás campos
+del formulario (hubo un bug real donde esto se les olvidó y el selector
+quedaba habilitado incluso en modo solo lectura — ya corregido).
+
+Se evaluó y se **descartó explícitamente** construir una tabla/lógica de
+horario por empleado separada de `parametros-nomina` — la jornada es global
+de la empresa (con restricción `EXCLUDE USING gist` en BD que impide
+jornadas vigentes solapadas), no por empleado; duplicar esa lógica hubiera
+quedado inconsistente con el diseño de Marisol.
+
+### HU20/HU30 "Consultar liquidaciones" / "Comprobante detallado de nómina" — ✅ Completa y mergeada (PR 37)
+
+Feature `liquidaciones`: tabla de listado con filtros (empleado, rango de
+período), modal de detalle (`PayrollPeriodDetailDialog.tsx`) con devengados
+y deducciones separados. `status` de la liquidación siempre se muestra como
+"Confirmada" — así es como lo devuelve el backend, no hay estado real
+todavía (ver nota en el `dev_plan.md` del backend).
+
+### HU35 "Consulta de indicadores en dashboard" — ✅ Completa y mergeada (PR 46)
+
+Feature `dashboard`: 3 tarjetas de indicador (asistencia, horas trabajadas,
+costos laborales) + 3 gráficos Recharts (barras, dona, línea) + selector de
+período (Desde/Hasta + "Consultar", con borrador separado del período
+aplicado). Estados explícitos `loading` / `null` ("Sin datos") / valor real
+en cada indicador y gráfico — nunca se sustituye un `null` del backend por
+`0`. También conecta la tarjeta "Empleados" del dashboard general (antes
+hardcodeada a `45`) al conteo real de empleados activos.
+
+### HU29 "Exportar nómina en PDF" — ✅ Completa, en `feature/HU29_Mario` sin PR todavía
+
+Extiende `liquidaciones` (no es feature nuevo). El botón, antes deshabilitado
+("Descargar PDF"), ahora se llama **"Generar PDF"** y recicla el mismo
+`PayrollPeriodDetailDialog` con un flujo de 3 pasos:
+
+1. "Generar PDF" → `GET /liquidaciones/:id/pdf` (`responseType: "blob"`).
+2. Vista previa del PDF en un `<iframe>` dentro del mismo modal (título
+   cambia a "Comprobante de pago").
+3. "Descargar PDF" descarga **el mismo blob ya generado** (sin volver a
+   pedirlo al backend) — garantiza que lo que se ve es lo que se descarga.
+
+Detalles no obvios:
+- El modal (`DialogContent`) tiene `resize` + `overflow-auto` + tamaños
+  mínimos, para que el usuario pueda arrastrar la esquina y agrandarlo —
+  solo en este diálogo, no se tocó el componente `Dialog` compartido. La
+  vista previa además arranca con `max-w-4xl` en vez de `max-w-2xl`.
+- `toApiError` no sirve tal cual para este endpoint: con `responseType:
+  "blob"`, el cuerpo del error también llega como `Blob`, no como JSON, así
+  que `payrollPeriodsService.getPdf()` tiene un `toPdfApiError` propio que
+  lee el blob como texto y lo parsea antes de caer al mensaje genérico.
+- Object URLs (`URL.createObjectURL`) se revocan al desmontar el diálogo o
+  al volver del preview al detalle — no se dejan colgados.
+
+**Pendiente, no es tarea de código**: PR de frontend y backend, una vez
+Mario confirme que ya probó todo en navegador.
+
 ## Pruebas
 
 ```
-src/__tests__/
-  sesion.test.tsx          navegación entre módulos, sesión, guards de rol
-  ...
+src/features/<dominio>/__tests__/
 ```
 
-12 suites / 81 tests pasando al cierre de esta sesión. Hubo un período donde
-12 tests de navegación fallaban (afectados por un refactor de auth de
-Tatiana que comentó rutas de Asistencia/Nómina/Reportes) — **ya se
-corrigieron** en `develop`, no son un problema introducido por este trabajo
-si vuelven a aparecer, revisar el commit que los rompió antes de asumir que
-es cosa nueva.
+37 suites / 336 tests al momento de esta actualización (2 fallas
+preexistentes y ya documentadas, no relacionadas con trabajo reciente:
+`navegacion.test.tsx` y `SucursalesFeature.test.tsx`, afectadas por un
+refactor de auth de Tatiana — no asumir que son un problema nuevo si
+reaparecen).
 
 ## Verificación
 

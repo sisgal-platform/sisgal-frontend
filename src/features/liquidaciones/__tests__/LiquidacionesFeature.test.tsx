@@ -11,7 +11,14 @@ import { ToastProvider } from "@/toast/components/ToastProvider"
 
 const findAll = vi.spyOn(payrollPeriodsService, "findAll")
 const findById = vi.spyOn(payrollPeriodsService, "findById")
+const getPdf = vi.spyOn(payrollPeriodsService, "getPdf")
 const listEmployees = vi.spyOn(employeesService, "list")
+
+// jsdom no implementa la API de blob URLs; se stubea con valores predecibles
+// para poder verificar que el iframe de vista previa recibe la URL generada.
+const createObjectURL = vi.fn(() => "blob:preview-url")
+const revokeObjectURL = vi.fn()
+vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL })
 
 const ANA: Employee = {
     id: 1,
@@ -85,7 +92,10 @@ async function esperarTabla() {
 beforeEach(() => {
     findAll.mockReset().mockResolvedValue([PAYROLL_PERIOD_ANA, PAYROLL_PERIOD_CARLOS])
     findById.mockReset().mockResolvedValue(PAYROLL_PERIOD_DETAIL_ANA)
+    getPdf.mockReset()
     listEmployees.mockReset().mockResolvedValue([ANA])
+    createObjectURL.mockClear()
+    revokeObjectURL.mockClear()
 })
 
 describe("LiquidacionesFeature", () => {
@@ -140,6 +150,60 @@ describe("LiquidacionesFeature", () => {
         expect(within(dialog).getByText("Horas extra")).toBeInTheDocument()
         expect(within(dialog).getByText("Salud y pensión")).toBeInTheDocument()
         expect(findById).toHaveBeenCalledWith(1)
+    })
+
+    it("genera y muestra la vista previa del PDF al presionar Generar PDF", async () => {
+        const user = renderFeature()
+        await esperarTabla()
+        await user.click(
+            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
+        )
+        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
+
+        const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" })
+        getPdf.mockResolvedValue(blob)
+
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
+
+        const dialog = await screen.findByRole("dialog", { name: "Comprobante de pago" })
+        expect(within(dialog).getByTitle("Vista previa del comprobante de pago")).toHaveAttribute(
+            "src",
+            "blob:preview-url",
+        )
+        expect(getPdf).toHaveBeenCalledWith(1)
+    })
+
+    it("descarga el mismo PDF que se previsualizó, sin volver a generarlo", async () => {
+        const user = renderFeature()
+        await esperarTabla()
+        await user.click(
+            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
+        )
+        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
+        getPdf.mockResolvedValue(new Blob(["%PDF-1.4"], { type: "application/pdf" }))
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
+        await screen.findByRole("dialog", { name: "Comprobante de pago" })
+
+        const clickAnchor = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
+        await user.click(screen.getByRole("button", { name: "Descargar PDF" }))
+
+        expect(clickAnchor).toHaveBeenCalledTimes(1)
+        expect(getPdf).toHaveBeenCalledTimes(1)
+        clickAnchor.mockRestore()
+    })
+
+    it("muestra un error cuando no se puede generar el PDF", async () => {
+        const user = renderFeature()
+        await esperarTabla()
+        await user.click(
+            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
+        )
+        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
+        getPdf.mockRejectedValue(new Error("No fue posible determinar la sucursal."))
+
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
+
+        expect(await screen.findByText("No fue posible determinar la sucursal.")).toBeInTheDocument()
     })
 
     it("muestra un estado vacío cuando no hay liquidaciones para los filtros", async () => {

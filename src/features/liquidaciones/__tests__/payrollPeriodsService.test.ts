@@ -69,4 +69,42 @@ describe("payrollPeriodsService", () => {
         )
         expect(client.get).toHaveBeenCalledWith("/liquidaciones/1")
     })
+
+    describe("getPdf", () => {
+        it("descarga el comprobante como blob", async () => {
+            const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" })
+            client.get.mockResolvedValue({ data: blob })
+
+            await expect(payrollPeriodsService.getPdf(1)).resolves.toBe(blob)
+            expect(client.get).toHaveBeenCalledWith("/liquidaciones/1/pdf", {
+                responseType: "blob",
+            })
+        })
+
+        it("recupera el mensaje real del backend aunque el error llegue como blob", async () => {
+            const cuerpoError = new Blob([JSON.stringify({ message: "No fue posible determinar la sucursal." })], {
+                type: "application/json",
+            })
+            client.get.mockRejectedValue({
+                isAxiosError: true,
+                response: { status: 422, data: cuerpoError },
+            })
+
+            await expect(payrollPeriodsService.getPdf(1)).rejects.toThrow(
+                "No fue posible determinar la sucursal.",
+            )
+        })
+
+        it("usa un mensaje genérico cuando el blob de error no es JSON legible", async () => {
+            const cuerpoError = new Blob(["no es json"], { type: "text/plain" })
+            client.get.mockRejectedValue({
+                isAxiosError: true,
+                response: { status: 500, data: cuerpoError },
+            })
+
+            await expect(payrollPeriodsService.getPdf(1)).rejects.toThrow(
+                "Ocurrió un error inesperado. Intenta de nuevo.",
+            )
+        })
+    })
 })
