@@ -6,6 +6,24 @@ import { DashboardIndicatorsSection } from "./DashboardIndicatorsSection";
 import { useSession } from "@/session/hooks/useSession";
 import { usePrestamosIndicadores } from "@/features/prestamos/hooks/usePrestamosIndicadores";
 import { useDisabilityLeaveIndicators } from "@/features/incapacidades/hooks/useDisabilityLeaveIndicators";
+import { useActiveEmployeesCount } from "../hooks/useActiveEmployeesCount";
+
+function EmployeesDashboardCard({ onAction }: { onAction: () => void }) {
+    const { count, loading, error } = useActiveEmployeesCount();
+
+    return (
+        <DashboardCard
+            title="Empleados"
+            value={loading ? "..." : error ? "—" : (count ?? 0)}
+            label={error ? "no disponibles" : "activos"}
+            icon={Users}
+            color="primary"
+            actionLabel="Ver todos"
+            actionIcon={ArrowRight}
+            onAction={onAction}
+        />
+    );
+}
 
 function PrestamosDashboardCard({ onAction }: { onAction: () => void }) {
     const { indicadores, cargando, error } = usePrestamosIndicadores();
@@ -98,16 +116,7 @@ export function DashboardContent() {
                     aria-label="Resumen administrativo"
                     className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-3 xl:grid-cols-4"
                 >
-                    <DashboardCard
-                        title="Empleados"
-                        value={45}
-                        label="activos"
-                        icon={Users}
-                        color="primary"
-                        actionLabel="Ver todos"
-                        actionIcon={ArrowRight}
-                        onAction={handleViewEmployees}
-                    />
+                    <EmployeesDashboardCard onAction={handleViewEmployees} />
 
                     <DashboardCard
                         title="Nómina"
