@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Download } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Download, FileText } from "lucide-react"
 
 import {
     Dialog,
@@ -26,12 +26,34 @@ type ResultadoDetalle = {
     error?: string
 }
 
+// El PDF pasa por: inicial -> generando -> vista_previa (o error, desde donde
+// "Generar PDF" reintenta). La vista previa y la descarga comparten el mismo
+// blob generado en una sola llamada, para garantizar que lo que se ve es
+// exactamente lo que se descarga.
+type EstadoPdf =
+    | { status: "inicial" }
+    | { status: "generando" }
+    | { status: "vista_previa"; url: string }
+    | { status: "error"; mensaje: string }
+
 export function PayrollPeriodDetailDialog({
     payrollPeriod,
     onOpenChange,
 }: PayrollPeriodDetailDialogProps) {
     const [intento, setIntento] = useState(0)
     const [resultado, setResultado] = useState<ResultadoDetalle | null>(null)
+    const [pdf, setPdf] = useState<EstadoPdf>({ status: "inicial" })
+    const pdfUrlRef = useRef<string | null>(null)
+
+    // El object URL del PDF vive en memoria del navegador; hay que liberarlo
+    // explícitamente al desmontar para no dejarlo retenido indefinidamente.
+    useEffect(() => {
+        return () => {
+            if (pdfUrlRef.current) {
+                URL.revokeObjectURL(pdfUrlRef.current)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         let activo = true
@@ -69,20 +91,73 @@ export function PayrollPeriodDetailDialog({
     const error = resultadoActual?.error ?? null
     const cargando = resultadoActual === null
 
+    async function handleGenerarPdf() {
+        setPdf({ status: "generando" })
+        try {
+            const blob = await payrollPeriodsService.getPdf(payrollPeriod.id)
+            const url = URL.createObjectURL(blob)
+            pdfUrlRef.current = url
+            setPdf({ status: "vista_previa", url })
+        } catch (pdfError: unknown) {
+            setPdf({
+                status: "error",
+                mensaje:
+                    pdfError instanceof Error
+                        ? pdfError.message
+                        : "No fue posible generar el comprobante de pago.",
+            })
+        }
+    }
+
+    function handleVolverAlDetalle() {
+        if (pdfUrlRef.current) {
+            URL.revokeObjectURL(pdfUrlRef.current)
+            pdfUrlRef.current = null
+        }
+        setPdf({ status: "inicial" })
+    }
+
+    function handleDescargarPdf() {
+        if (pdf.status !== "vista_previa") return
+        const enlace = document.createElement("a")
+        enlace.href = pdf.url
+        enlace.download = `liquidacion-${payrollPeriod.id}.pdf`
+        enlace.click()
+    }
+
     return (
         <Dialog open={true} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl">
+            {/* "resize" habilita el tirador nativo del navegador en la esquina
+            inferior derecha; overflow-auto es requisito del navegador para que
+            el resize funcione, y los min-w/min-h evitan que se encoja hasta
+            quedar inusable. La vista previa del PDF arranca más ancha porque
+            necesita más espacio que el detalle de texto. */}
+            <DialogContent
+                className={`resize overflow-auto min-w-[380px] min-h-[300px] ${
+                    pdf.status === "vista_previa" ? "max-w-4xl" : "max-w-2xl"
+                }`}
+            >
                 <DialogHeader>
-                    <DialogTitle>Detalle de la liquidación</DialogTitle>
+                    <DialogTitle>
+                        {pdf.status === "vista_previa" ? "Comprobante de pago" : "Detalle de la liquidación"}
+                    </DialogTitle>
                 </DialogHeader>
 
-                {cargando && (
+                {pdf.status === "vista_previa" && (
+                    <iframe
+                        src={pdf.url}
+                        title="Vista previa del comprobante de pago"
+                        className="h-[65vh] w-full rounded-lg border border-gray-200"
+                    />
+                )}
+
+                {pdf.status !== "vista_previa" && cargando && (
                     <p role="status" className="py-6 text-sm text-text-muted">
                         Cargando detalle de la liquidación…
                     </p>
                 )}
 
-                {error && (
+                {pdf.status !== "vista_previa" && error && (
                     <div
                         role="alert"
                         className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-error-light px-4 py-3 text-sm text-error"
@@ -98,7 +173,7 @@ export function PayrollPeriodDetailDialog({
                     </div>
                 )}
 
-                {detalle && !cargando && (
+                {pdf.status !== "vista_previa" && detalle && !cargando && (
                     <div className="space-y-5">
                         <section aria-labelledby="liquidacion-detalle-general">
                             <h3
@@ -171,18 +246,39 @@ export function PayrollPeriodDetailDialog({
                     </div>
                 )}
 
+                {pdf.status === "error" && (
+                    <p role="alert" className="text-sm text-error">
+                        {pdf.mensaje}
+                    </p>
+                )}
+
                 <DialogFooter>
-                    {/* Exportación a PDF pendiente de otra historia (HU de exportación); el botón queda visible pero sin funcionalidad */}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled
-                        title="Disponible próximamente"
-                        className="flex items-center gap-2"
-                    >
-                        <Download size={16} aria-hidden="true" />
-                        Descargar PDF
-                    </Button>
+                    {pdf.status === "vista_previa" ? (
+                        <>
+                            <Button type="button" variant="outline" onClick={handleVolverAlDetalle}>
+                                Volver al detalle
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleDescargarPdf}
+                                className="flex items-center gap-2"
+                            >
+                                <Download size={16} aria-hidden="true" />
+                                Descargar PDF
+                            </Button>
+                        </>
+                    ) : (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleGenerarPdf}
+                            disabled={!detalle || pdf.status === "generando"}
+                            className="flex items-center gap-2"
+                        >
+                            <FileText size={16} aria-hidden="true" />
+                            {pdf.status === "generando" ? "Generando…" : "Generar PDF"}
+                        </Button>
+                    )}
                     <button
                         type="button"
                         onClick={() => onOpenChange(false)}
