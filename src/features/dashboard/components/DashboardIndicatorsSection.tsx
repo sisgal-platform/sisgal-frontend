@@ -12,6 +12,8 @@ import { WorkedHoursTrendChart } from "./WorkedHoursTrendChart"
 import { useDashboardIndicators } from "../hooks/useDashboardIndicators"
 import type { DashboardIndicatorsQuery } from "../interfaces/types"
 
+// Mismo criterio por defecto que usa el backend cuando no se envían fechas:
+// del primer día del mes actual hasta hoy ("mes a la fecha").
 function firstDayOfCurrentMonth(): string {
     const today = new Date()
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`
@@ -27,6 +29,10 @@ const defaultPeriod: DashboardIndicatorsQuery = {
 }
 
 export function DashboardIndicatorsSection() {
+    // "from"/"to" son los valores que el usuario está editando en el formulario;
+    // "appliedPeriod" es lo que realmente se le manda al hook y dispara la
+    // consulta. Se separan para que escribir una fecha no dispare la consulta
+    // en cada tecla, solo al presionar "Consultar".
     const [from, setFrom] = useState(defaultPeriod.periodoDesde ?? "")
     const [to, setTo] = useState(defaultPeriod.periodoHasta ?? "")
     const [appliedPeriod, setAppliedPeriod] = useState<DashboardIndicatorsQuery>(defaultPeriod)
@@ -34,6 +40,8 @@ export function DashboardIndicatorsSection() {
     const { indicators, loading, error } = useDashboardIndicators(appliedPeriod)
 
     function applyPeriod() {
+        // Un campo vacío se envía como undefined para que el backend aplique
+        // su propio valor por defecto, en vez de mandarle un string vacío.
         setAppliedPeriod({ periodoDesde: from || undefined, periodoHasta: to || undefined })
     }
 
@@ -67,6 +75,9 @@ export function DashboardIndicatorsSection() {
 
             {!error && (
                 <>
+                    {/* "change" en null oculta la línea de tendencia (ver IndicatorCard): se usa
+                    tanto mientras carga como cuando el backend no pudo calcular una variación
+                    (p. ej. sin datos en el período anterior), para no mostrar una flecha engañosa. */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <IndicatorCard
                             title="Asistencia Promedio"

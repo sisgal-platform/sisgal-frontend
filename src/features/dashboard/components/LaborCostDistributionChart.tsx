@@ -49,6 +49,9 @@ export function LaborCostDistributionChart({ data }: LaborCostDistributionChartP
                 <Tooltip formatter={(value) => formatCurrencyCOP(Number(value))} />
                 <Legend
                     formatter={(_value, entry) => {
+                        // Recharts tipa "entry.payload" como genérico; el dato real que le
+                        // pasamos a <Pie> (con "percentage") sí está ahí en tiempo de
+                        // ejecución, por eso el cast — es para mostrar el % junto al nombre.
                         const payload = entry.payload as unknown as { percentage: number; name: string }
                         return `${payload.name} ${payload.percentage}%`
                     }}

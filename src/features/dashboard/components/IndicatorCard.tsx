@@ -19,6 +19,8 @@ export function IndicatorCard({
     change,
     changeUnit = "%",
 }: IndicatorCardProps) {
+    // Sin cambio (0) se trata como "positivo" a propósito: evita mostrar una
+    // flecha roja de caída cuando el indicador en realidad se mantuvo igual.
     const isPositive = change !== null && change >= 0
     const TrendIcon = isPositive ? TrendingUp : TrendingDown
 
