@@ -3,9 +3,12 @@ import { Clock, DollarSign, Users } from "lucide-react"
 
 import { formatCurrencyCOP } from "@/lib/formatters"
 
+import { AttendanceWeeklyChart } from "./AttendanceWeeklyChart"
 import { ChartCard } from "./ChartCard"
 import { IndicatorCard } from "./IndicatorCard"
+import { LaborCostDistributionChart } from "./LaborCostDistributionChart"
 import { PeriodSelector } from "./PeriodSelector"
+import { WorkedHoursTrendChart } from "./WorkedHoursTrendChart"
 import type { DashboardIndicators } from "../interfaces/types"
 
 // Datos de ejemplo mientras se conecta el endpoint real (próximo paso).
@@ -109,21 +112,15 @@ export function DashboardIndicatorsSection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <ChartCard title="Asistencia Semanal (%)">
-                    <p className="text-sm text-text-muted">
-                        Gráfico próximamente ({indicators.attendance.weeklyDistribution.length} días)
-                    </p>
+                    <AttendanceWeeklyChart data={indicators.attendance.weeklyDistribution} />
                 </ChartCard>
 
                 <ChartCard title="Distribución de Costos">
-                    <p className="text-sm text-text-muted">
-                        Gráfico próximamente ({indicators.laborCosts.distribution.length} categorías)
-                    </p>
+                    <LaborCostDistributionChart data={indicators.laborCosts.distribution} />
                 </ChartCard>
 
                 <ChartCard title="Tendencia de Horas Trabajadas">
-                    <p className="text-sm text-text-muted">
-                        Gráfico próximamente ({indicators.workedHours.trend.length} meses)
-                    </p>
+                    <WorkedHoursTrendChart data={indicators.workedHours.trend} />
                 </ChartCard>
             </div>
         </section>
