@@ -41,38 +41,13 @@ export type PayrollPeriodFilterValues = {
     periodEnd: string;
 };
 
-export type PayrollPreliquidationRequest = Pick<
-    PayrollPeriodQuery,
-    "periodStart" | "periodEnd"
-> & {
-    employeeId: number;
+export type PayrollPreliquidationRequest = {
     periodStart: string;
     periodEnd: string;
 };
 
-export type PayrollPreliquidationHour = {
-    type: string;
-    hours: number;
-};
-
-export type PayrollPreliquidationEmployee = {
+export type PayrollConfirmationRequest = PayrollPreliquidationRequest & {
     employeeId: number;
-    employeeName: string;
-    employeeDocumentType: string;
-    employeeDocument: string;
-    employeePosition: string | null;
-    hours: PayrollPreliquidationHour[];
-    surcharges: PayrollLine[];
-    earnings: PayrollLine[];
-    deductions: PayrollLine[];
-    totalEarnings: number;
-    totalDeductions: number;
-    netPay: number;
-    inconsistencies: string[];
 };
 
-export type PayrollPreliquidation = {
-    periodStart: string;
-    periodEnd: string;
-    employees: PayrollPreliquidationEmployee[];
-};
+export type PayrollPreliquidation = PayrollPeriodDetail;

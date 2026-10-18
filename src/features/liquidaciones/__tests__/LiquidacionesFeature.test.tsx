@@ -15,16 +15,24 @@ import { employeesService } from "@/features/empleados/services/employeesService
 import type { Employee } from "@/features/empleados/interfaces/types";
 import { ToastProvider } from "@/toast/components/ToastProvider";
 
-const findAll = vi.spyOn(payrollPeriodsService, "findAll")
-const findById = vi.spyOn(payrollPeriodsService, "findById")
-const getPdf = vi.spyOn(payrollPeriodsService, "getPdf")
-const listEmployees = vi.spyOn(employeesService, "list")
+const findAll = vi.spyOn(payrollPeriodsService, "findAll");
+const findById = vi.spyOn(payrollPeriodsService, "findById");
+const generatePreliquidation = vi.spyOn(
+    payrollPeriodsService,
+    "generatePreliquidation",
+);
+const confirmPreliquidation = vi.spyOn(
+    payrollPeriodsService,
+    "confirmPreliquidation",
+);
+const getPdf = vi.spyOn(payrollPeriodsService, "getPdf");
+const listEmployees = vi.spyOn(employeesService, "list");
 
 // jsdom no implementa la API de blob URLs; se stubea con valores predecibles
 // para poder verificar que el iframe de vista previa recibe la URL generada.
-const createObjectURL = vi.fn(() => "blob:preview-url")
-const revokeObjectURL = vi.fn()
-vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL })
+const createObjectURL = vi.fn(() => "blob:preview-url");
+const revokeObjectURL = vi.fn();
+vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL });
 
 const ANA: Employee = {
     id: 1,
@@ -90,28 +98,7 @@ const PAYROLL_PERIOD_DETAIL_ANA: PayrollPeriodDetail = {
 };
 
 const PRELIQUIDATION_ANA: PayrollPreliquidation = {
-    periodStart: "2026-09-01",
-    periodEnd: "2026-09-30",
-    employees: [
-        {
-            employeeId: 1,
-            employeeName: "Ana Barros",
-            employeeDocumentType: "CC",
-            employeeDocument: "1020304050",
-            employeePosition: "Mesera",
-            hours: [
-                { type: "Ordinarias", hours: 160 },
-                { type: "Extra diurna", hours: 6 },
-            ],
-            surcharges: [{ conceptName: "Recargo nocturno", amount: 25000 }],
-            earnings: [{ conceptName: "Salario base", amount: 1530000 }],
-            deductions: [{ conceptName: "Salud", amount: 72000 }],
-            totalEarnings: 1555000,
-            totalDeductions: 72000,
-            netPay: 1483000,
-            inconsistencies: [],
-        },
-    ],
+    ...PAYROLL_PERIOD_DETAIL_ANA,
 };
 
 function renderFeature() {
@@ -133,18 +120,22 @@ function renderFeature() {
 }
 
 async function esperarTabla() {
-    await screen.findByRole("heading", { name: "Liquidación" });
+    await screen.findByRole("heading", { name: "Liquidaciones" });
     await screen.findByRole("cell", { name: "Ana Barros" });
 }
 
 beforeEach(() => {
-    findAll.mockReset().mockResolvedValue([PAYROLL_PERIOD_ANA, PAYROLL_PERIOD_CARLOS])
-    findById.mockReset().mockResolvedValue(PAYROLL_PERIOD_DETAIL_ANA)
-    getPdf.mockReset()
-    listEmployees.mockReset().mockResolvedValue([ANA])
-    createObjectURL.mockClear()
-    revokeObjectURL.mockClear()
-})
+    findAll
+        .mockReset()
+        .mockResolvedValue([PAYROLL_PERIOD_ANA, PAYROLL_PERIOD_CARLOS]);
+    findById.mockReset().mockResolvedValue(PAYROLL_PERIOD_DETAIL_ANA);
+    generatePreliquidation.mockReset().mockResolvedValue(PRELIQUIDATION_ANA);
+    confirmPreliquidation.mockReset().mockResolvedValue();
+    getPdf.mockReset();
+    listEmployees.mockReset().mockResolvedValue([ANA]);
+    createObjectURL.mockClear();
+    revokeObjectURL.mockClear();
+});
 
 describe("LiquidacionesFeature", () => {
     it("muestra la tabla con las liquidaciones registradas", async () => {
@@ -212,7 +203,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Detalle de la liquidación",
             }),
         ).toBeInTheDocument();
-        expect(screen.getByText("CC 1020304050")).toBeInTheDocument();
+        expect(screen.getByText(/CC 1020304050/)).toBeInTheDocument();
         expect(screen.getByText("Mesera")).toBeInTheDocument();
         expect(screen.getByText("Salario base")).toBeInTheDocument();
         expect(screen.getByText("Horas extra")).toBeInTheDocument();
@@ -259,12 +250,10 @@ describe("LiquidacionesFeature", () => {
             screen.getByRole("button", { name: "Generar preliquidación" }),
         );
 
-        expect(await screen.findByText("Recargo nocturno")).toBeInTheDocument();
-        expect(screen.getByText("Ordinarias")).toBeInTheDocument();
-        expect(screen.getByText("Extra diurna")).toBeInTheDocument();
-        expect(screen.getByText("Salud")).toBeInTheDocument();
-        expect(generatePreliquidation).toHaveBeenCalledWith({
-            employeeId: 1,
+        expect(await screen.findByText("Salario base")).toBeInTheDocument();
+        expect(screen.getByText("Salud y pensión")).toBeInTheDocument();
+        expect(screen.getByText(/CC 1020304050/)).toBeInTheDocument();
+        expect(generatePreliquidation).toHaveBeenCalledWith(1, {
             periodStart: "2026-09-01",
             periodEnd: "2026-09-30",
         });
@@ -286,85 +275,80 @@ describe("LiquidacionesFeature", () => {
         ).not.toBeInTheDocument();
     });
 
-    it("bloquea la confirmación si la preliquidación tiene inconsistencias", async () => {
+    it("genera y muestra la vista previa del PDF al presionar Generar PDF", async () => {
         const user = renderFeature();
         await esperarTabla();
-        generatePreliquidation.mockResolvedValueOnce({
-            ...PRELIQUIDATION_ANA,
-            employees: [
-                {
-                    ...PRELIQUIDATION_ANA.employees[0],
-                    inconsistencies: ["El salario base no está configurado."],
-                },
-            ],
+        await user.click(
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+        await screen.findByRole("dialog", {
+            name: "Detalle de la liquidación",
         });
 
-        await user.click(
-            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
-        )
+        const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
+        getPdf.mockResolvedValue(blob);
 
-        const dialog = await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
-        expect(within(dialog).getByText("CC 1020304050")).toBeInTheDocument()
-        expect(within(dialog).getByText("Mesera")).toBeInTheDocument()
-        expect(within(dialog).getByText("Salario base")).toBeInTheDocument()
-        expect(within(dialog).getByText("Horas extra")).toBeInTheDocument()
-        expect(within(dialog).getByText("Salud y pensión")).toBeInTheDocument()
-        expect(findById).toHaveBeenCalledWith(1)
-    })
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }));
 
-    it("genera y muestra la vista previa del PDF al presionar Generar PDF", async () => {
-        const user = renderFeature()
-        await esperarTabla()
-        await user.click(
-            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
-        )
-        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
-
-        const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" })
-        getPdf.mockResolvedValue(blob)
-
-        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
-
-        const dialog = await screen.findByRole("dialog", { name: "Comprobante de pago" })
-        expect(within(dialog).getByTitle("Vista previa del comprobante de pago")).toHaveAttribute(
-            "src",
-            "blob:preview-url",
-        )
-        expect(getPdf).toHaveBeenCalledWith(1)
-    })
+        const dialog = await screen.findByRole("dialog", {
+            name: "Comprobante de pago",
+        });
+        expect(
+            within(dialog).getByTitle("Vista previa del comprobante de pago"),
+        ).toHaveAttribute("src", "blob:preview-url");
+        expect(getPdf).toHaveBeenCalledWith(1);
+    });
 
     it("descarga el mismo PDF que se previsualizó, sin volver a generarlo", async () => {
-        const user = renderFeature()
-        await esperarTabla()
+        const user = renderFeature();
+        await esperarTabla();
         await user.click(
-            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
-        )
-        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
-        getPdf.mockResolvedValue(new Blob(["%PDF-1.4"], { type: "application/pdf" }))
-        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
-        await screen.findByRole("dialog", { name: "Comprobante de pago" })
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+        await screen.findByRole("dialog", {
+            name: "Detalle de la liquidación",
+        });
+        getPdf.mockResolvedValue(
+            new Blob(["%PDF-1.4"], { type: "application/pdf" }),
+        );
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }));
+        await screen.findByRole("dialog", { name: "Comprobante de pago" });
 
-        const clickAnchor = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
-        await user.click(screen.getByRole("button", { name: "Descargar PDF" }))
+        const clickAnchor = vi
+            .spyOn(HTMLAnchorElement.prototype, "click")
+            .mockImplementation(() => {});
+        await user.click(screen.getByRole("button", { name: "Descargar PDF" }));
 
-        expect(clickAnchor).toHaveBeenCalledTimes(1)
-        expect(getPdf).toHaveBeenCalledTimes(1)
-        clickAnchor.mockRestore()
-    })
+        expect(clickAnchor).toHaveBeenCalledTimes(1);
+        expect(getPdf).toHaveBeenCalledTimes(1);
+        clickAnchor.mockRestore();
+    });
 
     it("muestra un error cuando no se puede generar el PDF", async () => {
-        const user = renderFeature()
-        await esperarTabla()
+        const user = renderFeature();
+        await esperarTabla();
         await user.click(
-            screen.getByRole("button", { name: "Ver detalle de la liquidación de Ana Barros" }),
-        )
-        await screen.findByRole("dialog", { name: "Detalle de la liquidación" })
-        getPdf.mockRejectedValue(new Error("No fue posible determinar la sucursal."))
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+        await screen.findByRole("dialog", {
+            name: "Detalle de la liquidación",
+        });
+        getPdf.mockRejectedValue(
+            new Error("No fue posible determinar la sucursal."),
+        );
 
-        await user.click(screen.getByRole("button", { name: "Generar PDF" }))
+        await user.click(screen.getByRole("button", { name: "Generar PDF" }));
 
-        expect(await screen.findByText("No fue posible determinar la sucursal.")).toBeInTheDocument()
-    })
+        expect(
+            await screen.findByText("No fue posible determinar la sucursal."),
+        ).toBeInTheDocument();
+    });
 
     it("muestra un estado vacío cuando no hay liquidaciones para los filtros", async () => {
         findAll.mockReset().mockResolvedValue([]);

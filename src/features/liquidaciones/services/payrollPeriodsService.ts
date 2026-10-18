@@ -1,9 +1,16 @@
-import { isAxiosError } from "axios"
+import { isAxiosError } from "axios";
 
-import apiClient from "@/lib/axios"
-import { ApiError, toApiError } from "@/lib/apiError"
+import apiClient from "@/lib/axios";
+import { ApiError, toApiError } from "@/lib/apiError";
 
-import type { PayrollPeriod, PayrollPeriodDetail, PayrollPeriodQuery, PayrollPreliquidation, PayrollPreliquidationRequest } from "../interfaces/types"
+import type {
+    PayrollConfirmationRequest,
+    PayrollPeriod,
+    PayrollPeriodDetail,
+    PayrollPeriodQuery,
+    PayrollPreliquidation,
+    PayrollPreliquidationRequest,
+} from "../interfaces/types";
 
 // Con responseType "blob", el cuerpo del error también llega como Blob (no
 // como JSON), así que toApiError no puede leer el mensaje del backend ahí.
@@ -12,17 +19,17 @@ import type { PayrollPeriod, PayrollPeriodDetail, PayrollPeriodQuery, PayrollPre
 async function toPdfApiError(error: unknown): Promise<ApiError> {
     if (isAxiosError(error) && error.response?.data instanceof Blob) {
         try {
-            const texto = await error.response.data.text()
-            const cuerpo: unknown = JSON.parse(texto)
-            const message = (cuerpo as { message?: unknown })?.message
+            const texto = await error.response.data.text();
+            const cuerpo: unknown = JSON.parse(texto);
+            const message = (cuerpo as { message?: unknown })?.message;
             if (typeof message === "string" && message) {
-                return new ApiError(error.response.status, message)
+                return new ApiError(error.response.status, message);
             }
         } catch {
             // El cuerpo del error no era JSON legible; se usa el mensaje genérico.
         }
     }
-    return toApiError(error)
+    return toApiError(error);
 }
 
 export const payrollPeriodsService = {
@@ -54,11 +61,12 @@ export const payrollPeriodsService = {
     },
 
     async generatePreliquidation(
+        employeeId: number,
         request: PayrollPreliquidationRequest,
     ): Promise<PayrollPreliquidation> {
         try {
             const { data } = await apiClient.post<PayrollPreliquidation>(
-                "/nomina/generar",
+                `/preliquidacion/${employeeId}`,
                 request,
             );
             return data;
@@ -68,7 +76,7 @@ export const payrollPeriodsService = {
     },
 
     async confirmPreliquidation(
-        request: PayrollPreliquidationRequest,
+        request: PayrollConfirmationRequest,
     ): Promise<void> {
         try {
             await apiClient.post("/liquidaciones", request);
@@ -80,12 +88,15 @@ export const payrollPeriodsService = {
     // Comprobante de pago en PDF; responseType "blob" porque la respuesta es binaria, no JSON
     async getPdf(id: number): Promise<Blob> {
         try {
-            const { data } = await apiClient.get<Blob>(`/liquidaciones/${id}/pdf`, {
-                responseType: "blob",
-            })
-            return data
+            const { data } = await apiClient.get<Blob>(
+                `/liquidaciones/${id}/pdf`,
+                {
+                    responseType: "blob",
+                },
+            );
+            return data;
         } catch (error) {
-            throw await toPdfApiError(error)
+            throw await toPdfApiError(error);
         }
     },
 };

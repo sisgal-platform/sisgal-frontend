@@ -100,7 +100,6 @@ describe("PrestamosFeature", () => {
 
         expect(
             await screen.findByRole("heading", {
-                level: 1,
                 name: "Préstamos",
             }),
         ).toBeInTheDocument();

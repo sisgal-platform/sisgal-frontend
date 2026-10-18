@@ -75,45 +75,80 @@ describe("payrollPeriodsService", () => {
 
         await expect(payrollPeriodsService.findById(1)).resolves.toEqual(
             PAYROLL_PERIOD_DETAIL,
-        )
-        expect(client.get).toHaveBeenCalledWith("/liquidaciones/1")
-    })
+        );
+        expect(client.get).toHaveBeenCalledWith("/liquidaciones/1");
+    });
+
+    it("genera la preliquidación para el empleado en la ruta y envía solo el período", async () => {
+        client.post.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL });
+        const request = {
+            periodStart: "2026-09-01",
+            periodEnd: "2026-09-30",
+        };
+
+        await expect(
+            payrollPeriodsService.generatePreliquidation(1, request),
+        ).resolves.toEqual(PAYROLL_PERIOD_DETAIL);
+        expect(client.post).toHaveBeenCalledWith("/preliquidacion/1", request);
+    });
+
+    it("confirma la preliquidación incluyendo el empleado y el período", async () => {
+        client.post.mockResolvedValue({ data: undefined });
+        const request = {
+            employeeId: 1,
+            periodStart: "2026-09-01",
+            periodEnd: "2026-09-30",
+        };
+
+        await payrollPeriodsService.confirmPreliquidation(request);
+
+        expect(client.post).toHaveBeenCalledWith("/liquidaciones", request);
+    });
 
     describe("getPdf", () => {
         it("descarga el comprobante como blob", async () => {
-            const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" })
-            client.get.mockResolvedValue({ data: blob })
+            const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
+            client.get.mockResolvedValue({ data: blob });
 
-            await expect(payrollPeriodsService.getPdf(1)).resolves.toBe(blob)
+            await expect(payrollPeriodsService.getPdf(1)).resolves.toBe(blob);
             expect(client.get).toHaveBeenCalledWith("/liquidaciones/1/pdf", {
                 responseType: "blob",
-            })
-        })
+            });
+        });
 
         it("recupera el mensaje real del backend aunque el error llegue como blob", async () => {
-            const cuerpoError = new Blob([JSON.stringify({ message: "No fue posible determinar la sucursal." })], {
-                type: "application/json",
-            })
+            const cuerpoError = new Blob(
+                [
+                    JSON.stringify({
+                        message: "No fue posible determinar la sucursal.",
+                    }),
+                ],
+                {
+                    type: "application/json",
+                },
+            );
             client.get.mockRejectedValue({
                 isAxiosError: true,
                 response: { status: 422, data: cuerpoError },
-            })
+            });
 
             await expect(payrollPeriodsService.getPdf(1)).rejects.toThrow(
                 "No fue posible determinar la sucursal.",
-            )
-        })
+            );
+        });
 
         it("usa un mensaje genérico cuando el blob de error no es JSON legible", async () => {
-            const cuerpoError = new Blob(["no es json"], { type: "text/plain" })
+            const cuerpoError = new Blob(["no es json"], {
+                type: "text/plain",
+            });
             client.get.mockRejectedValue({
                 isAxiosError: true,
                 response: { status: 500, data: cuerpoError },
-            })
+            });
 
             await expect(payrollPeriodsService.getPdf(1)).rejects.toThrow(
                 "Ocurrió un error inesperado. Intenta de nuevo.",
-            )
-        })
-    })
-})
+            );
+        });
+    });
+});

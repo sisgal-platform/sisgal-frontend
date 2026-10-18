@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import { payrollPeriodsService } from "../services/payrollPeriodsService";
 import type {
     PayrollLine,
     PayrollPreliquidation,
-    PayrollPreliquidationEmployee,
     PayrollPreliquidationRequest,
 } from "../interfaces/types";
 
@@ -79,11 +77,6 @@ export function PayrollPreliquidationDialog({
         };
     }, [employeeLoadVersion]);
 
-    const hasInconsistencies =
-        preview?.employees.some(
-            (employee) => employee.inconsistencies.length > 0,
-        ) ?? false;
-
     function updatePeriod(field: "start" | "end", value: string) {
         if (field === "start") setPeriodStart(value);
         else setPeriodEnd(value);
@@ -119,7 +112,7 @@ export function PayrollPreliquidationDialog({
             );
             return null;
         }
-        return { employeeId: selectedEmployee.id, periodStart, periodEnd };
+        return { periodStart, periodEnd };
     }
 
     async function generatePreview() {
@@ -130,7 +123,10 @@ export function PayrollPreliquidationDialog({
         setError(null);
         try {
             setPreview(
-                await payrollPeriodsService.generatePreliquidation(request),
+                await payrollPeriodsService.generatePreliquidation(
+                    Number(employeeId),
+                    request,
+                ),
             );
         } catch (cause) {
             setPreview(null);
@@ -146,19 +142,17 @@ export function PayrollPreliquidationDialog({
 
     async function confirmPreliquidation() {
         const request = buildRequest();
-        if (
-            !request ||
-            !preview ||
-            preview.employees.length === 0 ||
-            hasInconsistencies
-        ) {
+        if (!request || !preview) {
             return;
         }
 
         setConfirming(true);
         setError(null);
         try {
-            await payrollPeriodsService.confirmPreliquidation(request);
+            await payrollPeriodsService.confirmPreliquidation({
+                ...request,
+                employeeId: preview.employeeId,
+            });
             onConfirmed();
             onOpenChange(false);
         } catch (cause) {
@@ -172,14 +166,6 @@ export function PayrollPreliquidationDialog({
         }
     }
 
-    const totals = preview?.employees.reduce(
-        (result, employee) => ({
-            earnings: result.earnings + employee.totalEarnings,
-            deductions: result.deductions + employee.totalDeductions,
-            netPay: result.netPay + employee.netPay,
-        }),
-        { earnings: 0, deductions: 0, netPay: 0 },
-    );
     let generateButtonLabel = "Generar preliquidación";
     if (preview) generateButtonLabel = "Recalcular";
     if (loading) generateButtonLabel = "Calculando…";
@@ -300,12 +286,7 @@ export function PayrollPreliquidationDialog({
                 )}
 
                 {preview && !loading && (
-                    <PreliquidationReview
-                        preview={preview}
-                        totals={
-                            totals ?? { earnings: 0, deductions: 0, netPay: 0 }
-                        }
-                    />
+                    <PreliquidationReview preview={preview} />
                 )}
 
                 <DialogFooter>
@@ -320,13 +301,7 @@ export function PayrollPreliquidationDialog({
                     <Button
                         type="button"
                         onClick={confirmPreliquidation}
-                        disabled={
-                            loading ||
-                            confirming ||
-                            !preview ||
-                            preview.employees.length === 0 ||
-                            hasInconsistencies
-                        }
+                        disabled={loading || confirming || !preview}
                         className="flex items-center gap-2"
                     >
                         {confirming ? "Guardando…" : "Confirmar liquidación"}
@@ -337,16 +312,9 @@ export function PayrollPreliquidationDialog({
     );
 }
 
-type PreliquidationReviewProps = Readonly<{
-    preview: PayrollPreliquidation;
-    totals: { earnings: number; deductions: number; netPay: number };
-}>;
+type PreliquidationReviewProps = Readonly<{ preview: PayrollPreliquidation }>;
 
-function PreliquidationReview({ preview, totals }: PreliquidationReviewProps) {
-    const employeesWithIssues = preview.employees.filter(
-        (employee) => employee.inconsistencies.length > 0,
-    ).length;
-
+function PreliquidationReview({ preview }: PreliquidationReviewProps) {
     return (
         <section aria-labelledby="preliquidacion-resumen" className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-2 border-b border-gray-200 pb-3">
@@ -363,145 +331,48 @@ function PreliquidationReview({ preview, totals }: PreliquidationReviewProps) {
                     </p>
                 </div>
                 <p className="text-sm text-text-muted">
-                    {preview.employees.length} empleados
+                    {preview.employeeName}
                 </p>
             </div>
 
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <Total label="Total devengado" value={totals.earnings} />
-                <Total label="Total deducciones" value={totals.deductions} />
-                <Total label="Neto a pagar" value={totals.netPay} />
+                <Total label="Total devengado" value={preview.totalEarnings} />
+                <Total
+                    label="Total deducciones"
+                    value={preview.totalDeductions}
+                />
+                <Total label="Neto a pagar" value={preview.netPay} />
             </dl>
 
-            {employeesWithIssues > 0 && (
-                <p
-                    role="alert"
-                    className="rounded-lg bg-error-light px-4 py-3 text-sm text-error"
-                >
-                    Hay inconsistencias en {employeesWithIssues} empleado(s).
-                    Corrige la información y vuelve a calcular antes de
-                    confirmar.
-                </p>
-            )}
-
-            {preview.employees.length === 0 ? (
-                <p className="rounded-lg bg-secondary px-4 py-5 text-sm text-text-muted">
-                    No hay empleados incluidos en este período.
-                </p>
-            ) : (
-                <div className="divide-y divide-gray-200 border-y border-gray-200">
-                    {preview.employees.map((employee) => (
-                        <EmployeeReview
-                            key={employee.employeeId}
-                            employee={employee}
-                        />
-                    ))}
-                </div>
-            )}
-        </section>
-    );
-}
-
-function EmployeeReview({
-    employee,
-}: Readonly<{ employee: PayrollPreliquidationEmployee }>) {
-    const inconsistent = employee.inconsistencies.length > 0;
-
-    return (
-        <details className="py-3">
-            <summary className="group flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-5 gap-y-2">
-                <span className="min-w-0 flex-1">
-                    <span className="block font-semibold text-text">
-                        {employee.employeeName}
-                    </span>
-                    <span className="block text-xs text-text-muted">
-                        {employee.employeeDocumentType}{" "}
-                        {employee.employeeDocument}
-                        {employee.employeePosition
-                            ? ` · ${employee.employeePosition}`
-                            : ""}
-                    </span>
-                </span>
-                <span className="text-right text-xs text-text-muted">
-                    Devengado{" "}
-                    <strong className="text-text">
-                        {formatCurrencyCOP(employee.totalEarnings)}
-                    </strong>
-                </span>
-                <span className="text-right text-xs text-text-muted">
-                    Deducciones{" "}
-                    <strong className="text-text">
-                        {formatCurrencyCOP(employee.totalDeductions)}
-                    </strong>
-                </span>
-                <span className="text-right text-sm font-semibold text-text">
-                    Neto {formatCurrencyCOP(employee.netPay)}
-                </span>
-                {inconsistent && (
-                    <span className="rounded-full bg-error-light px-2.5 py-1 text-xs font-semibold text-error">
-                        Inconsistencia
-                    </span>
-                )}
-                <ChevronDown
-                    size={16}
-                    aria-hidden="true"
-                    className="shrink-0 text-text-muted transition-transform group-open:rotate-180"
-                />
-            </summary>
-
-            <div className="mt-4 grid grid-cols-1 gap-5 border-t border-gray-100 pt-4 lg:grid-cols-2">
-                <section
-                    aria-label={`Horas trabajadas de ${employee.employeeName}`}
-                >
-                    <h3 className="mb-2 text-sm font-semibold text-primary">
-                        Horas trabajadas
+            <section
+                aria-labelledby="preliquidacion-empleado"
+                className="space-y-4"
+            >
+                <div>
+                    <h3
+                        id="preliquidacion-empleado"
+                        className="text-sm font-semibold text-primary"
+                    >
+                        Información del empleado
                     </h3>
-                    {employee.hours.length > 0 ? (
-                        <dl className="space-y-1 text-sm">
-                            {employee.hours.map((hour, index) => (
-                                <div
-                                    key={`${hour.type}-${index}`}
-                                    className="flex justify-between gap-3"
-                                >
-                                    <dt className="text-text-muted">
-                                        {hour.type}
-                                    </dt>
-                                    <dd className="font-medium text-text">
-                                        {hour.hours} h
-                                    </dd>
-                                </div>
-                            ))}
-                        </dl>
-                    ) : (
-                        <p className="text-sm text-text-muted">
-                            Sin horas registradas.
-                        </p>
-                    )}
-                    <ConceptList title="Recargos" lines={employee.surcharges} />
-                </section>
+                    <p className="text-sm text-text-muted">
+                        {preview.employeeDocumentType}{" "}
+                        {preview.employeeDocument}
+                        {preview.employeePosition
+                            ? ` · ${preview.employeePosition}`
+                            : ""}
+                    </p>
+                </div>
 
-                <div className="space-y-4">
-                    <ConceptList title="Devengados" lines={employee.earnings} />
+                <div className="grid grid-cols-1 gap-5 border-y border-gray-200 py-4 sm:grid-cols-2">
+                    <ConceptList title="Devengados" lines={preview.earnings} />
                     <ConceptList
                         title="Deducciones"
-                        lines={employee.deductions}
+                        lines={preview.deductions}
                     />
                 </div>
-
-                {inconsistent && (
-                    <div className="lg:col-span-2">
-                        <h3 className="mb-1 text-sm font-semibold text-error">
-                            Inconsistencias
-                        </h3>
-                        <ul className="list-inside list-disc text-sm text-error">
-                            {employee.inconsistencies.map((issue, index) => (
-                                <li key={`${issue}-${index}`}>{issue}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
-        </details>
+            </section>
+        </section>
     );
 }
 
