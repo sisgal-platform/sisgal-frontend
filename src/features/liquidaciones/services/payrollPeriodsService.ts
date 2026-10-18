@@ -3,7 +3,7 @@ import { isAxiosError } from "axios"
 import apiClient from "@/lib/axios"
 import { ApiError, toApiError } from "@/lib/apiError"
 
-import type { PayrollPeriod, PayrollPeriodDetail, PayrollPeriodQuery } from "../interfaces/types"
+import type { PayrollPeriod, PayrollPeriodDetail, PayrollPeriodQuery, PayrollPreliquidation, PayrollPreliquidationRequest } from "../interfaces/types"
 
 // Con responseType "blob", el cuerpo del error también llega como Blob (no
 // como JSON), así que toApiError no puede leer el mensaje del backend ahí.
@@ -88,4 +88,4 @@ export const payrollPeriodsService = {
             throw await toPdfApiError(error)
         }
     },
-}
+};
