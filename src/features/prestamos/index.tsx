@@ -1,12 +1,9 @@
 import { useState, type SubmitEvent } from "react";
-import {
-    RotateCcw,
-    Search,
-    TrendingDown,
-    WalletCards,
-} from "lucide-react";
+import { RotateCcw, Search, TrendingDown, WalletCards } from "lucide-react";
 
 import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
+import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
+import { useEmployees } from "@/features/empleados/hooks/useEmployees";
 
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
 import { CreatePrestamoModal } from "./components/CreatePrestamoModal";
@@ -21,9 +18,11 @@ import type {
     PrestamosIndicadores,
 } from "./interfaces/types";
 import { normalizarRangoFechas } from "./services/prestamosService";
+import { SectionHeader } from "@/components/atoms";
 
 const filtrosVacios: FiltrosPrestamos = {
     busqueda: "",
+    empleadoId: undefined,
     estado: "",
     fechaDesde: "",
     fechaHasta: "",
@@ -59,6 +58,12 @@ export function PrestamosFeature() {
         recargar,
     } = usePrestamosIndicadores();
     const listado = usePrestamos(filtrosAplicados);
+    const {
+        employees,
+        cargando: empleadosCargando,
+        error: empleadosError,
+        recargar: recargarEmpleados,
+    } = useEmployees({});
 
     function aplicarFiltros(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -97,16 +102,13 @@ export function PrestamosFeature() {
 
     return (
         <section className="space-y-6 p-4">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                    Préstamos
-                </h1>
-                <p className="text-sm text-primary-light sm:text-base">
-                    Administra los préstamos otorgados a los empleados,
-                    incluyendo el seguimiento de los saldos pendientes y la
-                    gestión de nuevos préstamos.
-                </p>
-            </header>
+            <div className="flex items-start justify-between gap-4">
+                <SectionHeader
+                    eyebrow="Gestión"
+                    title="Préstamos"
+                    description="Consulta y registro de préstamos otorgados a los empleados."
+                />
+            </div>
 
             <section
                 aria-label="Resumen de préstamos"
@@ -180,21 +182,47 @@ export function PrestamosFeature() {
                                 htmlFor="filtro-prestamo-busqueda"
                                 className="text-sm font-medium text-text"
                             >
-                                Nombre o número de documento
+                                Empleado
                             </label>
-                            <input
+                            <EmployeeCombobox
                                 id="filtro-prestamo-busqueda"
-                                type="search"
-                                value={filtros.busqueda}
-                                onChange={(event) =>
+                                employees={employees}
+                                loading={empleadosCargando}
+                                disabled={
+                                    empleadosCargando || Boolean(empleadosError)
+                                }
+                                value={
+                                    filtros.empleadoId
+                                        ? String(filtros.empleadoId)
+                                        : ""
+                                }
+                                onChange={(empleadoId) =>
                                     setFiltros({
                                         ...filtros,
-                                        busqueda: event.target.value,
+                                        busqueda: "",
+                                        empleadoId: empleadoId
+                                            ? Number(empleadoId)
+                                            : undefined,
                                     })
                                 }
-                                placeholder="Buscar empleado o documento"
-                                className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                allLabel="Todos"
+                                placeholder="Buscar por nombre o documento"
                             />
+                            {empleadosError && (
+                                <div
+                                    role="alert"
+                                    className="flex items-center justify-between gap-3 text-sm text-error"
+                                >
+                                    <span>{empleadosError}</span>
+                                    <button
+                                        type="button"
+                                        onClick={recargarEmpleados}
+                                        className="font-semibold underline"
+                                    >
+                                        Reintentar
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label
@@ -241,7 +269,7 @@ export function PrestamosFeature() {
                                     actualizarFechaDesde(event.target.value)
                                 }
                                 className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            />                            
+                            />
                         </div>
                         <div className="relative space-y-2">
                             <label

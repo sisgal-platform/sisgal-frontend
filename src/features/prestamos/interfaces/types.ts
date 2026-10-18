@@ -46,6 +46,7 @@ export type PrestamosQuery = {
 
 export type FiltrosPrestamos = {
     busqueda: string;
+    empleadoId?: number;
     estado: EstadoPrestamo | "";
     fechaDesde: string;
     fechaHasta: string;

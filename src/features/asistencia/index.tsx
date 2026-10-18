@@ -2,19 +2,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AsistenciaHoy } from "./components/AsistenciaHoy";
 import { HistorialAsistencia } from "./components/HistorialAsistencia";
+import { SectionHeader } from "@/components/atoms";
 
 export function AsistenciaFeature() {
     return (
         <section className="space-y-6 p-4">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                    Asistencia
-                </h1>
-                <p className="text-sm text-primary-light sm:text-base">
-                    Consulta quién ha ingresado hoy y el historial de
-                    marcaciones y horas trabajadas de los empleados.
-                </p>
-            </header>
+            <div className="flex items-start justify-between gap-4">
+                <SectionHeader
+                    eyebrow="Gestión"
+                    title="Asistencia"
+                    description="Registro, consulta y control de la jornada laboral."
+                />
+            </div>
 
             <Tabs defaultValue="hoy" className="w-full">
                 <TabsList>

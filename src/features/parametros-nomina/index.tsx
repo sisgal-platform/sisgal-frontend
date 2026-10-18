@@ -11,7 +11,6 @@ export function ParametrosNominaFeature() {
     return (
         <section className="space-y-6">
             <SectionHeader
-                eyebrow="Configuración"
                 title="Parámetros de nómina"
                 description="Parámetros y reglas laborales que usan los cálculos de asistencia y nómina. Cada cambio rige desde una fecha y conserva su historial."
             />

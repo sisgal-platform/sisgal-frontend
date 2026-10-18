@@ -72,7 +72,6 @@ export function CargosFeature() {
       <div>
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
-            eyebrow="Configuración"
             title="Cargos"
             description="Catálogo de cargos disponibles para los empleados del restaurante."
           />

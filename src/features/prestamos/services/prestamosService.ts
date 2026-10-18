@@ -37,7 +37,9 @@ function crearQueryPrestamos(filtros: FiltrosPrestamos): PrestamosQuery {
     const query: PrestamosQuery = {};
     const rango = normalizarRangoFechas(filtros);
 
-    if (busqueda) {
+    if (filtros.empleadoId) {
+        query.empleadoId = filtros.empleadoId;
+    } else if (busqueda) {
         if (/^\d+$/.test(busqueda)) {
             query.documento = busqueda;
         } else {

@@ -1,17 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import apiClient from "@/lib/axios"
+import apiClient from "@/lib/axios";
 
-import { payrollPeriodsService } from "../services/payrollPeriodsService"
-import type { PayrollPeriod, PayrollPeriodDetail } from "../interfaces/types"
+import { payrollPeriodsService } from "../services/payrollPeriodsService";
+import type { PayrollPeriod, PayrollPeriodDetail } from "../interfaces/types";
 
 vi.mock("@/lib/axios", () => ({
     default: {
         get: vi.fn(),
+        post: vi.fn(),
     },
-}))
+}));
 
-const client = vi.mocked(apiClient)
+const client = vi.mocked(apiClient);
 
 const PAYROLL_PERIOD: PayrollPeriod = {
     id: 1,
@@ -24,7 +25,7 @@ const PAYROLL_PERIOD: PayrollPeriod = {
     totalDeductions: 150000,
     netPay: 1650000,
     status: "Confirmada",
-}
+};
 
 const PAYROLL_PERIOD_DETAIL: PayrollPeriodDetail = {
     ...PAYROLL_PERIOD,
@@ -33,36 +34,44 @@ const PAYROLL_PERIOD_DETAIL: PayrollPeriodDetail = {
     employeePosition: "Mesera",
     earnings: [{ conceptName: "Salario base", amount: 1800000 }],
     deductions: [{ conceptName: "Salud y pensión", amount: 150000 }],
-}
+};
 
 describe("payrollPeriodsService", () => {
     beforeEach(() => {
-        vi.clearAllMocks()
-    })
+        vi.clearAllMocks();
+    });
 
     it("lista todas las liquidaciones sin filtros", async () => {
-        client.get.mockResolvedValue({ data: [PAYROLL_PERIOD] })
+        client.get.mockResolvedValue({ data: [PAYROLL_PERIOD] });
 
-        await expect(payrollPeriodsService.findAll()).resolves.toEqual([PAYROLL_PERIOD])
-        expect(client.get).toHaveBeenCalledWith("/liquidaciones", { params: {} })
-    })
+        await expect(payrollPeriodsService.findAll()).resolves.toEqual([
+            PAYROLL_PERIOD,
+        ]);
+        expect(client.get).toHaveBeenCalledWith("/liquidaciones", {
+            params: {},
+        });
+    });
 
     it("lista las liquidaciones con los filtros recibidos", async () => {
-        client.get.mockResolvedValue({ data: [PAYROLL_PERIOD] })
+        client.get.mockResolvedValue({ data: [PAYROLL_PERIOD] });
 
         await payrollPeriodsService.findAll({
             employeeId: 1,
             periodStart: "2026-09-01",
             periodEnd: "2026-09-30",
-        })
+        });
 
         expect(client.get).toHaveBeenCalledWith("/liquidaciones", {
-            params: { employeeId: 1, periodStart: "2026-09-01", periodEnd: "2026-09-30" },
-        })
-    })
+            params: {
+                employeeId: 1,
+                periodStart: "2026-09-01",
+                periodEnd: "2026-09-30",
+            },
+        });
+    });
 
     it("consulta el detalle de una liquidación por id", async () => {
-        client.get.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL })
+        client.get.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL });
 
         await expect(payrollPeriodsService.findById(1)).resolves.toEqual(
             PAYROLL_PERIOD_DETAIL,

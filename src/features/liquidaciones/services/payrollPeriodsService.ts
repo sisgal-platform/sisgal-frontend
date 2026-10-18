@@ -29,22 +29,51 @@ export const payrollPeriodsService = {
     // Listado con filtros opcionales; sin query trae todas las liquidaciones
     async findAll(query: PayrollPeriodQuery = {}): Promise<PayrollPeriod[]> {
         try {
-            const { data } = await apiClient.get<PayrollPeriod[]>("/liquidaciones", {
-                params: query,
-            })
-            return data
+            const { data } = await apiClient.get<PayrollPeriod[]>(
+                "/liquidaciones",
+                {
+                    params: query,
+                },
+            );
+            return data;
         } catch (error) {
-            throw toApiError(error)
+            throw toApiError(error);
         }
     },
 
     // Detalle completo de una liquidación, con los conceptos devengados y las deducciones
     async findById(id: number): Promise<PayrollPeriodDetail> {
         try {
-            const { data } = await apiClient.get<PayrollPeriodDetail>(`/liquidaciones/${id}`)
-            return data
+            const { data } = await apiClient.get<PayrollPeriodDetail>(
+                `/liquidaciones/${id}`,
+            );
+            return data;
         } catch (error) {
-            throw toApiError(error)
+            throw toApiError(error);
+        }
+    },
+
+    async generatePreliquidation(
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollPreliquidation> {
+        try {
+            const { data } = await apiClient.post<PayrollPreliquidation>(
+                "/nomina/generar",
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async confirmPreliquidation(
+        request: PayrollPreliquidationRequest,
+    ): Promise<void> {
+        try {
+            await apiClient.post("/liquidaciones", request);
+        } catch (error) {
+            throw toApiError(error);
         }
     },
 

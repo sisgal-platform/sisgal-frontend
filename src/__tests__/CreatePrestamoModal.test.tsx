@@ -62,6 +62,20 @@ async function abrirModal(user: ReturnType<typeof userEvent.setup>) {
     return screen.findByRole("dialog", { name: "Crear préstamo" });
 }
 
+async function seleccionarEmpleado(
+    user: ReturnType<typeof userEvent.setup>,
+    dialog: HTMLElement,
+) {
+    const selector = within(dialog).getByRole("combobox", { name: /Empleado/ });
+    await user.click(selector);
+    await user.type(selector, "1234567890");
+    await user.click(
+        await within(dialog).findByRole("option", {
+            name: "María Pérez · 1234567890",
+        }),
+    );
+}
+
 beforeEach(() => {
     vi.clearAllMocks();
     empleadosApi.list.mockResolvedValue([EMPLEADO_ACTIVO, EMPLEADO_INACTIVO]);
@@ -76,8 +90,15 @@ describe("modal de creación de préstamos", () => {
         const dialog = await abrirModal(user);
 
         expect(empleadosApi.list).toHaveBeenCalledWith({ status: "ACTIVO" });
+        const selector = within(dialog).getByRole("combobox", {
+            name: /Empleado/,
+        });
+        await user.click(selector);
+        await user.type(selector, "1234567890");
         expect(
-            await within(dialog).findByRole("option", { name: /María Pérez/ }),
+            await within(dialog).findByRole("option", {
+                name: "María Pérez · 1234567890",
+            }),
         ).toBeInTheDocument();
         expect(
             within(dialog).queryByRole("option", { name: /Luis/ }),
@@ -88,10 +109,7 @@ describe("modal de creación de préstamos", () => {
         const { user, onSuccess } = renderModal();
         const dialog = await abrirModal(user);
 
-        await user.selectOptions(
-            within(dialog).getByLabelText(/Empleado/),
-            "7",
-        );
+        await seleccionarEmpleado(user, dialog);
         await user.type(
             within(dialog).getByLabelText(/Valor del préstamo/),
             "1200000",
@@ -151,10 +169,7 @@ describe("modal de creación de préstamos", () => {
         const { user } = renderModal();
         const dialog = await abrirModal(user);
 
-        await user.selectOptions(
-            within(dialog).getByLabelText(/Empleado/),
-            "7",
-        );
+        await seleccionarEmpleado(user, dialog);
         await user.type(
             within(dialog).getByLabelText(/Valor del préstamo/),
             "1200000",

@@ -97,6 +97,22 @@ describe("Servicio de préstamos", () => {
         });
     });
 
+    it("filtra por el id único del empleado seleccionado", async () => {
+        client.get.mockResolvedValue({ data: [] });
+
+        await prestamosService.obtenerTodos({
+            busqueda: "",
+            empleadoId: 7,
+            estado: "",
+            fechaDesde: "",
+            fechaHasta: "",
+        });
+
+        expect(client.get).toHaveBeenCalledWith("/prestamos", {
+            params: { empleadoId: 7 },
+        });
+    });
+
     it("normaliza un rango de fechas cuando la fecha final es anterior a la inicial", () => {
         expect(
             normalizarRangoFechas({

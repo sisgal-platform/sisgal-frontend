@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 
 import { Modal } from "@/components/molecules/Modal";
+import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
 import { employeesService } from "@/features/empleados/services/employeesService";
 import type { Employee } from "@/features/empleados/interfaces/types";
 import { useToast } from "@/toast/hooks/useToast";
@@ -146,6 +147,10 @@ function CreatePrestamoDialog({
     }
 
     const busy = submitting || loadingEmployees;
+    let employeePlaceholder = "Buscar nombre o documento";
+    if (loadingEmployees) employeePlaceholder = "Cargando empleados…";
+    else if (employees.length === 0)
+        employeePlaceholder = "No hay empleados activos";
 
     return (
         <Modal title="Crear préstamo" onClose={submitting ? () => {} : onClose}>
@@ -164,33 +169,22 @@ function CreatePrestamoDialog({
                             *
                         </span>
                     </label>
-                    <select
+                    <EmployeeCombobox
                         id="prestamo-empleado"
+                        employees={employees}
                         value={employeeId}
-                        onChange={(event) => setEmployeeId(event.target.value)}
+                        onChange={setEmployeeId}
                         disabled={busy || employees.length === 0}
+                        loading={loadingEmployees}
+                        placeholder={employeePlaceholder}
+                        allLabel="Selecciona un empleado"
                         aria-invalid={errors.employeeId ? true : undefined}
                         aria-describedby={
                             errors.employeeId
                                 ? "prestamo-empleado-error"
                                 : undefined
                         }
-                        className="h-11 rounded-xl border border-gray-300 bg-white px-3 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-gray-100 aria-[invalid]:border-error"
-                    >
-                        <option value="">
-                            {loadingEmployees
-                                ? "Cargando empleados…"
-                                : employees.length === 0
-                                  ? "No hay empleados activos"
-                                  : "Selecciona un empleado"}
-                        </option>
-                        {employees.map((employee) => (
-                            <option key={employee.id} value={employee.id}>
-                                {employee.firstName} {employee.lastName} ·{" "}
-                                {employee.document}
-                            </option>
-                        ))}
-                    </select>
+                    />
                     {errors.employeeId && (
                         <p
                             id="prestamo-empleado-error"
