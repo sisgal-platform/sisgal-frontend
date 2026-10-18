@@ -3,6 +3,7 @@ import type { RouteObject } from "react-router";
 import { AppLayout } from "@/components/organisms/AppLayout";
 
 import { RequireAuth } from "@/routes/guards/RequireAuth";
+import { RequireRole } from "@/routes/guards/RequireRole";
 
 import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { LoginPage } from "@/pages/login/LoginPage";
@@ -11,7 +12,7 @@ import { NotFoundPage } from "@/pages/not-found/NotFoundPage";
 import { AsistenciaPage } from "@/pages/asistencia/AsistenciaPage";
 import { ConfiguracionPage } from "@/pages/configuracion/ConfiguracionPage";
 import { NominaPage } from "@/pages/nomina/NominaPage";
-import { NovedadesPage } from "@/pages/novedades/NovedadesPage";
+import { LiquidacionDetallePage } from "@/pages/nomina/LiquidacionDetallePage";
 import { IncapacidadesPage } from "@/pages/incapacidades/IncapacidadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
@@ -41,8 +42,12 @@ export const routes: RouteObject[] = [
                         element: <NominaPage />,
                     },
                     {
-                        path: "novedades",
-                        element: <NovedadesPage />,
+                        path: "nomina/liquidaciones/:payrollPeriodId",
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <LiquidacionDetallePage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "incapacidades",

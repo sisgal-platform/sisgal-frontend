@@ -3,19 +3,17 @@ import { CargosFeature } from "@/features/cargos";
 import { ParametrosNominaFeature } from "@/features/parametros-nomina";
 import { SucursalesFeature } from "@/features/sucursales";
 import { SupportInformation } from "./components/SupportInformation";
+import { SectionHeader } from "@/components/atoms";
 
 export function ConfiguracionFeature() {
     return (
         <section className="space-y-6">
-            <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                    Configuración del sistema
-                </h1>
-
-                <p className="mt-2 text-sm text-primary-light sm:text-base">
-                    Administra la configuración general del sistema, incluyendo
-                    sucursales y otros parámetros importantes.
-                </p>
+            <div className="flex items-start justify-between gap-4">
+                <SectionHeader
+                    eyebrow="Gestión"
+                    title="Configuración"
+                    description="Gestión de sucursales, cargos y parámetros de nómina."
+                />
             </div>
 
             <Tabs defaultValue="sucursales" className="w-full">

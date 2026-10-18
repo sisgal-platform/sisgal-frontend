@@ -100,7 +100,6 @@ describe("PrestamosFeature", () => {
 
         expect(
             await screen.findByRole("heading", {
-                level: 1,
                 name: "Préstamos",
             }),
         ).toBeInTheDocument();
@@ -120,9 +119,15 @@ describe("PrestamosFeature", () => {
         const user = renderPrestamos();
         await esperarCargaInicial();
 
-        await user.type(
-            screen.getByLabelText("Nombre o número de documento"),
-            "Ana",
+        const employeeSelector = screen.getByRole("combobox", {
+            name: "Empleado",
+        });
+        await user.click(employeeSelector);
+        await user.type(employeeSelector, "1234567890");
+        await user.click(
+            await screen.findByRole("option", {
+                name: "Ana Ruiz · 1234567890",
+            }),
         );
         await user.selectOptions(
             screen.getByLabelText("Estado del préstamo"),
@@ -141,7 +146,8 @@ describe("PrestamosFeature", () => {
 
         await waitFor(() =>
             expect(obtenerTodos).toHaveBeenLastCalledWith({
-                busqueda: "Ana",
+                busqueda: "",
+                empleadoId: 6,
                 estado: "SALDADO",
                 fechaDesde: "2026-03-01",
                 fechaHasta: "2026-03-10",
@@ -160,9 +166,9 @@ describe("PrestamosFeature", () => {
                 fechaHasta: "",
             }),
         );
-        expect(
-            screen.getByLabelText("Nombre o número de documento"),
-        ).toHaveValue("");
+        expect(screen.getByRole("combobox", { name: "Empleado" })).toHaveValue(
+            "",
+        );
     });
 
     it("muestra errores de indicadores y permite reintentar", async () => {
@@ -275,9 +281,14 @@ describe("PrestamosFeature", () => {
         const dialog = await screen.findByRole("dialog", {
             name: "Crear préstamo",
         });
-        await user.selectOptions(
-            within(dialog).getByLabelText(/Empleado/),
-            "6",
+        const selector = within(dialog).getByRole("combobox", {
+            name: /Empleado/,
+        });
+        await user.click(selector);
+        await user.click(
+            await within(dialog).findByRole("option", {
+                name: "Ana Ruiz · 1234567890",
+            }),
         );
         await user.type(
             within(dialog).getByLabelText(/Valor del préstamo/),

@@ -1,103 +1,114 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react"
-import { Plus, RotateCcw, Search } from "lucide-react"
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Plus, RotateCcw, Search } from "lucide-react";
+import { useNavigate } from "react-router";
 
-import { SectionHeader } from "@/components/atoms/SectionHeader"
-import { Button } from "@/components/ui/button"
-import { Combobox } from "@/components/ui/combobox"
-import { formatCurrencyCOP } from "@/lib/formatters"
+import { SectionHeader } from "@/components/atoms/SectionHeader";
+import { Button } from "@/components/ui/button";
+import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
+import { formatCurrencyCOP } from "@/lib/formatters";
 
-import { PayrollPeriodDetailDialog } from "./components/PayrollPeriodDetailDialog"
-import { PayrollPeriodTable } from "./components/PayrollPeriodTable"
-import { useActiveEmployees } from "./hooks/useActiveEmployees"
-import { usePayrollPeriods } from "./hooks/usePayrollPeriods"
-import type { PayrollPeriod, PayrollPeriodFilterValues, PayrollPeriodQuery } from "./interfaces/types"
+import { PayrollPeriodTable } from "./components/PayrollPeriodTable";
+import { PayrollPreliquidationDialog } from "./components/PayrollPreliquidationDialog";
+import { useActiveEmployees } from "./hooks/useActiveEmployees";
+import { usePayrollPeriods } from "./hooks/usePayrollPeriods";
+import type {
+    PayrollPeriodFilterValues,
+    PayrollPeriodQuery,
+} from "./interfaces/types";
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
 const emptyFilters: PayrollPeriodFilterValues = {
     employeeId: "",
     periodStart: "",
     periodEnd: "",
-}
+};
 
 // Arma el query que se le manda al backend a partir de los filtros (strings) del formulario
 function buildQuery(filters: PayrollPeriodFilterValues): PayrollPeriodQuery {
-    const query: PayrollPeriodQuery = {}
+    const query: PayrollPeriodQuery = {};
 
-    if (filters.employeeId) query.employeeId = Number(filters.employeeId)
-    if (filters.periodStart) query.periodStart = filters.periodStart
-    if (filters.periodEnd) query.periodEnd = filters.periodEnd
+    if (filters.employeeId) query.employeeId = Number(filters.employeeId);
+    if (filters.periodStart) query.periodStart = filters.periodStart;
+    if (filters.periodEnd) query.periodEnd = filters.periodEnd;
 
-    return query
+    return query;
 }
 
 export function LiquidacionesFeature() {
-    const [filters, setFilters] = useState(emptyFilters)
-    const [appliedFilters, setAppliedFilters] = useState(emptyFilters)
-    const [periodRangeError, setPeriodRangeError] = useState<string | null>(null)
-    const [page, setPage] = useState(1)
-    const [selectedPayrollPeriod, setSelectedPayrollPeriod] = useState<PayrollPeriod | null>(null)
+    const [filters, setFilters] = useState(emptyFilters);
+    const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+    const [periodRangeError, setPeriodRangeError] = useState<string | null>(
+        null,
+    );
+    const [page, setPage] = useState(1);
+    const [preliquidationOpen, setPreliquidationOpen] = useState(false);
+    const navigate = useNavigate();
 
     const { payrollPeriods, loading, error, reload } = usePayrollPeriods(
         buildQuery(appliedFilters),
-    )
-    const { employees, loading: employeesLoading } = useActiveEmployees()
-    const employeeOptions = employees.map((employee) => ({
-        value: String(employee.id),
-        label: `${employee.firstName} ${employee.lastName}`,
-    }))
+    );
+    const { employees, loading: employeesLoading } = useActiveEmployees();
 
     // Cualquier cambio en los filtros aplicados vuelve a la primera página
     useEffect(() => {
-        setPage(1)
-    }, [appliedFilters])
+        setPage(1);
+    }, [appliedFilters]);
 
-    const totalPages = Math.max(1, Math.ceil(payrollPeriods.length / PAGE_SIZE))
-    const pageStart = (page - 1) * PAGE_SIZE
-    const pageItems = payrollPeriods.slice(pageStart, pageStart + PAGE_SIZE)
+    const totalPages = Math.max(
+        1,
+        Math.ceil(payrollPeriods.length / PAGE_SIZE),
+    );
+    const pageStart = (page - 1) * PAGE_SIZE;
+    const pageItems = payrollPeriods.slice(pageStart, pageStart + PAGE_SIZE);
 
     // Total de neto a pagar sobre el mismo listado filtrado que se muestra en la tabla
     const netPayTotal = useMemo(
         () => payrollPeriods.reduce((sum, item) => sum + item.netPay, 0),
         [payrollPeriods],
-    )
+    );
 
     function applyFilters(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
+        event.preventDefault();
 
         // El período inicial no puede ser posterior al final; se bloquea la consulta
-        if (filters.periodStart && filters.periodEnd && filters.periodStart > filters.periodEnd) {
-            setPeriodRangeError("El período inicial no puede ser posterior al período final.")
-            return
+        if (
+            filters.periodStart &&
+            filters.periodEnd &&
+            filters.periodStart > filters.periodEnd
+        ) {
+            setPeriodRangeError(
+                "El período inicial no puede ser posterior al período final.",
+            );
+            return;
         }
 
-        setPeriodRangeError(null)
-        setAppliedFilters(filters)
+        setPeriodRangeError(null);
+        setAppliedFilters(filters);
     }
 
     function clearFilters() {
-        setFilters(emptyFilters)
-        setAppliedFilters(emptyFilters)
-        setPeriodRangeError(null)
+        setFilters(emptyFilters);
+        setAppliedFilters(emptyFilters);
+        setPeriodRangeError(null);
     }
 
     return (
         <section className="space-y-6 p-4">
             <div className="flex items-start justify-between gap-4">
                 <SectionHeader
-                    title="Liquidación"
-                    description="Gestión de comprobantes de pago."
+                    eyebrow="Gestión"
+                    title="Liquidaciones"
+                    description="Consulta y generación de liquidaciones de nómina."
                 />
 
-                {/* Generación de nómina pendiente para una historia futura; el botón queda visible pero sin funcionalidad */}
                 <Button
                     type="button"
-                    disabled
-                    title="Disponible próximamente"
+                    onClick={() => setPreliquidationOpen(true)}
                     className="flex items-center gap-2 bg-primary hover:bg-primary-light"
                 >
                     <Plus size={18} aria-hidden="true" />
-                    Generar Nómina
+                    Generar liquidación
                 </Button>
             </div>
 
@@ -108,11 +119,15 @@ export function LiquidacionesFeature() {
                 <div className="flex flex-wrap gap-4">
                     <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-sm text-text-muted">
                         Empleado
-                        <Combobox
-                            options={employeeOptions}
+                        <EmployeeCombobox
+                            employees={employees}
                             loading={employeesLoading}
+                            disabled={employeesLoading}
                             value={filters.employeeId}
-                            onChange={(employeeId) => setFilters({ ...filters, employeeId })}
+                            onChange={(employeeId) =>
+                                setFilters({ ...filters, employeeId })
+                            }
+                            placeholder="Buscar nombre o documento"
                         />
                     </label>
 
@@ -122,7 +137,10 @@ export function LiquidacionesFeature() {
                             type="date"
                             value={filters.periodStart}
                             onChange={(event) =>
-                                setFilters({ ...filters, periodStart: event.target.value })
+                                setFilters({
+                                    ...filters,
+                                    periodStart: event.target.value,
+                                })
                             }
                             className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
                         />
@@ -134,7 +152,10 @@ export function LiquidacionesFeature() {
                             type="date"
                             value={filters.periodEnd}
                             onChange={(event) =>
-                                setFilters({ ...filters, periodEnd: event.target.value })
+                                setFilters({
+                                    ...filters,
+                                    periodEnd: event.target.value,
+                                })
                             }
                             className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
                         />
@@ -171,7 +192,9 @@ export function LiquidacionesFeature() {
                 loading={loading}
                 error={error}
                 onRetry={reload}
-                onViewDetail={setSelectedPayrollPeriod}
+                onViewDetail={(payrollPeriod) =>
+                    navigate(`/nomina/liquidaciones/${payrollPeriod.id}`)
+                }
             />
 
             {payrollPeriods.length > 0 && (
@@ -209,14 +232,12 @@ export function LiquidacionesFeature() {
                 </div>
             )}
 
-            {selectedPayrollPeriod && (
-                <PayrollPeriodDetailDialog
-                    payrollPeriod={selectedPayrollPeriod}
-                    onOpenChange={(open) => {
-                        if (!open) setSelectedPayrollPeriod(null)
-                    }}
+            {preliquidationOpen && (
+                <PayrollPreliquidationDialog
+                    onOpenChange={setPreliquidationOpen}
+                    onConfirmed={reload}
                 />
             )}
         </section>
-    )
+    );
 }

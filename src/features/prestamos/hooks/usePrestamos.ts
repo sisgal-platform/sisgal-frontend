@@ -19,6 +19,9 @@ export function usePrestamos(filtros: FiltrosPrestamos) {
             try {
                 const datos = await prestamosService.obtenerTodos({
                     busqueda: filtros.busqueda,
+                    ...(filtros.empleadoId
+                        ? { empleadoId: filtros.empleadoId }
+                        : {}),
                     estado: filtros.estado,
                     fechaDesde: filtros.fechaDesde,
                     fechaHasta: filtros.fechaHasta,
@@ -45,6 +48,7 @@ export function usePrestamos(filtros: FiltrosPrestamos) {
         };
     }, [
         filtros.busqueda,
+        filtros.empleadoId,
         filtros.estado,
         filtros.fechaDesde,
         filtros.fechaHasta,

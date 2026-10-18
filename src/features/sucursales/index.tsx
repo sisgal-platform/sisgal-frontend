@@ -71,7 +71,10 @@ export function SucursalesFeature() {
     return (
         <section className="space-y-6">
             <div className="flex items-start justify-between gap-4">
-                <SectionHeader title="Sucursales" />
+                <SectionHeader
+                    title="Sucursales"
+                    description="Gestión de sucursales y su información relacionada."
+                />
 
                 <button
                     type="button"

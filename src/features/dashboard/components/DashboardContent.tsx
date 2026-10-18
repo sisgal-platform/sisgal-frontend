@@ -7,6 +7,7 @@ import { useSession } from "@/session/hooks/useSession";
 import { usePrestamosIndicadores } from "@/features/prestamos/hooks/usePrestamosIndicadores";
 import { useDisabilityLeaveIndicators } from "@/features/incapacidades/hooks/useDisabilityLeaveIndicators";
 import { useActiveEmployeesCount } from "../hooks/useActiveEmployeesCount";
+import { SectionHeader } from "@/components/atoms";
 
 function EmployeesDashboardCard({ onAction }: { onAction: () => void }) {
     const { count, loading, error } = useActiveEmployeesCount();
@@ -54,7 +55,9 @@ function IncapacidadesDashboardCard({ onAction }: { onAction: () => void }) {
     return (
         <DashboardCard
             title="Incapacidades"
-            value={loading ? "..." : error ? "—" : (indicators?.activeCount ?? 0)}
+            value={
+                loading ? "..." : error ? "—" : (indicators?.activeCount ?? 0)
+            }
             label={error ? "no disponibles" : "activas"}
             icon={FileText}
             color="text"
@@ -72,9 +75,13 @@ export function DashboardContent() {
     if (!user || user.rol !== "administrador") {
         return (
             <article className="w-full max-w-2xl rounded-2xl border border-error-light bg-white p-8 shadow-sm">
-                <h1 className="mb-4 text-3xl font-bold text-primary">
-                    Dashboard
-                </h1>
+                <div className="flex items-start justify-between gap-4">
+                    <SectionHeader
+                        eyebrow="Gestión"
+                        title="Dashboard"
+                        description="Resumen general del sistema de gestión"
+                    />
+                </div>
 
                 <p className="text-base text-text">
                     No tienes permisos para acceder al dashboard.
@@ -102,14 +109,12 @@ export function DashboardContent() {
     return (
         <section className="space-y-6 p-4">
             <div className="mx-auto max-w-7xl 2xl:max-w-[1600px]">
-                <div className="mb-6 sm:mb-8">
-                    <h1 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                        Panel Administrativo
-                    </h1>
-
-                    <p className="mt-2 text-sm text-primary-light sm:text-base">
-                        Resumen general del sistema de gestión
-                    </p>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                    <SectionHeader
+                        eyebrow="Gestión"
+                        title="Dashboard"
+                        description="Resumen general del sistema de gestión"
+                    />
                 </div>
 
                 <section
@@ -131,7 +136,9 @@ export function DashboardContent() {
 
                     <PrestamosDashboardCard onAction={handleViewLoans} />
 
-                    <IncapacidadesDashboardCard onAction={handleRegisterDisabilityLeave} />
+                    <IncapacidadesDashboardCard
+                        onAction={handleRegisterDisabilityLeave}
+                    />
                 </section>
 
                 <DashboardIndicatorsSection />
