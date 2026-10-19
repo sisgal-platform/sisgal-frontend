@@ -166,7 +166,7 @@ type ConceptSectionRowsProps = {
     conceptos: PayrollLine[]
 }
 
-function ConceptSectionRows({
+export function ConceptSectionRows({
     title,
     headerClassName,
     amountClassName,

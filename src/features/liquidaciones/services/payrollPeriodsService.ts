@@ -4,6 +4,7 @@ import apiClient from "@/lib/axios";
 import { ApiError, toApiError } from "@/lib/apiError";
 
 import type {
+    PayrollCalculation,
     PayrollConfirmationRequest,
     PayrollPeriod,
     PayrollPeriodDetail,
@@ -67,6 +68,21 @@ export const payrollPeriodsService = {
         try {
             const { data } = await apiClient.post<PayrollPreliquidation>(
                 `/preliquidacion/${employeeId}`,
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    // Nómina del período para todos los empleados activos; no guarda la liquidación
+    async calculatePayroll(
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollCalculation> {
+        try {
+            const { data } = await apiClient.post<PayrollCalculation>(
+                "/nomina/calcular",
                 request,
             );
             return data;

@@ -15,7 +15,14 @@ export type PayrollPeriod = {
     totalEarnings: number;
     totalDeductions: number;
     netPay: number;
-    status: "Confirmada";
+    status: "Confirmada" | "Preliquidación";
+};
+
+/** Espejo exacto de WorkedHoursResponseDto (backend). */
+export type PayrollWorkedHours = {
+    type: string;
+    label: string;
+    hours: number;
 };
 
 /** Espejo exacto de PayrollPeriodDetailResponseDto (backend). */
@@ -25,6 +32,7 @@ export type PayrollPeriodDetail = PayrollPeriod & {
     employeePosition: string | null;
     earnings: PayrollLine[];
     deductions: PayrollLine[];
+    workedHours: PayrollWorkedHours[];
 };
 
 /** Espejo exacto de ListPayrollPeriodQueryDto (backend). */
@@ -51,3 +59,25 @@ export type PayrollConfirmationRequest = PayrollPreliquidationRequest & {
 };
 
 export type PayrollPreliquidation = PayrollPeriodDetail;
+
+/** Espejo exacto de PayrollCalculationErrorResponseDto (backend). */
+export type PayrollCalculationError = {
+    employeeId: number;
+    employeeName: string;
+    employeeDocumentType: string;
+    employeeDocument: string;
+    causes: string[];
+};
+
+/** Espejo exacto de PayrollCalculationResponseDto (backend). */
+export type PayrollCalculation = {
+    periodStart: string;
+    periodEnd: string;
+    status: "COMPLETADO" | "CON_ERRORES";
+    totalEmployees: number;
+    totalEarnings: number;
+    totalDeductions: number;
+    totalNetPay: number;
+    results: PayrollPreliquidation[];
+    errors: PayrollCalculationError[];
+};
