@@ -29,6 +29,7 @@ const EMPLEADO_ACTIVO = {
     document: "1234567890",
     phone: "3001234567",
     salaryBase: 1800000,
+    hireDate: "2025-08-01",
     position: "Mesera",
     status: "ACTIVO",
     branchId: 1,

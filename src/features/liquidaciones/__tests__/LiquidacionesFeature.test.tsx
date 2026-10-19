@@ -43,6 +43,7 @@ const ANA: Employee = {
     document: "1020304050",
     phone: "3001234567",
     salaryBase: 1800000,
+    hireDate: "2025-08-01",
     position: "Mesera",
     status: "ACTIVO",
     branchId: 1,
@@ -246,6 +247,43 @@ describe("LiquidacionesFeature", () => {
         expect(
             screen.queryByRole("region", { name: "Observaciones de préstamos" }),
         ).not.toBeInTheDocument();
+    });
+
+    it("muestra la prima como devengado independiente e indica si es proporcional", async () => {
+        findById.mockReset().mockResolvedValue({
+            ...PAYROLL_PERIOD_DETAIL_ANA,
+            earnings: [
+                ...PAYROLL_PERIOD_DETAIL_ANA.earnings,
+                {
+                    conceptName: "Prima de servicios 1.er semestre 2026",
+                    amount: 583031.67,
+                    serviceBonus: {
+                        semesterStart: "2026-01-01",
+                        semesterEnd: "2026-06-30",
+                        workedDays: 120,
+                        semesterDays: 180,
+                        baseAmount: 1749095,
+                        isProportional: true,
+                    },
+                },
+            ],
+        });
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+
+        const prima = (
+            await screen.findByText("Prima de servicios 1.er semestre 2026")
+        ).closest("tr");
+        expect(prima).toHaveTextContent(
+            /Proporcional: 120 de 180 días · Base: \$\s1\.749\.095/,
+        );
+        expect(prima).toHaveTextContent(/\+\$\s583\.032/);
     });
 
     it("identifica en el detalle el préstamo de cada cuota, su saldo restante y los descuentos parciales", async () => {

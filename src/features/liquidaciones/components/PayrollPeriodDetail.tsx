@@ -4,7 +4,7 @@ import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
 import type { PayrollLine, PayrollPeriodDetail } from "../interfaces/types"
-import { ConceptName, LoanObservations } from "./LoanDeductionDetails"
+import { ConceptName, LoanObservations } from "./PayrollConceptDetails"
 
 type PayrollPeriodDetailProps = {
     payrollPeriodId: number

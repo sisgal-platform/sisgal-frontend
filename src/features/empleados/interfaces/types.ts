@@ -9,6 +9,8 @@ export type Employee = {
   document: string
   phone: string
   salaryBase: number
+  /** Fecha de ingreso (YYYY-MM-DD); null en empleados registrados antes de la HU16. */
+  hireDate: string | null
   position: string
   status: string
   branchId: number | null
@@ -38,6 +40,7 @@ export type UpdateEmployeePayload = {
   salaryBase?: number
   positionId?: number
   branchId?: number
+  hireDate?: string
 }
 
 /**
@@ -54,4 +57,6 @@ export type RegisterEmployeePayload = {
   salaryBase: number
   positionId: number
   branchId: number
+  /** Fecha de ingreso (YYYY-MM-DD); el formulario siempre la envía. */
+  hireDate?: string
 }

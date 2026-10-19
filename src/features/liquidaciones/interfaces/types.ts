@@ -11,12 +11,27 @@ export type PayrollLineLoan = {
     pendingInstallments: number;
 };
 
+/** Espejo exacto de PayrollLineServiceBonusResponseDto (backend). */
+export type PayrollLineServiceBonus = {
+    semesterStart: string;
+    semesterEnd: string;
+    /** Días trabajados del semestre (base 360). */
+    workedDays: number;
+    /** Días del semestre completo (180). */
+    semesterDays: number;
+    /** Salario base más auxilio de transporte si tiene derecho. */
+    baseAmount: number;
+    isProportional: boolean;
+};
+
 /** Espejo exacto de PayrollLineResponseDto (backend). */
 export type PayrollLine = {
     conceptName: string;
     amount: number;
     /** Solo en las cuotas de préstamos. */
     loan?: PayrollLineLoan;
+    /** Solo en la prima de servicios. */
+    serviceBonus?: PayrollLineServiceBonus;
 };
 
 /** Espejo exacto de PayrollPeriodResponseDto (backend). */

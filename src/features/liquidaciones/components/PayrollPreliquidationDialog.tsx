@@ -21,7 +21,7 @@ import type {
     PayrollPreliquidation,
     PayrollPreliquidationRequest,
 } from "../interfaces/types";
-import { ConceptName, LoanObservations } from "./LoanDeductionDetails";
+import { ConceptName, LoanObservations } from "./PayrollConceptDetails";
 
 type PayrollPreliquidationDialogProps = Readonly<{
     onOpenChange: (open: boolean) => void;
