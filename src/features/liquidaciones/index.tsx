@@ -235,7 +235,11 @@ export function LiquidacionesFeature() {
             {preliquidationOpen && (
                 <PayrollPreliquidationDialog
                     onOpenChange={setPreliquidationOpen}
-                    onConfirmed={reload}
+                    onConfirmed={(payrollPeriodId) =>
+                        navigate(`/nomina/liquidaciones/${payrollPeriodId}`, {
+                            flushSync: true,
+                        })
+                    }
                 />
             )}
         </section>

@@ -92,17 +92,22 @@ describe("payrollPeriodsService", () => {
         expect(client.post).toHaveBeenCalledWith("/preliquidacion/1", request);
     });
 
-    it("confirma la preliquidación incluyendo el empleado y el período", async () => {
-        client.post.mockResolvedValue({ data: undefined });
+    it("confirma la preliquidación y retorna la liquidación creada", async () => {
+        client.post.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL });
         const request = {
             employeeId: 1,
             periodStart: "2026-09-01",
             periodEnd: "2026-09-30",
         };
 
-        await payrollPeriodsService.confirmPreliquidation(request);
+        await expect(
+            payrollPeriodsService.confirmPreliquidation(request),
+        ).resolves.toEqual(PAYROLL_PERIOD_DETAIL);
 
-        expect(client.post).toHaveBeenCalledWith("/liquidaciones", request);
+        expect(client.post).toHaveBeenCalledWith("/liquidaciones/1", {
+            periodStart: "2026-09-01",
+            periodEnd: "2026-09-30",
+        });
     });
 
     describe("getPdf", () => {

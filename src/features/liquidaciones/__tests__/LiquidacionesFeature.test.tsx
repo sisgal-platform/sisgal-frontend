@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 
 import { LiquidacionesFeature } from "../index";
 import { LiquidacionDetallePage } from "@/pages/nomina/LiquidacionDetallePage";
@@ -106,6 +106,7 @@ function renderFeature() {
     render(
         <MemoryRouter initialEntries={["/nomina"]}>
             <ToastProvider>
+                <CurrentRoute />
                 <Routes>
                     <Route path="/nomina" element={<LiquidacionesFeature />} />
                     <Route
@@ -119,6 +120,11 @@ function renderFeature() {
     return user;
 }
 
+function CurrentRoute() {
+    const location = useLocation();
+    return <output data-testid="current-route">{location.pathname}</output>;
+}
+
 async function esperarTabla() {
     await screen.findByRole("heading", { name: "Liquidaciones" });
     await screen.findByRole("cell", { name: "Ana Barros" });
@@ -130,7 +136,9 @@ beforeEach(() => {
         .mockResolvedValue([PAYROLL_PERIOD_ANA, PAYROLL_PERIOD_CARLOS]);
     findById.mockReset().mockResolvedValue(PAYROLL_PERIOD_DETAIL_ANA);
     generatePreliquidation.mockReset().mockResolvedValue(PRELIQUIDATION_ANA);
-    confirmPreliquidation.mockReset().mockResolvedValue();
+    confirmPreliquidation
+        .mockReset()
+        .mockResolvedValue({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
     getPdf.mockReset();
     listEmployees.mockReset().mockResolvedValue([ANA]);
     createObjectURL.mockClear();
@@ -214,7 +222,7 @@ describe("LiquidacionesFeature", () => {
         expect(findById).toHaveBeenCalledWith(1);
     });
 
-    it("muestra la preliquidación y guarda solo después de confirmarla", async () => {
+    it("genera la liquidación al confirmar y navega a su detalle", async () => {
         const user = renderFeature();
         await esperarTabla();
         listEmployees.mockReset().mockResolvedValue([ANA, EMPLOYEE_INACTIVE]);
@@ -269,10 +277,82 @@ describe("LiquidacionesFeature", () => {
                 periodEnd: "2026-09-30",
             }),
         );
+        await expect(
+            confirmPreliquidation.mock.results[0].value,
+        ).resolves.toMatchObject({
+            id: 7,
+        });
+        await waitFor(() =>
+            expect(screen.getByTestId("current-route")).toHaveTextContent(
+                "/nomina/liquidaciones/7",
+            ),
+        );
+        await waitFor(() => expect(findById).toHaveBeenLastCalledWith(7));
+        expect(
+            await screen.findByRole("heading", {
+                name: "Detalle de la liquidación",
+            }),
+        ).toBeInTheDocument();
         await waitFor(() => expect(findAll).toHaveBeenCalledTimes(2));
         expect(
             screen.queryByRole("heading", { name: "Preliquidación de nómina" }),
         ).not.toBeInTheDocument();
+    });
+
+    it("muestra el spinner Generando mientras guarda la liquidación", async () => {
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", { name: "Generar liquidación" }),
+        );
+        const dialog = screen.getByRole("dialog", {
+            name: "Preliquidación de nómina",
+        });
+        await user.click(within(dialog).getByRole("combobox"));
+        await user.click(
+            await within(dialog).findByRole("option", {
+                name: "Ana Barros · 1020304050",
+            }),
+        );
+        await user.type(
+            within(dialog).getByLabelText("Período desde"),
+            "2026-09-01",
+        );
+        await user.type(
+            within(dialog).getByLabelText("Período hasta"),
+            "2026-09-30",
+        );
+        await user.click(
+            screen.getByRole("button", { name: "Generar preliquidación" }),
+        );
+        await screen.findByText("Salario base");
+
+        let resolveConfirmation!: (value: PayrollPeriodDetail) => void;
+        confirmPreliquidation.mockReturnValue(
+            new Promise<PayrollPeriodDetail>((resolve) => {
+                resolveConfirmation = resolve;
+            }),
+        );
+        await user.click(
+            screen.getByRole("button", { name: "Confirmar liquidación" }),
+        );
+
+        expect(
+            await screen.findByRole("button", { name: "Generando…" }),
+        ).toBeDisabled();
+        expect(
+            screen
+                .getByRole("button", { name: "Generando…" })
+                .querySelector("svg"),
+        ).toHaveClass("animate-spin");
+
+        resolveConfirmation({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
+        expect(
+            await screen.findByRole("heading", {
+                name: "Detalle de la liquidación",
+            }),
+        ).toBeInTheDocument();
     });
 
     it("genera y muestra la vista previa del PDF al presionar Generar PDF", async () => {
