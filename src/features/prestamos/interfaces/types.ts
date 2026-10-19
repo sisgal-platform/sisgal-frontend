@@ -3,11 +3,15 @@ export type PrestamosIndicadores = {
     montoTotalPrestamosActivos: number;
 };
 
+/** Cada cuánto se descuenta una cuota en la liquidación. */
+export type PeriodicidadPrestamo = "MENSUAL" | "QUINCENAL";
+
 export type CrearPrestamoPayload = {
     employeeId: number;
     totalAmount: number;
     totalInstallments: number;
     grantedAt: string;
+    periodicity: PeriodicidadPrestamo;
 };
 
 export type EstadoPrestamo = "ACTIVO" | "SALDADO" | "CANCELADO";
@@ -30,6 +34,7 @@ export type Prestamo = {
     pendingInstallments: number;
     outstandingBalance: number;
     grantedAt: string;
+    periodicity: PeriodicidadPrestamo;
     status: EstadoPrestamo;
     createdAt: string;
     updatedAt: string;

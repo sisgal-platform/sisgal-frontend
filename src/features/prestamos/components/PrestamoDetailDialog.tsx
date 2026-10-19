@@ -10,6 +10,7 @@ import {
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
 
 import { obtenerConfiguracionEstadoPrestamo } from "../estadosPrestamo";
+import { obtenerEtiquetaPeriodicidadPrestamo } from "../periodicidadesPrestamo";
 import type { Prestamo } from "../interfaces/types";
 import { prestamosService } from "../services/prestamosService";
 
@@ -159,6 +160,11 @@ export function PrestamoDetailDialog({
                                 </Dato>
                                 <Dato label="Total de cuotas">
                                     {detalle.totalInstallments}
+                                </Dato>
+                                <Dato label="Periodicidad del descuento">
+                                    {obtenerEtiquetaPeriodicidadPrestamo(
+                                        detalle.periodicity,
+                                    )}
                                 </Dato>
                                 <Dato label="Cuotas pendientes">
                                     {detalle.pendingInstallments}
