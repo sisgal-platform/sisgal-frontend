@@ -37,7 +37,20 @@ const ANA: PayrollPreliquidation = {
     deductions: [
         { conceptName: "Salud", amount: 62387.5 },
         { conceptName: "Pensión", amount: 62387.5 },
-        { conceptName: "Cuota préstamo #4", amount: 250000 },
+        {
+            conceptName: "Cuota préstamo #4",
+            amount: 250000,
+            loan: {
+                loanId: 4,
+                installments: 1,
+                scheduledAmount: 250000,
+                outstandingBalance: 750000,
+                pendingInstallments: 3,
+            },
+        },
+    ],
+    observations: [
+        "El préstamo #9 no se descontó porque tiene información inconsistente. Revíselo en el módulo de préstamos.",
     ],
     workedHours: [
         {
@@ -253,6 +266,16 @@ describe("PayrollCalculationDialog", () => {
         expect(
             within(concepts).getByRole("row", { name: /Neto a pagar/ }),
         ).toHaveTextContent(/1\.396\.395/);
+        expect(
+            within(concepts).getByText(
+                /Préstamo #4 · Saldo restante: \$\s750\.000 · Cuotas pendientes: 3/,
+            ),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("region", { name: "Observaciones de préstamos" }),
+        ).toHaveTextContent(
+            "El préstamo #9 no se descontó porque tiene información inconsistente.",
+        );
 
         await user.click(
             screen.getByRole("button", { name: "Volver al resultado" }),

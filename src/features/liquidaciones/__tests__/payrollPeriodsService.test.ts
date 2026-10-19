@@ -35,6 +35,7 @@ const PAYROLL_PERIOD_DETAIL: PayrollPeriodDetail = {
     earnings: [{ conceptName: "Salario base", amount: 1800000 }],
     deductions: [{ conceptName: "Salud y pensión", amount: 150000 }],
     workedHours: [],
+    observations: [],
 };
 
 describe("payrollPeriodsService", () => {

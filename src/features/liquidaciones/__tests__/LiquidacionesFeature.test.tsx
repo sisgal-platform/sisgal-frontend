@@ -32,7 +32,8 @@ const listEmployees = vi.spyOn(employeesService, "list");
 // para poder verificar que el iframe de vista previa recibe la URL generada.
 const createObjectURL = vi.fn(() => "blob:preview-url");
 const revokeObjectURL = vi.fn();
-vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL });
+// Solo se reemplazan los métodos estáticos: react-router necesita el constructor URL real.
+Object.assign(URL, { createObjectURL, revokeObjectURL });
 
 const ANA: Employee = {
     id: 1,
@@ -96,10 +97,31 @@ const PAYROLL_PERIOD_DETAIL_ANA: PayrollPeriodDetail = {
     ],
     deductions: [{ conceptName: "Salud y pensión", amount: 150000 }],
     workedHours: [],
+    observations: [],
 };
+
+const CUOTA_PRESTAMO_ANA = {
+    conceptName: "Cuota préstamo #4",
+    amount: 250000,
+    loan: {
+        loanId: 4,
+        installments: 1,
+        scheduledAmount: 250000,
+        outstandingBalance: 750000,
+        pendingInstallments: 3,
+    },
+};
+
+const OBSERVACION_LIMITE =
+    "La cuota del préstamo #9 no se descontó porque supera el límite de deducciones del período (50% del salario neto).";
 
 const PRELIQUIDATION_ANA: PayrollPreliquidation = {
     ...PAYROLL_PERIOD_DETAIL_ANA,
+    deductions: [
+        ...PAYROLL_PERIOD_DETAIL_ANA.deductions,
+        CUOTA_PRESTAMO_ANA,
+    ],
+    observations: [OBSERVACION_LIMITE],
 };
 
 function renderFeature() {
@@ -221,6 +243,56 @@ describe("LiquidacionesFeature", () => {
             screen.getByRole("button", { name: "Descargar PDF" }),
         ).toBeDisabled();
         expect(findById).toHaveBeenCalledWith(1);
+        expect(
+            screen.queryByRole("region", { name: "Observaciones de préstamos" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("identifica en el detalle el préstamo de cada cuota, su saldo restante y los descuentos parciales", async () => {
+        findById.mockReset().mockResolvedValue({
+            ...PAYROLL_PERIOD_DETAIL_ANA,
+            deductions: [
+                ...PAYROLL_PERIOD_DETAIL_ANA.deductions,
+                {
+                    conceptName: "Cuota préstamo #5",
+                    amount: 100000,
+                    loan: {
+                        loanId: 5,
+                        installments: 2,
+                        scheduledAmount: 300000,
+                        outstandingBalance: 500000,
+                        pendingInstallments: 4,
+                    },
+                },
+            ],
+            observations: [
+                "La cuota del préstamo #5 se descontó parcialmente por el límite de deducciones del período (50% del salario neto).",
+            ],
+        });
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+
+        const cuota = (await screen.findByText("Cuota préstamo #5")).closest(
+            "tr",
+        );
+        expect(cuota).toHaveTextContent(
+            /Préstamo #5 · 2 cuotas · Saldo restante: \$\s500\.000 · Cuotas pendientes: 4/,
+        );
+        expect(cuota).toHaveTextContent(
+            /Descuento parcial: correspondían \$\s300\.000/,
+        );
+        expect(cuota).toHaveTextContent(/-\$\s100\.000/);
+        expect(
+            screen.getByRole("region", { name: "Observaciones de préstamos" }),
+        ).toHaveTextContent(
+            "La cuota del préstamo #5 se descontó parcialmente",
+        );
     });
 
     it("genera la liquidación al confirmar y navega a su detalle", async () => {
@@ -261,6 +333,16 @@ describe("LiquidacionesFeature", () => {
 
         expect(await screen.findByText("Salario base")).toBeInTheDocument();
         expect(screen.getByText("Salud y pensión")).toBeInTheDocument();
+        // La preliquidación muestra la cuota, su préstamo y el saldo que quedaría.
+        expect(screen.getByText("Cuota préstamo #4")).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                /Préstamo #4 · Saldo restante: \$\s750\.000 · Cuotas pendientes: 3/,
+            ),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("region", { name: "Observaciones de préstamos" }),
+        ).toHaveTextContent(OBSERVACION_LIMITE);
         expect(screen.getByText(/CC 1020304050/)).toBeInTheDocument();
         expect(generatePreliquidation).toHaveBeenCalledWith(1, {
             periodStart: "2026-09-01",

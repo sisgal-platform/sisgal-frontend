@@ -128,6 +128,7 @@ describe("modal de creación de préstamos", () => {
                 totalAmount: 1200000,
                 totalInstallments: 6,
                 grantedAt: "2026-10-02",
+                periodicity: "MENSUAL",
             }),
         );
         expect(onSuccess).toHaveBeenCalledOnce();
@@ -135,6 +136,46 @@ describe("modal de creación de préstamos", () => {
             "Préstamo creado correctamente.",
         );
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("envía la periodicidad quincenal cuando se elige y explica sus fechas de corte", async () => {
+        const { user } = renderModal();
+        const dialog = await abrirModal(user);
+
+        const periodicidad = within(dialog).getByLabelText(
+            /Periodicidad del descuento/,
+        );
+        expect(periodicidad).toHaveValue("MENSUAL");
+        expect(
+            within(dialog).getByText(
+                "Se descuenta una cuota el último día de cada mes.",
+            ),
+        ).toBeInTheDocument();
+
+        await seleccionarEmpleado(user, dialog);
+        await user.type(
+            within(dialog).getByLabelText(/Valor del préstamo/),
+            "600000",
+        );
+        await user.type(within(dialog).getByLabelText(/Total de cuotas/), "4");
+        fireEvent.change(within(dialog).getByLabelText(/Fecha de entrega/), {
+            target: { value: "2026-10-02" },
+        });
+        await user.selectOptions(periodicidad, "QUINCENAL");
+        expect(
+            within(dialog).getByText(
+                "Se descuenta una cuota el día 15 y otra el último día de cada mes.",
+            ),
+        ).toBeInTheDocument();
+        await user.click(
+            within(dialog).getByRole("button", { name: "Crear préstamo" }),
+        );
+
+        await waitFor(() =>
+            expect(prestamosApi.crear).toHaveBeenCalledWith(
+                expect.objectContaining({ periodicity: "QUINCENAL" }),
+            ),
+        );
     });
 
     it("valida los campos requeridos antes de llamar al servicio", async () => {

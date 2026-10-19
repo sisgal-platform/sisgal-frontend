@@ -39,6 +39,7 @@ describe("Servicio de préstamos", () => {
             totalAmount: 1200000,
             totalInstallments: 6,
             grantedAt: "2026-10-02",
+            periodicity: "MENSUAL" as const,
         };
         const prestamo = { id: 3, ...payload };
         client.post.mockResolvedValue({ data: prestamo });
@@ -144,6 +145,7 @@ describe("Servicio de préstamos", () => {
                         pendingInstallments: 10,
                         outstandingBalance: 1250000,
                         grantedAt: "2026-01-10T00:00:00.000Z",
+                        periodicity: "MENSUAL",
                         status: "ACTIVO",
                         createdAt: "2026-01-10T00:00:00.000Z",
                         updatedAt: "2026-02-10T00:00:00.000Z",
