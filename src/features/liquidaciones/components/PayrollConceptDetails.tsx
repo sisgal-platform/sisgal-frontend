@@ -1,6 +1,10 @@
 import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters"
 
-import type { PayrollLine, PayrollLineLoan } from "../interfaces/types"
+import type {
+    PayrollLine,
+    PayrollLineLoan,
+    PayrollLineServiceBonus,
+} from "../interfaces/types"
 
 type LoanDeductionInfoProps = Readonly<{
     amount: number
@@ -26,12 +30,30 @@ export function LoanDeductionInfo({ amount, loan }: LoanDeductionInfoProps) {
     )
 }
 
-/** Nombre del concepto y, si es una cuota de préstamo, el préstamo al que corresponde. */
+/** Tiempo trabajado y base de la prima de servicios, indicando si es proporcional. */
+export function ServiceBonusInfo({
+    serviceBonus,
+}: Readonly<{ serviceBonus: PayrollLineServiceBonus }>) {
+    return (
+        <span className="mt-0.5 block text-xs font-normal text-text-muted">
+            {serviceBonus.isProportional
+                ? `Proporcional: ${formatNumberCO(serviceBonus.workedDays)} de ${formatNumberCO(serviceBonus.semesterDays)} días`
+                : `Semestre completo: ${formatNumberCO(serviceBonus.semesterDays)} días`}
+            {" · "}Base: {formatCurrencyCOP(serviceBonus.baseAmount)}
+        </span>
+    )
+}
+
+/**
+ * Nombre del concepto con su detalle: el préstamo de una cuota descontada o
+ * el tiempo trabajado de la prima de servicios.
+ */
 export function ConceptName({ line }: Readonly<{ line: PayrollLine }>) {
     return (
         <>
             {line.conceptName}
             {line.loan && <LoanDeductionInfo amount={line.amount} loan={line.loan} />}
+            {line.serviceBonus && <ServiceBonusInfo serviceBonus={line.serviceBonus} />}
         </>
     )
 }

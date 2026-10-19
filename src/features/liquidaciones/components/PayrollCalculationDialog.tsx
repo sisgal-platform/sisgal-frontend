@@ -23,7 +23,7 @@ import type {
     PayrollPreliquidation,
     PayrollWorkedHours,
 } from "../interfaces/types";
-import { LoanObservations } from "./LoanDeductionDetails";
+import { LoanObservations } from "./PayrollConceptDetails";
 import { ConceptSectionRows } from "./PayrollPeriodDetail";
 
 type ProcessStatus = "PENDIENTE" | "PROCESANDO" | "COMPLETADO" | "CON_ERRORES";

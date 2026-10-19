@@ -13,7 +13,7 @@ import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
 import type { PayrollPeriod, PayrollPeriodDetail } from "../interfaces/types"
-import { LoanObservations } from "./LoanDeductionDetails"
+import { LoanObservations } from "./PayrollConceptDetails"
 import { ConceptSectionRows } from "./PayrollPeriodDetail"
 
 type PayrollPeriodDetailDialogProps = {
