@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus, RotateCcw, Search } from "lucide-react";
+import { Calculator, Plus, RotateCcw, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
 import { formatCurrencyCOP } from "@/lib/formatters";
 
+import { PayrollCalculationDialog } from "./components/PayrollCalculationDialog";
 import { PayrollPeriodTable } from "./components/PayrollPeriodTable";
 import { PayrollPreliquidationDialog } from "./components/PayrollPreliquidationDialog";
 import { useActiveEmployees } from "./hooks/useActiveEmployees";
@@ -43,6 +44,7 @@ export function LiquidacionesFeature() {
     );
     const [page, setPage] = useState(1);
     const [preliquidationOpen, setPreliquidationOpen] = useState(false);
+    const [calculationOpen, setCalculationOpen] = useState(false);
     const navigate = useNavigate();
 
     const { payrollPeriods, loading, error, reload } = usePayrollPeriods(
@@ -95,21 +97,32 @@ export function LiquidacionesFeature() {
 
     return (
         <section className="space-y-6 p-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
                 <SectionHeader
                     eyebrow="Gestión"
                     title="Liquidaciones"
                     description="Consulta y generación de liquidaciones de nómina."
                 />
 
-                <Button
-                    type="button"
-                    onClick={() => setPreliquidationOpen(true)}
-                    className="flex items-center gap-2 bg-primary hover:bg-primary-light"
-                >
-                    <Plus size={18} aria-hidden="true" />
-                    Generar liquidación
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCalculationOpen(true)}
+                        className="flex items-center gap-2"
+                    >
+                        <Calculator size={18} aria-hidden="true" />
+                        Calcular nómina
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={() => setPreliquidationOpen(true)}
+                        className="flex items-center gap-2 bg-primary hover:bg-primary-light"
+                    >
+                        <Plus size={18} aria-hidden="true" />
+                        Generar liquidación
+                    </Button>
+                </div>
             </div>
 
             <form
@@ -230,6 +243,10 @@ export function LiquidacionesFeature() {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {calculationOpen && (
+                <PayrollCalculationDialog onOpenChange={setCalculationOpen} />
             )}
 
             {preliquidationOpen && (
