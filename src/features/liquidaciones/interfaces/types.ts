@@ -1,7 +1,22 @@
+/** Espejo exacto de PayrollLineLoanResponseDto (backend). */
+export type PayrollLineLoan = {
+    loanId: number;
+    /** Cuotas que cubre el descuento (una por fecha de corte del período). */
+    installments: number;
+    /** Lo que correspondía descontar; es mayor que el monto si el descuento fue parcial. */
+    scheduledAmount: number;
+    /** Saldo del préstamo después del descuento. */
+    outstandingBalance: number;
+    /** Cuotas pendientes después del descuento. */
+    pendingInstallments: number;
+};
+
 /** Espejo exacto de PayrollLineResponseDto (backend). */
 export type PayrollLine = {
     conceptName: string;
     amount: number;
+    /** Solo en las cuotas de préstamos. */
+    loan?: PayrollLineLoan;
 };
 
 /** Espejo exacto de PayrollPeriodResponseDto (backend). */
@@ -33,6 +48,8 @@ export type PayrollPeriodDetail = PayrollPeriod & {
     earnings: PayrollLine[];
     deductions: PayrollLine[];
     workedHours: PayrollWorkedHours[];
+    /** Cuotas de préstamos que no se descontaron o se descontaron en parte. */
+    observations: string[];
 };
 
 /** Espejo exacto de ListPayrollPeriodQueryDto (backend). */

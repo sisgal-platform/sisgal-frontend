@@ -21,6 +21,7 @@ import type {
     PayrollPreliquidation,
     PayrollPreliquidationRequest,
 } from "../interfaces/types";
+import { ConceptName, LoanObservations } from "./LoanDeductionDetails";
 
 type PayrollPreliquidationDialogProps = Readonly<{
     onOpenChange: (open: boolean) => void;
@@ -379,6 +380,8 @@ function PreliquidationReview({ preview }: PreliquidationReviewProps) {
                         lines={preview.deductions}
                     />
                 </div>
+
+                <LoanObservations observations={preview.observations} />
             </section>
         </section>
     );
@@ -399,7 +402,7 @@ function ConceptList({
                             className="flex justify-between gap-3"
                         >
                             <dt className="text-text-muted">
-                                {line.conceptName}
+                                <ConceptName line={line} />
                             </dt>
                             <dd className="shrink-0 font-medium text-text">
                                 {formatCurrencyCOP(line.amount)}

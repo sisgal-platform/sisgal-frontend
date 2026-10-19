@@ -4,6 +4,7 @@ import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
 import type { PayrollLine, PayrollPeriodDetail } from "../interfaces/types"
+import { ConceptName, LoanObservations } from "./LoanDeductionDetails"
 
 type PayrollPeriodDetailProps = {
     payrollPeriodId: number
@@ -149,6 +150,8 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
                 </table>
             </div>
 
+            <LoanObservations observations={detalle.observations} />
+
             <p className="text-xs text-text-muted">
                 Resumen: Total devengado ({formatCurrencyCOP(detalle.totalEarnings)}) −
                 Total deducciones ({formatCurrencyCOP(detalle.totalDeductions)}) ={" "}
@@ -189,7 +192,9 @@ export function ConceptSectionRows({
             ) : (
                 conceptos.map((concepto, index) => (
                     <tr key={`${concepto.conceptName}-${index}`}>
-                        <td className="px-4 py-2 text-text">{concepto.conceptName}</td>
+                        <td className="px-4 py-2 text-text">
+                            <ConceptName line={concepto} />
+                        </td>
                         <td className={`px-4 py-2 text-right font-medium ${amountClassName}`}>
                             {sign}
                             {formatCurrencyCOP(concepto.amount)}
