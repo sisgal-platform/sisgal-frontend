@@ -95,6 +95,7 @@ const PAYROLL_PERIOD_DETAIL_ANA: PayrollPeriodDetail = {
         { conceptName: "Horas extra", amount: 270000 },
     ],
     deductions: [{ conceptName: "Salud y pensión", amount: 150000 }],
+    workedHours: [],
 };
 
 const PRELIQUIDATION_ANA: PayrollPreliquidation = {
