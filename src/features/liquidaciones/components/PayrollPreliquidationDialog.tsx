@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import type {
 
 type PayrollPreliquidationDialogProps = Readonly<{
     onOpenChange: (open: boolean) => void;
-    onConfirmed: () => void;
+    onConfirmed: (payrollPeriodId: number) => void;
 }>;
 
 export function PayrollPreliquidationDialog({
@@ -149,12 +150,12 @@ export function PayrollPreliquidationDialog({
         setConfirming(true);
         setError(null);
         try {
-            await payrollPeriodsService.confirmPreliquidation({
-                ...request,
-                employeeId: preview.employeeId,
-            });
-            onConfirmed();
-            onOpenChange(false);
+            const payrollPeriod =
+                await payrollPeriodsService.confirmPreliquidation({
+                    ...request,
+                    employeeId: preview.employeeId,
+                });
+            onConfirmed(payrollPeriod.id);
         } catch (cause) {
             setError(
                 cause instanceof Error
@@ -304,7 +305,14 @@ export function PayrollPreliquidationDialog({
                         disabled={loading || confirming || !preview}
                         className="flex items-center gap-2"
                     >
-                        {confirming ? "Guardando…" : "Confirmar liquidación"}
+                        {confirming && (
+                            <LoaderCircle
+                                size={16}
+                                aria-hidden="true"
+                                className="animate-spin"
+                            />
+                        )}
+                        {confirming ? "Generando…" : "Confirmar liquidación"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

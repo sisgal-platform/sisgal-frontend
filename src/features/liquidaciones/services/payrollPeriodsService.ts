@@ -77,9 +77,16 @@ export const payrollPeriodsService = {
 
     async confirmPreliquidation(
         request: PayrollConfirmationRequest,
-    ): Promise<void> {
+    ): Promise<PayrollPeriodDetail> {
         try {
-            await apiClient.post("/liquidaciones", request);
+            const { data } = await apiClient.post<PayrollPeriodDetail>(
+                `/liquidaciones/${request.employeeId}`,
+                {
+                    periodStart: request.periodStart,
+                    periodEnd: request.periodEnd,
+                },
+            );
+            return data;
         } catch (error) {
             throw toApiError(error);
         }
