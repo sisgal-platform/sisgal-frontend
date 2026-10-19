@@ -7,6 +7,8 @@ import { employeesService } from "@/features/empleados/services/employeesService
 import type { Employee } from "@/features/empleados/interfaces/types";
 import { useToast } from "@/toast/hooks/useToast";
 
+import type { PeriodicidadPrestamo } from "../interfaces/types";
+import { PERIODICIDADES_PRESTAMO } from "../periodicidadesPrestamo";
 import { prestamosService } from "../services/prestamosService";
 
 type CreatePrestamoModalProps = {
@@ -64,6 +66,8 @@ function CreatePrestamoDialog({
     const [totalAmount, setTotalAmount] = useState("");
     const [totalInstallments, setTotalInstallments] = useState("");
     const [grantedAt, setGrantedAt] = useState("");
+    const [periodicity, setPeriodicity] =
+        useState<PeriodicidadPrestamo>("MENSUAL");
     const [errors, setErrors] = useState<Errores>({});
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
@@ -132,6 +136,7 @@ function CreatePrestamoDialog({
                 totalAmount: amount,
                 totalInstallments: installments,
                 grantedAt,
+                periodicity,
             });
             showToast("Préstamo creado correctamente.", "success");
             onSuccess();
@@ -301,38 +306,82 @@ function CreatePrestamoDialog({
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <label
-                        htmlFor="prestamo-fecha-entrega"
-                        className="text-sm font-semibold text-text"
-                    >
-                        Fecha de entrega{" "}
-                        <span aria-hidden="true" className="text-error">
-                            *
-                        </span>
-                    </label>
-                    <input
-                        id="prestamo-fecha-entrega"
-                        type="date"
-                        value={grantedAt}
-                        onChange={(event) => setGrantedAt(event.target.value)}
-                        disabled={submitting}
-                        aria-invalid={errors.grantedAt ? true : undefined}
-                        aria-describedby={
-                            errors.grantedAt
-                                ? "prestamo-fecha-error"
-                                : undefined
-                        }
-                        className="h-11 rounded-xl border border-gray-300 px-3 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 aria-[invalid]:border-error"
-                    />
-                    {errors.grantedAt && (
-                        <p
-                            id="prestamo-fecha-error"
-                            className="text-sm text-error"
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="prestamo-fecha-entrega"
+                            className="text-sm font-semibold text-text"
                         >
-                            {errors.grantedAt}
+                            Fecha de entrega{" "}
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
+                        </label>
+                        <input
+                            id="prestamo-fecha-entrega"
+                            type="date"
+                            value={grantedAt}
+                            onChange={(event) =>
+                                setGrantedAt(event.target.value)
+                            }
+                            disabled={submitting}
+                            aria-invalid={errors.grantedAt ? true : undefined}
+                            aria-describedby={
+                                errors.grantedAt
+                                    ? "prestamo-fecha-error"
+                                    : undefined
+                            }
+                            className="h-11 rounded-xl border border-gray-300 px-3 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 aria-[invalid]:border-error"
+                        />
+                        {errors.grantedAt && (
+                            <p
+                                id="prestamo-fecha-error"
+                                className="text-sm text-error"
+                            >
+                                {errors.grantedAt}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="prestamo-periodicidad"
+                            className="text-sm font-semibold text-text"
+                        >
+                            Periodicidad del descuento{" "}
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
+                        </label>
+                        <select
+                            id="prestamo-periodicidad"
+                            value={periodicity}
+                            onChange={(event) =>
+                                setPeriodicity(
+                                    event.target.value as PeriodicidadPrestamo,
+                                )
+                            }
+                            disabled={submitting}
+                            aria-describedby="prestamo-periodicidad-ayuda"
+                            className="h-11 rounded-xl border border-gray-300 bg-white px-3 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                            {PERIODICIDADES_PRESTAMO.map((opcion) => (
+                                <option key={opcion.value} value={opcion.value}>
+                                    {opcion.label}
+                                </option>
+                            ))}
+                        </select>
+                        <p
+                            id="prestamo-periodicidad-ayuda"
+                            className="text-xs text-text-muted"
+                        >
+                            {
+                                PERIODICIDADES_PRESTAMO.find(
+                                    (opcion) => opcion.value === periodicity,
+                                )?.descripcion
+                            }
                         </p>
-                    )}
+                    </div>
                 </div>
 
                 {submitError && (

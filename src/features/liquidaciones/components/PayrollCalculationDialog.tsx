@@ -23,6 +23,7 @@ import type {
     PayrollPreliquidation,
     PayrollWorkedHours,
 } from "../interfaces/types";
+import { LoanObservations } from "./LoanDeductionDetails";
 import { ConceptSectionRows } from "./PayrollPeriodDetail";
 
 type ProcessStatus = "PENDIENTE" | "PROCESANDO" | "COMPLETADO" | "CON_ERRORES";
@@ -489,6 +490,8 @@ function EmployeeCalculationDetail({
                     </tbody>
                 </table>
             </div>
+
+            <LoanObservations observations={detail.observations} />
         </section>
     );
 }

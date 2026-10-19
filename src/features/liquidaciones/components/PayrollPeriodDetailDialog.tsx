@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button"
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
-import type { PayrollLine, PayrollPeriod, PayrollPeriodDetail } from "../interfaces/types"
+import type { PayrollPeriod, PayrollPeriodDetail } from "../interfaces/types"
+import { LoanObservations } from "./LoanDeductionDetails"
+import { ConceptSectionRows } from "./PayrollPeriodDetail"
 
 type PayrollPeriodDetailDialogProps = {
     payrollPeriod: PayrollPeriod
@@ -238,6 +240,8 @@ export function PayrollPeriodDetailDialog({
                             </table>
                         </div>
 
+                        <LoanObservations observations={detalle.observations} />
+
                         <p className="text-xs text-text-muted">
                             Resumen: Total devengado ({formatCurrencyCOP(detalle.totalEarnings)}) −
                             Total deducciones ({formatCurrencyCOP(detalle.totalDeductions)}) ={" "}
@@ -289,51 +293,6 @@ export function PayrollPeriodDetailDialog({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-    )
-}
-
-type ConceptSectionRowsProps = {
-    title: string
-    headerClassName: string
-    amountClassName: string
-    sign: "+" | "-"
-    conceptos: PayrollLine[]
-}
-
-// Fragmento de filas de <tbody>: una fila de encabezado coloreada (devengado/deducciones)
-// seguida de sus conceptos, para que la tabla de detalle los diferencie con claridad
-function ConceptSectionRows({
-    title,
-    headerClassName,
-    amountClassName,
-    sign,
-    conceptos,
-}: ConceptSectionRowsProps) {
-    return (
-        <>
-            <tr className={headerClassName}>
-                <td colSpan={2} className="px-4 py-2 text-sm font-semibold">
-                    {title}
-                </td>
-            </tr>
-            {conceptos.length === 0 ? (
-                <tr>
-                    <td colSpan={2} className="px-4 py-2 text-sm text-text-muted">
-                        Sin conceptos registrados.
-                    </td>
-                </tr>
-            ) : (
-                conceptos.map((concepto, index) => (
-                    <tr key={`${concepto.conceptName}-${index}`}>
-                        <td className="px-4 py-2 text-text">{concepto.conceptName}</td>
-                        <td className={`px-4 py-2 text-right font-medium ${amountClassName}`}>
-                            {sign}
-                            {formatCurrencyCOP(concepto.amount)}
-                        </td>
-                    </tr>
-                ))
-            )}
-        </>
     )
 }
 

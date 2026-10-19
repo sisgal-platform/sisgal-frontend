@@ -59,6 +59,7 @@ const PRESTAMO: Prestamo = {
     pendingInstallments: 8,
     outstandingBalance: 2000000,
     grantedAt: "2026-03-10T00:00:00.000Z",
+    periodicity: "QUINCENAL",
     status: "ACTIVO",
     createdAt: "2026-03-10T00:00:00.000Z",
     updatedAt: "2026-04-10T00:00:00.000Z",
@@ -234,6 +235,9 @@ describe("PrestamosFeature", () => {
         expect(
             within(dialog).getByText("Cuotas pendientes"),
         ).toBeInTheDocument();
+        expect(
+            within(dialog).getByText("Periodicidad del descuento").nextSibling,
+        ).toHaveTextContent("Quincenal");
         expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
         expect(
             within(dialog).queryByRole("spinbutton"),
@@ -308,6 +312,7 @@ describe("PrestamosFeature", () => {
                 totalAmount: 2500000,
                 totalInstallments: 10,
                 grantedAt: "2026-03-10",
+                periodicity: "MENSUAL",
             }),
         );
         await waitFor(() => {
