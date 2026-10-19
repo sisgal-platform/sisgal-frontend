@@ -7,6 +7,7 @@ export type EmployeeFormValues = {
   documentNumber: string
   phone: string
   salaryBase: string
+  hireDate: string
   positionId: string
   branchId: string
 }
@@ -15,12 +16,23 @@ export type EmployeeFormErrors = Partial<Record<keyof EmployeeFormValues, string
 
 const SOLO_DIGITOS = /^\d+$/
 
+/** Fecha local de hoy (YYYY-MM-DD), para compararla con un <input type="date">. */
+export function fechaLocalHoy(): string {
+  const hoy = new Date()
+  const mes = String(hoy.getMonth() + 1).padStart(2, "0")
+  const dia = String(hoy.getDate()).padStart(2, "0")
+  return `${hoy.getFullYear()}-${mes}-${dia}`
+}
+
 /**
  * Reglas puras del formulario de registro/edición de empleados.
  * Espejo de las validaciones del backend (DTOs + value objects), para dar
  * feedback inmediato antes de llamar a la API.
  */
-export function validateEmployeeForm(values: EmployeeFormValues): EmployeeFormErrors {
+export function validateEmployeeForm(
+  values: EmployeeFormValues,
+  hoy: string = fechaLocalHoy(),
+): EmployeeFormErrors {
   const errors: EmployeeFormErrors = {}
 
   if (!values.firstName.trim()) {
@@ -62,6 +74,13 @@ export function validateEmployeeForm(values: EmployeeFormValues): EmployeeFormEr
     errors.salaryBase = "El salario debe ser mayor que cero."
   }
 
+  // La prima de servicios es proporcional al tiempo trabajado desde el ingreso.
+  if (!values.hireDate) {
+    errors.hireDate = "La fecha de ingreso es obligatoria."
+  } else if (values.hireDate > hoy) {
+    errors.hireDate = "La fecha de ingreso no puede ser posterior a hoy."
+  }
+
   const positionId = Number(values.positionId)
   if (!values.positionId.trim()) {
     errors.positionId = "Selecciona el cargo."
@@ -86,6 +105,7 @@ export const EMPTY_EMPLOYEE_FORM: EmployeeFormValues = {
   documentNumber: "",
   phone: "",
   salaryBase: "",
+  hireDate: "",
   positionId: "",
   branchId: "",
 }

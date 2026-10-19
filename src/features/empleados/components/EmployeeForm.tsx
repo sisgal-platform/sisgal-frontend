@@ -11,6 +11,7 @@ import { useActiveBranches } from "../hooks/useActiveBranches"
 import { useVigentWorkdayConfig } from "../hooks/useVigentWorkdayConfig"
 import {
   validateEmployeeForm,
+  fechaLocalHoy,
   EMPTY_EMPLOYEE_FORM,
   type EmployeeFormValues,
   type EmployeeFormErrors,
@@ -37,6 +38,7 @@ function valoresDesdeEmpleado(employee: Employee): EmployeeFormValues {
     documentNumber: employee.document,
     phone: employee.phone,
     salaryBase: String(employee.salaryBase),
+    hireDate: employee.hireDate ?? "",
     positionId: employee.positionId ? String(employee.positionId) : "",
     branchId: employee.branchId ? String(employee.branchId) : "",
   }
@@ -104,6 +106,7 @@ export function EmployeeForm({
         salaryBase: Number(values.salaryBase),
         positionId: Number(values.positionId),
         branchId: Number(values.branchId),
+        hireDate: values.hireDate,
       }
       await updateEmployee(employee.id, payload)
       return
@@ -120,6 +123,7 @@ export function EmployeeForm({
       salaryBase: Number(values.salaryBase),
       positionId: Number(values.positionId),
       branchId: Number(values.branchId),
+      hireDate: values.hireDate,
     }
 
     await registerEmployee(payload)
@@ -258,6 +262,20 @@ export function EmployeeForm({
             error={errors.salaryBase}
           />
 
+          <FloatingInput
+            label="Fecha de ingreso"
+            required
+            type="date"
+            max={fechaLocalHoy()}
+            value={values.hireDate}
+            onChange={(e) => handleChange("hireDate", e.target.value)}
+            onBlur={() => handleBlur("hireDate")}
+            disabled={enviando || soloLectura}
+            error={errors.hireDate}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
           <FloatingSelect label="Horario laboral" disabled={enviando || soloLectura}>
             <option>
               {cargandoHorario
