@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -82,6 +82,7 @@ async function completarFormularioValido(user: ReturnType<typeof userEvent.setup
   await user.selectOptions(campo("Cargo"), "Mesero")
   await user.selectOptions(campo("Sucursal"), "Sucursal Centro")
   await user.type(campo("Salario base"), "1000000")
+  fireEvent.change(campo("Fecha de ingreso"), { target: { value: "2025-08-01" } })
 }
 
 beforeEach(() => {
@@ -111,6 +112,7 @@ describe("EmployeeForm", () => {
       document: "1333456789",
       phone: "3001234567",
       salaryBase: 1000000,
+      hireDate: "2025-08-01",
       position: "Mesero",
       status: "ACTIVO",
       branchId: 3,
@@ -134,6 +136,7 @@ describe("EmployeeForm", () => {
         salaryBase: 1000000,
         positionId: 4,
         branchId: 3,
+        hireDate: "2025-08-01",
       })
     })
 
@@ -154,6 +157,7 @@ describe("EmployeeForm", () => {
     expect(screen.getByText("El número de documento es obligatorio.")).toBeInTheDocument()
     expect(screen.getByText("El teléfono es obligatorio.")).toBeInTheDocument()
     expect(screen.getByText("El salario es obligatorio.")).toBeInTheDocument()
+    expect(screen.getByText("La fecha de ingreso es obligatoria.")).toBeInTheDocument()
     expect(screen.getByText("Selecciona el cargo.")).toBeInTheDocument()
     expect(screen.getByText("Selecciona la sucursal.")).toBeInTheDocument()
 
