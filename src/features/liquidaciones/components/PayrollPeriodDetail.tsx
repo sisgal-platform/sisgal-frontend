@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { Download, FileText } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
@@ -17,9 +19,41 @@ type ResultadoDetalle = {
     error?: string
 }
 
+// El PDF pasa por: inicial -> generando -> vista_previa (o error, desde donde
+// "Generar PDF" reintenta). La vista previa y la descarga comparten el mismo
+// blob generado en una sola llamada, para garantizar que lo que se ve es
+// exactamente lo que se descarga.
+type EstadoPdf =
+    | { status: "inicial" }
+    | { status: "generando" }
+    | { status: "vista_previa"; url: string }
+    | { status: "error"; mensaje: string }
+
 export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProps) {
     const [intento, setIntento] = useState(0)
     const [resultado, setResultado] = useState<ResultadoDetalle | null>(null)
+    const [pdf, setPdf] = useState<EstadoPdf>({ status: "inicial" })
+    const pdfUrlRef = useRef<string | null>(null)
+
+    // El object URL del PDF vive en memoria del navegador; hay que liberarlo
+    // explícitamente al desmontar para no dejarlo retenido indefinidamente.
+    useEffect(() => {
+        return () => {
+            if (pdfUrlRef.current) {
+                URL.revokeObjectURL(pdfUrlRef.current)
+            }
+        }
+    }, [])
+
+    // Si se navega de una liquidación a otra sin desmontar (misma ruta,
+    // distinto :payrollPeriodId), el PDF de la anterior no debe seguir visible.
+    useEffect(() => {
+        if (pdfUrlRef.current) {
+            URL.revokeObjectURL(pdfUrlRef.current)
+            pdfUrlRef.current = null
+        }
+        setPdf({ status: "inicial" })
+    }, [payrollPeriodId])
 
     useEffect(() => {
         let activo = true
@@ -56,6 +90,66 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
     const detalle = resultadoActual?.detalle ?? null
     const error = resultadoActual?.error ?? null
     const cargando = resultadoActual === null
+
+    async function handleGenerarPdf() {
+        setPdf({ status: "generando" })
+        try {
+            const blob = await payrollPeriodsService.getPdf(payrollPeriodId)
+            const url = URL.createObjectURL(blob)
+            pdfUrlRef.current = url
+            setPdf({ status: "vista_previa", url })
+        } catch (pdfError: unknown) {
+            setPdf({
+                status: "error",
+                mensaje:
+                    pdfError instanceof Error
+                        ? pdfError.message
+                        : "No fue posible generar el comprobante de pago.",
+            })
+        }
+    }
+
+    function handleVolverAlDetalle() {
+        if (pdfUrlRef.current) {
+            URL.revokeObjectURL(pdfUrlRef.current)
+            pdfUrlRef.current = null
+        }
+        setPdf({ status: "inicial" })
+    }
+
+    function handleDescargarPdf() {
+        if (pdf.status !== "vista_previa") return
+        const enlace = document.createElement("a")
+        enlace.href = pdf.url
+        enlace.download = `liquidacion-${payrollPeriodId}.pdf`
+        enlace.click()
+    }
+
+    if (pdf.status === "vista_previa") {
+        return (
+            <div className="space-y-4">
+                <h2 className="text-sm font-semibold text-primary">Comprobante de pago</h2>
+                <iframe
+                    src={pdf.url}
+                    title="Vista previa del comprobante de pago"
+                    className="h-[65vh] w-full rounded-xl border border-gray-200"
+                />
+                <div className="flex flex-wrap justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={handleVolverAlDetalle}>
+                        Volver al detalle
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={handleDescargarPdf}
+                        className="flex items-center gap-2"
+                    >
+                        <Download size={16} aria-hidden="true" />
+                        Descargar PDF
+                    </Button>
+                </div>
+            </div>
+        )
+    }
 
     if (cargando) {
         return (
@@ -157,6 +251,25 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
                 Total deducciones ({formatCurrencyCOP(detalle.totalDeductions)}) ={" "}
                 {formatCurrencyCOP(detalle.netPay)}
             </p>
+
+            {pdf.status === "error" && (
+                <p role="alert" className="text-sm text-error">
+                    {pdf.mensaje}
+                </p>
+            )}
+
+            <div className="flex justify-end">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGenerarPdf}
+                    disabled={pdf.status === "generando"}
+                    className="flex items-center gap-2"
+                >
+                    <FileText size={16} aria-hidden="true" />
+                    {pdf.status === "generando" ? "Generando…" : "Generar PDF"}
+                </Button>
+            </div>
         </div>
     )
 }
