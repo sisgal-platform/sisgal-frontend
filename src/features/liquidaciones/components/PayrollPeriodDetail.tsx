@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react"
-import { Download, FileText } from "lucide-react"
+import { Download, FileSpreadsheet, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
+import { useToast } from "@/toast"
 
 import { payrollPeriodsService } from "../services/payrollPeriodsService"
 import type { PayrollLine, PayrollPeriodDetail } from "../interfaces/types"
@@ -30,9 +31,11 @@ type EstadoPdf =
     | { status: "error"; mensaje: string }
 
 export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProps) {
+    const { showToast } = useToast()
     const [intento, setIntento] = useState(0)
     const [resultado, setResultado] = useState<ResultadoDetalle | null>(null)
     const [pdf, setPdf] = useState<EstadoPdf>({ status: "inicial" })
+    const [exportandoCsv, setExportandoCsv] = useState(false)
     const pdfUrlRef = useRef<string | null>(null)
 
     // El object URL del PDF vive en memoria del navegador; hay que liberarlo
@@ -123,6 +126,32 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
         enlace.href = pdf.url
         enlace.download = `liquidacion-${payrollPeriodId}.pdf`
         enlace.click()
+    }
+
+    // A diferencia del PDF, el CSV no tiene paso de vista previa (se acordó que
+    // la propia página de detalle ya cumple el "resumen antes de exportar" que
+    // pide la CA): se descarga directo y se confirma con un toast.
+    async function handleExportarCsv() {
+        setExportandoCsv(true)
+        try {
+            const blob = await payrollPeriodsService.getCsv(payrollPeriodId)
+            const url = URL.createObjectURL(blob)
+            const enlace = document.createElement("a")
+            enlace.href = url
+            enlace.download = `liquidacion-${payrollPeriodId}-contabilidad.csv`
+            enlace.click()
+            URL.revokeObjectURL(url)
+            showToast("Archivo exportado correctamente.", "success")
+        } catch (csvError: unknown) {
+            showToast(
+                csvError instanceof Error
+                    ? csvError.message
+                    : "No fue posible exportar la liquidación para contabilidad.",
+                "error",
+            )
+        } finally {
+            setExportandoCsv(false)
+        }
     }
 
     if (pdf.status === "vista_previa") {
@@ -258,7 +287,17 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
                 </p>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExportarCsv}
+                    disabled={exportandoCsv}
+                    className="flex items-center gap-2"
+                >
+                    <FileSpreadsheet size={16} aria-hidden="true" />
+                    {exportandoCsv ? "Exportando…" : "Exportar para contabilidad"}
+                </Button>
                 <Button
                     type="button"
                     variant="outline"

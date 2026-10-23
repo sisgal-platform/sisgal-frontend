@@ -26,6 +26,7 @@ const confirmPreliquidation = vi.spyOn(
     "confirmPreliquidation",
 );
 const getPdf = vi.spyOn(payrollPeriodsService, "getPdf");
+const getCsv = vi.spyOn(payrollPeriodsService, "getCsv");
 const listEmployees = vi.spyOn(employeesService, "list");
 
 // jsdom no implementa la API de blob URLs; se stubea con valores predecibles
@@ -164,6 +165,7 @@ beforeEach(() => {
         .mockReset()
         .mockResolvedValue({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
     getPdf.mockReset();
+    getCsv.mockReset();
     listEmployees.mockReset().mockResolvedValue([ANA]);
     createObjectURL.mockClear();
     revokeObjectURL.mockClear();
@@ -569,6 +571,59 @@ describe("LiquidacionesFeature", () => {
             screen.queryByRole("heading", { name: "Comprobante de pago" }),
         ).not.toBeInTheDocument();
         expect(revokeObjectURL).toHaveBeenCalledWith("blob:preview-url");
+    });
+
+    it("exporta la liquidación a CSV y confirma con un toast, sin vista previa", async () => {
+        const user = renderFeature();
+        await esperarTabla();
+        await user.click(
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        getCsv.mockResolvedValue(new Blob(["a,b\n1,2\n"], { type: "text/csv" }));
+        const clickAnchor = vi
+            .spyOn(HTMLAnchorElement.prototype, "click")
+            .mockImplementation(() => {});
+
+        await user.click(
+            screen.getByRole("button", { name: "Exportar para contabilidad" }),
+        );
+
+        expect(
+            await screen.findByText("Archivo exportado correctamente."),
+        ).toBeInTheDocument();
+        expect(getCsv).toHaveBeenCalledWith(1);
+        expect(clickAnchor).toHaveBeenCalledTimes(1);
+        expect(
+            screen.queryByRole("heading", { name: "Comprobante de pago" }),
+        ).not.toBeInTheDocument();
+        clickAnchor.mockRestore();
+    });
+
+    it("muestra un error cuando no se puede exportar a CSV", async () => {
+        const user = renderFeature();
+        await esperarTabla();
+        await user.click(
+            screen.getByRole("button", {
+                name: "Ver detalle de la liquidación de Ana Barros",
+            }),
+        );
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        getCsv.mockRejectedValue(
+            new Error("La liquidación no tiene conceptos ni totales para exportar."),
+        );
+
+        await user.click(
+            screen.getByRole("button", { name: "Exportar para contabilidad" }),
+        );
+
+        expect(
+            await screen.findByText(
+                "La liquidación no tiene conceptos ni totales para exportar.",
+            ),
+        ).toBeInTheDocument();
     });
 
     it("muestra un estado vacío cuando no hay liquidaciones para los filtros", async () => {

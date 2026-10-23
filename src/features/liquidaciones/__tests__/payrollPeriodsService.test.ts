@@ -204,4 +204,37 @@ describe("payrollPeriodsService", () => {
             );
         });
     });
+
+    describe("getCsv", () => {
+        it("descarga el archivo contable como blob", async () => {
+            const blob = new Blob(["a,b\n1,2\n"], { type: "text/csv" });
+            client.get.mockResolvedValue({ data: blob });
+
+            await expect(payrollPeriodsService.getCsv(1)).resolves.toBe(blob);
+            expect(client.get).toHaveBeenCalledWith("/liquidaciones/1/csv", {
+                responseType: "blob",
+            });
+        });
+
+        it("recupera el mensaje real del backend aunque el error llegue como blob", async () => {
+            const cuerpoError = new Blob(
+                [
+                    JSON.stringify({
+                        message: "La liquidación no tiene conceptos ni totales para exportar.",
+                    }),
+                ],
+                {
+                    type: "application/json",
+                },
+            );
+            client.get.mockRejectedValue({
+                isAxiosError: true,
+                response: { status: 422, data: cuerpoError },
+            });
+
+            await expect(payrollPeriodsService.getCsv(1)).rejects.toThrow(
+                "La liquidación no tiene conceptos ni totales para exportar.",
+            );
+        });
+    });
 });
