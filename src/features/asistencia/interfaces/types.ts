@@ -81,3 +81,36 @@ export type AsistenciaHoy = {
     ausentes: number;
     data: EmpleadoAsistenciaHoy[];
 };
+
+export type TipoMarcacion = "ENTRADA" | "SALIDA";
+
+export type MetodoMarcacion = "HUELLA" | "QR";
+
+/** Espejo de LecturaSimuladaDto: lo que envía el lector simulado al colocar el dedo. */
+export type LecturaSimulada = {
+    /** false simula una falla del lector. */
+    capturaExitosa: boolean;
+    /** En el lector simulado, el documento de quien coloca el dedo. */
+    huella?: string;
+    /** Clave única de la lectura; un reintento con la misma clave no duplica la marcación. */
+    idempotencyKey: string;
+};
+
+/** Espejo de MarcacionResponseDto; las fechas llegan serializadas como texto. */
+export type Marcacion = {
+    id: number;
+    tipo: TipoMarcacion;
+    metodo: MetodoMarcacion;
+    /** Hora oficial de la marcación, asignada por el servidor. */
+    fechaHora: string;
+    empleadoId: number;
+    empleadoNombre: string;
+    sucursalId: number | null;
+    sucursalNombre: string | null;
+    registroAsistenciaId: number;
+    entrada: string;
+    /** null en una entrada. */
+    salida: string | null;
+    /** null en una entrada. */
+    minutosTrabajados: number | null;
+};

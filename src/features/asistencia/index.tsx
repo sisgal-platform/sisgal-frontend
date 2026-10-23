@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AsistenciaHoy } from "./components/AsistenciaHoy";
 import { HistorialAsistencia } from "./components/HistorialAsistencia";
+import { LectorHuellaSimulado } from "./components/LectorHuellaSimulado";
 import { SectionHeader } from "@/components/atoms";
 
 export function AsistenciaFeature() {
@@ -19,6 +20,7 @@ export function AsistenciaFeature() {
                 <TabsList>
                     <TabsTrigger value="hoy">Asistencia hoy</TabsTrigger>
                     <TabsTrigger value="historial">Historial</TabsTrigger>
+                    <TabsTrigger value="lector">Lector de huella</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="hoy" className="pt-2">
@@ -27,6 +29,10 @@ export function AsistenciaFeature() {
 
                 <TabsContent value="historial" className="pt-2">
                     <HistorialAsistencia />
+                </TabsContent>
+
+                <TabsContent value="lector" className="pt-2">
+                    <LectorHuellaSimulado />
                 </TabsContent>
             </Tabs>
         </section>
