@@ -20,6 +20,22 @@ type ResultadoDetalle = {
     error?: string
 }
 
+// Nombre del archivo descargado: sin tildes/ñ ni caracteres que puedan dar
+// problemas en el sistema de archivos del usuario (espacios, "/", etc.).
+function slugificarParaArchivo(valor: string): string {
+    return valor
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+}
+
+// Nombre base compartido por el PDF y el CSV: identifica al empleado y la
+// fecha de liquidación (no el id interno, que no le dice nada al usuario).
+function nombreBaseArchivo(detalle: PayrollPeriodDetail): string {
+    return `liquidacion-${slugificarParaArchivo(detalle.employeeName)}-${detalle.settlementDate}`
+}
+
 // El PDF pasa por: inicial -> generando -> vista_previa (o error, desde donde
 // "Generar PDF" reintenta). La vista previa y la descarga comparten el mismo
 // blob generado en una sola llamada, para garantizar que lo que se ve es
@@ -121,10 +137,10 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
     }
 
     function handleDescargarPdf() {
-        if (pdf.status !== "vista_previa") return
+        if (pdf.status !== "vista_previa" || !detalle) return
         const enlace = document.createElement("a")
         enlace.href = pdf.url
-        enlace.download = `liquidacion-${payrollPeriodId}.pdf`
+        enlace.download = `${nombreBaseArchivo(detalle)}.pdf`
         enlace.click()
     }
 
@@ -132,13 +148,14 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
     // la propia página de detalle ya cumple el "resumen antes de exportar" que
     // pide la CA): se descarga directo y se confirma con un toast.
     async function handleExportarCsv() {
+        if (!detalle) return
         setExportandoCsv(true)
         try {
             const blob = await payrollPeriodsService.getCsv(payrollPeriodId)
             const url = URL.createObjectURL(blob)
             const enlace = document.createElement("a")
             enlace.href = url
-            enlace.download = `liquidacion-${payrollPeriodId}-contabilidad.csv`
+            enlace.download = `${nombreBaseArchivo(detalle)}-contabilidad.csv`
             enlace.click()
             URL.revokeObjectURL(url)
             showToast("Archivo exportado correctamente.", "success")
