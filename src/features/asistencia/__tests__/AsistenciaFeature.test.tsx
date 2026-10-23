@@ -71,6 +71,22 @@ describe("Módulo de Asistencia", () => {
         await waitFor(() => expect(consultarHistorial).toHaveBeenCalled());
     });
 
+    it('muestra el lector de huella simulado al abrir su pestaña', async () => {
+        const { user } = renderApp({ ruta: "/asistencia" });
+
+        await user.click(
+            await screen.findByRole("tab", { name: "Lector de huella" }),
+        );
+
+        expect(
+            screen.getByRole("heading", { level: 2, name: "Lector de huella" }),
+        ).toBeInTheDocument();
+        expect(screen.getByText("Simulado")).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Colocar el dedo en el lector" }),
+        ).toBeInTheDocument();
+    });
+
     it("bloquea el acceso a usuarios no administradores", async () => {
         const { router } = renderApp({
             ruta: "/asistencia",
