@@ -13,11 +13,11 @@ import type {
     PayrollPreliquidationRequest,
 } from "../interfaces/types";
 
-// Con responseType "blob", el cuerpo del error también llega como Blob (no
-// como JSON), así que toApiError no puede leer el mensaje del backend ahí.
-// Se lee el blob como texto para recuperar el mensaje real antes de caer al
-// mensaje genérico.
-async function toPdfApiError(error: unknown): Promise<ApiError> {
+// Con responseType "blob" (PDF y CSV), el cuerpo del error también llega
+// como Blob (no como JSON), así que toApiError no puede leer el mensaje del
+// backend ahí. Se lee el blob como texto para recuperar el mensaje real
+// antes de caer al mensaje genérico.
+async function toBlobApiError(error: unknown): Promise<ApiError> {
     if (isAxiosError(error) && error.response?.data instanceof Blob) {
         try {
             const texto = await error.response.data.text();
@@ -119,7 +119,22 @@ export const payrollPeriodsService = {
             );
             return data;
         } catch (error) {
-            throw await toPdfApiError(error);
+            throw await toBlobApiError(error);
+        }
+    },
+
+    // Exportación a CSV para integración contable; mismo criterio de blob que el PDF
+    async getCsv(id: number): Promise<Blob> {
+        try {
+            const { data } = await apiClient.get<Blob>(
+                `/liquidaciones/${id}/csv`,
+                {
+                    responseType: "blob",
+                },
+            );
+            return data;
+        } catch (error) {
+            throw await toBlobApiError(error);
         }
     },
 };
