@@ -203,7 +203,16 @@ La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo y estad
 
 ## 6. Asistencia
 
-Este módulo tiene dos pestañas en la parte superior: **"Asistencia hoy"** e **"Historial"**.
+Este módulo tiene tres pestañas en la parte superior: **"Asistencia hoy"**, **"Historial"** y **"Lector de huella"**.
+
+```
+ ┌────────────────┬─────────────┬──────────────────┐
+ │ Asistencia hoy │  Historial  │ Lector de huella │
+ └────────────────┴─────────────┴──────────────────┘
+   Quién llegó      Marcaciones    Donde los empleados
+   hoy              de días        registran su entrada
+                    anteriores     y su salida
+```
 
 ### Pestaña "Asistencia hoy"
 
@@ -226,6 +235,85 @@ Haz clic en **"Buscar"** para aplicar los filtros, o en **"Limpiar filtros"** pa
 La tabla muestra fecha, empleado, sucursal, hora de entrada, hora de salida y horas trabajadas. Si un empleado entró pero no registró salida, verás **"Sin salida"** resaltado — y el estado de esa marcación aparecerá como **"Incompleto"**.
 
 > **Nota:** Puedes elegir cuántos resultados ver por página (10, 25 o 50) en la parte inferior de la tabla.
+
+### Pestaña "Lector de huella"
+
+Aquí es donde los empleados **marcan su entrada y su salida** con la huella. Junto al título verás una etiqueta amarilla que dice **"Simulado"**: el restaurante todavía no tiene el lector de huella físico, así que esta pantalla hace su papel. Funciona igual que lo haría el aparato real.
+
+> **Nota:** la hora de cada marcación la pone el sistema automáticamente. Nadie tiene que escribirla, y no se puede cambiar.
+
+La pantalla tiene dos partes:
+
+```
+ ┌──────────────────────────────────┐ ┌──────────────────────────┐
+ │                                  │ │ Simulación               │
+ │  ┌────────────────────────────┐  │ │                          │
+ │  │ Coloque su dedo en el      │  │ │ ¿Quién coloca el dedo?   │
+ │  │ lector                     │  │ │  (o) Un empleado         │
+ │  └────────────────────────────┘  │ │      [ Selecciona...   ] │
+ │                                  │ │  ( ) Una persona sin     │
+ │             ( huella )           │ │      huella registrada   │
+ │                                  │ │                          │
+ │  Toca el sensor para colocar     │ │ [ ] Simular una falla    │
+ │  el dedo                         │ │     del lector           │
+ └──────────────────────────────────┘ └──────────────────────────┘
+        El lector (izquierda)          Panel de simulación (derecha)
+```
+
+- **El lector (izquierda):** tiene una pantalla que muestra mensajes y un botón redondo con el dibujo de una huella, que hace de sensor.
+- **El panel "Simulación" (derecha):** como no hay un dedo real, aquí eliges quién "pone el dedo" en el lector.
+
+#### Cómo registrar una entrada o una salida
+
+1. En el panel **"Simulación"**, deja marcada la opción **"Un empleado"**.
+2. En la lista, elige al empleado (aparece con su nombre y su número de documento).
+3. Haz clic en el botón redondo de la huella.
+4. La pantalla dice **"Leyendo huella…"** por un momento.
+5. Aparece el resultado en la pantalla del lector.
+
+**No hay que elegir si es entrada o salida: el sistema lo decide solo.**
+
+```
+   Primera marcación              Siguiente marcación
+   del empleado                   del mismo empleado
+ ┌──────────────────┐           ┌──────────────────┐
+ │ Entrada          │    ──→    │ Salida           │
+ │ registrada       │           │ registrada       │
+ │                  │           │ Jornada: 8:00 –  │
+ │ Ana Barros       │           │ 17:00 · 9 h      │
+ └──────────────────┘           └──────────────────┘
+```
+
+- Si el empleado **no tiene una entrada abierta**, la marcación se guarda como **"Entrada registrada"**.
+- Si **ya tiene una entrada abierta**, la marcación se guarda como **"Salida registrada"**, y además se muestra la jornada completa: hora de entrada, hora de salida y horas trabajadas.
+
+En los dos casos la pantalla muestra el nombre del empleado, la hora de la marcación y la sucursal.
+
+> **Nota:** un empleado puede tener varias jornadas en un mismo día. Cada vez que marca después de una salida, empieza una jornada nueva.
+
+#### Qué significan los mensajes de error
+
+Si la marcación no se puede registrar, la pantalla del lector muestra una **X roja** con el motivo:
+
+| Mensaje en pantalla | Qué pasó | Qué hacer |
+|---|---|---|
+| **Huella no reconocida** | La huella no corresponde a ningún empleado registrado | Verifica que la persona esté registrada como empleado en **Personal** |
+| **El empleado no se encuentra activo.** | El empleado está desactivado | Si debe seguir trabajando, actívalo de nuevo en **Personal** |
+| **El empleado no tiene un restaurante asignado.** | El empleado no tiene sucursal | Asígnale una sucursal desde su detalle en **Personal** |
+| **Registro duplicado no permitido** | El empleado marcó dos veces en menos de un minuto | No es un error grave: la primera marcación ya quedó guardada. Si necesita marcar de nuevo, debe esperar al menos un minuto |
+| **Error en lectura biométrica** | El lector no pudo leer la huella | Intenta colocar el dedo otra vez |
+| **No fue posible registrar la marcación. Intenta de nuevo.** | Ocurrió un problema en el sistema | Intenta de nuevo; si sigue pasando, avisa al equipo de soporte |
+
+Cuando una marcación es rechazada, **no se guarda nada**: no queda ninguna entrada ni salida a medias.
+
+#### Las otras opciones del panel de simulación
+
+Estas opciones sirven para **probar** cómo responde el sistema ante problemas, sin necesidad de que ocurran de verdad:
+
+- **"Una persona sin huella registrada":** simula a alguien que no es empleado del restaurante. El resultado esperado es el mensaje **"Huella no reconocida"**.
+- **"Simular una falla del lector":** simula que el aparato no logró leer la huella. El resultado esperado es el mensaje **"Error en lectura biométrica"**. Recuerda desmarcar esta casilla cuando termines de probar.
+
+> **Advertencia:** si un empleado marca su entrada y **no marca la salida en las siguientes 16 horas**, el sistema asume que olvidó marcarla. Esa jornada queda como **"Incompleta"** (con **"Sin salida"** en el Historial), y la siguiente marcación del empleado se toma como una **entrada nueva**, no como la salida de la jornada anterior.
 
 ---
 
@@ -453,6 +541,12 @@ Sí, es el comportamiento correcto. Las liquidaciones ya confirmadas conservan s
 **Generé un PDF y el archivo no se ve bien o no se descarga, ¿qué hago?**
 Vuelve al detalle con el botón "Volver al detalle" e inténtalo de nuevo con "Generar PDF". Si el problema persiste, el sistema te mostrará un mensaje explicando qué información falta o qué salió mal.
 
+**Un empleado marcó y salió "Entrada registrada", pero en realidad estaba saliendo, ¿por qué?**
+Porque el sistema no encontró una entrada abierta para él. Puede pasar si no marcó la entrada al llegar, o si pasaron más de 16 horas desde su última entrada. Puedes revisar sus marcaciones en la pestaña **Historial** de Asistencia.
+
+**El empleado marcó dos veces seguidas por error, ¿quedaron dos marcaciones?**
+No. Si las dos marcaciones están a menos de un minuto de distancia, el sistema guarda solo la primera y rechaza la segunda con el mensaje "Registro duplicado no permitido".
+
 **¿Cuál es la diferencia entre "Calcular nómina" y "Generar liquidación"?**
 "Calcular nómina" es una simulación rápida para **todos los empleados a la vez**, y **no se guarda**. "Generar liquidación" crea el pago oficial de **un solo empleado**, y sí **se guarda** en el sistema.
 
@@ -462,6 +556,8 @@ Vuelve al detalle con el botón "Volver al detalle" e inténtalo de nuevo con "G
 
 | Término | Significado |
 |---|---|
+| **Marcación** | El registro de la entrada o la salida de un empleado con su huella |
+| **Jornada incompleta** | Una jornada con entrada pero sin salida registrada |
 | **Liquidación** | El pago oficial y ya confirmado de un empleado por un período de trabajo |
 | **Preliquidación** | El cálculo de una liquidación *antes* de confirmarla y guardarla |
 | **Devengado** | Dinero que el empleado gana (salario, horas extra, etc.) |
