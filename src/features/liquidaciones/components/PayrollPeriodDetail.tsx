@@ -228,6 +228,28 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
 
     return (
         <div className="space-y-5">
+            <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                    type="button"
+                    onClick={handleGenerarPdf}
+                    disabled={pdf.status === "generando"}
+                    className="flex items-center gap-2 bg-primary text-white hover:bg-primary-dark"
+                >
+                    <FileText size={16} aria-hidden="true" />
+                    {pdf.status === "generando" ? "Generando…" : "Generar PDF"}
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExportarCsv}
+                    disabled={exportandoCsv}
+                    className="flex items-center gap-2 border-primary text-primary hover:bg-secondary"
+                >
+                    <FileSpreadsheet size={16} aria-hidden="true" />
+                    {exportandoCsv ? "Exportando…" : "Exportar CSV"}
+                </Button>
+            </div>
+
             <section aria-labelledby="liquidacion-detalle-general">
                 <h2
                     id="liquidacion-detalle-general"
@@ -305,28 +327,6 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
                 </p>
             )}
 
-            <div className="flex flex-wrap justify-end gap-2">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleExportarCsv}
-                    disabled={exportandoCsv}
-                    className="flex items-center gap-2"
-                >
-                    <FileSpreadsheet size={16} aria-hidden="true" />
-                    {exportandoCsv ? "Exportando…" : "Exportar para contabilidad"}
-                </Button>
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGenerarPdf}
-                    disabled={pdf.status === "generando"}
-                    className="flex items-center gap-2"
-                >
-                    <FileText size={16} aria-hidden="true" />
-                    {pdf.status === "generando" ? "Generando…" : "Generar PDF"}
-                </Button>
-            </div>
         </div>
     )
 }

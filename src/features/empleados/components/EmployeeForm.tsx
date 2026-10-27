@@ -56,10 +56,14 @@ export function EmployeeForm({
     employee ? valoresDesdeEmpleado(employee) : EMPTY_EMPLOYEE_FORM,
   )
   const [errors, setErrors] = useState<EmployeeFormErrors>({})
+  const [aceptaPolitica, setAceptaPolitica] = useState(false)
+  const [errorPolitica, setErrorPolitica] = useState(false)
 
   const { registerEmployee, enviando: creando } = useRegisterEmployee(() => {
     setValues(EMPTY_EMPLOYEE_FORM)
     setErrors({})
+    setAceptaPolitica(false)
+    setErrorPolitica(false)
     onSuccess()
   })
   const { updateEmployee, enviando: actualizando } = useUpdateEmployee(onSuccess)
@@ -89,10 +93,13 @@ export function EmployeeForm({
       return
     }
 
+    const requierePolitica = !esEdicion && !aceptaPolitica
+    setErrorPolitica(requierePolitica)
+
     const erroresValidacion = validateEmployeeForm(values)
     setErrors(erroresValidacion)
 
-    if (Object.keys(erroresValidacion).length > 0) {
+    if (Object.keys(erroresValidacion).length > 0 || requierePolitica) {
       return
     }
 
@@ -291,6 +298,42 @@ export function EmployeeForm({
           Esta es la jornada laboral general de la empresa, configurada en Parámetros de nómina. La asignación de un horario propio por empleado estará disponible en una próxima entrega.
         </p>
       </fieldset>
+
+      {!esEdicion && !soloLectura && (
+        <div>
+          <label className="flex items-start gap-3 text-sm text-text">
+            <input
+              type="checkbox"
+              required
+              checked={aceptaPolitica}
+              disabled={enviando}
+              onChange={(event) => {
+                setAceptaPolitica(event.target.checked)
+                if (event.target.checked) setErrorPolitica(false)
+              }}
+              aria-describedby={errorPolitica ? "politica-error" : undefined}
+              className="mt-1 size-4 shrink-0 accent-primary"
+            />
+            <span>
+              He leído y acepto la{" "}
+              <a
+                href="/politica-tratamiento-datos-personales"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                Política de Tratamiento y Protección de Datos Personales
+              </a>
+              .
+            </span>
+          </label>
+          {errorPolitica && (
+            <p id="politica-error" role="alert" className="mt-2 text-sm text-red-600">
+              Debes aceptar la política de tratamiento de datos para registrar el empleado.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button type="submit" disabled={enviando} className="bg-primary hover:bg-primary-light">

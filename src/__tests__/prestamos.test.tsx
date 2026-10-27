@@ -225,11 +225,11 @@ describe("PrestamosFeature", () => {
         );
 
         const dialog = await screen.findByRole("dialog", {
-            name: "Detalle del préstamo",
+            name: "Detalle del préstamo #11",
         });
         expect(obtenerPorId).toHaveBeenCalledWith(11);
         expect(within(dialog).getByText("Ana Ruiz")).toBeInTheDocument();
-        expect(within(dialog).getByText("1234567890")).toBeInTheDocument();
+        expect(within(dialog).getByText("CC 1234567890")).toBeInTheDocument();
         expect(within(dialog).getAllByText("10/03/2026")).toHaveLength(2);
         expect(within(dialog).getByText("10/04/2026")).toBeInTheDocument();
         expect(within(dialog).getByText("Activo")).toBeInTheDocument();
@@ -263,7 +263,7 @@ describe("PrestamosFeature", () => {
             }),
         );
         const dialog = await screen.findByRole("dialog", {
-            name: "Detalle del préstamo",
+            name: "Detalle del préstamo #11",
         });
         const alerta = await within(dialog).findByRole("alert");
         expect(alerta).toHaveTextContent("Detalle no disponible");
