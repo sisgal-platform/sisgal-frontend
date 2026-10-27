@@ -25,10 +25,6 @@ export const routes: RouteObject[] = [
         element: <LoginPage />,
     },
     {
-        path: "/politica-tratamiento-datos-personales",
-        element: <PoliticaTratamientoDatosPage />,
-    },
-    {
         element: <RequireAuth />,
         children: [
             {
@@ -61,6 +57,10 @@ export const routes: RouteObject[] = [
                     {
                         path: "personal",
                         element: <PersonalPage />,
+                    },
+                    {
+                        path: "politica-tratamiento-datos-personales",
+                        element: <PoliticaTratamientoDatosPage />,
                     },
                     {
                         path: "prestamos",

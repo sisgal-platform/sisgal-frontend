@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from "react"
-import { Link } from "react-router"
 
+import { SectionHeader } from "@/components/atoms/SectionHeader"
 import politicaMarkdown from "./politica-tratamiento.md?raw"
 
 function renderInline(text: string): ReactNode[] {
@@ -79,13 +79,16 @@ function renderPolicy(markdown: string): ReactNode[] {
 
 export function PoliticaTratamientoDatosPage() {
   return (
-    <article className="mx-auto max-w-4xl rounded-2xl bg-white p-6 shadow-sm sm:p-10">
-      <Link to="/personal" className="mb-6 inline-flex text-sm font-medium text-primary underline underline-offset-4">
-        Volver a empleados
-      </Link>
-      <div className="space-y-5 text-sm leading-7 text-text sm:text-base">
+    <section className="space-y-6 p-4">
+      <SectionHeader
+        eyebrow="Información"
+        title="Política de tratamiento de datos personales"
+        description="Conoce cómo SISGAL trata y protege los datos personales."
+      />
+
+      <article className="space-y-5 rounded-xl border border-gray-200 bg-surface p-5 text-sm leading-7 text-text shadow-sm sm:p-8 sm:text-base">
         {renderPolicy(politicaMarkdown)}
-      </div>
-    </article>
+      </article>
+    </section>
   )
 }
