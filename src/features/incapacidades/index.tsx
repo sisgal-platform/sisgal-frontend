@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Activity, CalendarDays, RotateCcw, Search } from "lucide-react";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
@@ -79,20 +79,18 @@ export function IncapacidadesFeature() {
     const [dateRangeError, setDateRangeError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
 
-    const { disabilityLeaves, loading, error, reload } = useDisabilityLeaves(
-        buildQuery(appliedFilters),
+    const disabilityLeaveQuery = useMemo(
+        () => buildQuery(appliedFilters),
+        [appliedFilters],
     );
+    const { disabilityLeaves, loading, error, reload } =
+        useDisabilityLeaves(disabilityLeaveQuery);
     const { positions, cargando: positionsLoading } = useActivePositions();
     const positionOptions = positions.map((position) => ({
         value: String(position.id),
         label: position.name,
     }));
     const { employees, loading: employeesLoading } = useActiveEmployees();
-
-    // Cualquier cambio en los filtros aplicados vuelve a la primera página
-    useEffect(() => {
-        setPage(1);
-    }, [appliedFilters]);
 
     const indicatorsData = useMemo(
         () => calculateIndicators(disabilityLeaves),
@@ -122,10 +120,12 @@ export function IncapacidadesFeature() {
         }
 
         setDateRangeError(null);
+        setPage(1);
         setAppliedFilters(filters);
     }
 
     function clearFilters() {
+        setPage(1);
         setFilters(emptyFilters);
         setAppliedFilters(emptyFilters);
         setDateRangeError(null);
