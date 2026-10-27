@@ -64,13 +64,13 @@ export function PrestamosTable({
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
                         <th scope="col" className="px-4 py-3">
+                            ID
+                        </th>
+                        <th scope="col" className="px-4 py-3">
                             Documento
                         </th>
                         <th scope="col" className="px-4 py-3">
                             Empleado
-                        </th>
-                        <th scope="col" className="px-4 py-3">
-                            ID
                         </th>
                         <th scope="col" className="px-4 py-3">
                             Estado
@@ -100,6 +100,9 @@ export function PrestamosTable({
 
                         return (
                             <tr key={prestamo.id}>
+                                <td className="px-4 py-3 font-medium text-text">
+                                    {prestamo.id}
+                                </td>
                                 <td className="px-4 py-3 text-text-muted">
                                     {prestamo.employee.documentType
                                         ? `${prestamo.employee.documentType} ${prestamo.employee.document}`
@@ -108,9 +111,6 @@ export function PrestamosTable({
                                 <td className="px-4 py-3 font-medium text-text">
                                     {prestamo.employee.firstName}{" "}
                                     {prestamo.employee.lastName}
-                                </td>
-                                <td className="px-4 py-3 font-medium text-text">
-                                    {prestamo.id}
                                 </td>
                                 <td className="px-4 py-3">
                                     <span

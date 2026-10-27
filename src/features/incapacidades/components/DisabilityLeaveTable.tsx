@@ -70,6 +70,7 @@ export function DisabilityLeaveTable({
                 </caption>
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
+                        <th scope="col" className="px-4 py-3">ID</th>
                         <th scope="col" className="px-4 py-3">Documento</th>
                         <th scope="col" className="px-4 py-3">Nombre completo</th>
                         <th scope="col" className="px-4 py-3">Cargo</th>
@@ -86,6 +87,9 @@ export function DisabilityLeaveTable({
 
                         return (
                             <tr key={disabilityLeave.id}>
+                                <td className="px-4 py-3 font-medium text-text">
+                                    {disabilityLeave.id}
+                                </td>
                                 <td className="px-4 py-3 text-text-muted">
                                     {disabilityLeave.documentType} {disabilityLeave.document}
                                 </td>
