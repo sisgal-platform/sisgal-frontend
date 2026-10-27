@@ -13,8 +13,8 @@ describe("Estado de sesión durante la navegación", () => {
 
         expect(screen.getByText("Ana Ruiz")).toBeInTheDocument();
 
-        await user.click(screen.getByRole("link", { name: "Reportes" }));
-        await screen.findByRole("heading", { level: 1, name: "Reportes" });
+        await user.click(screen.getByRole("link", { name: "Nómina" }));
+        await screen.findByRole("heading", { level: 1, name: "Nómina" });
 
         expect(screen.getByText("Ana Ruiz")).toBeInTheDocument();
     });

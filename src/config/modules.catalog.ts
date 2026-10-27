@@ -12,7 +12,6 @@ export type ModuleId =
     | "incapacidades"
     | "personal"
     | "prestamos"
-    | "reportes"
     | "configuracion";
 
 export type AppModule = {
@@ -58,14 +57,6 @@ export const MODULES: readonly AppModule[] = [
         icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
     },
     {
-        id: "incapacidades",
-        path: "/incapacidades",
-        label: "Incapacidades",
-        description: "Registro y consulta de incapacidades y licencias de los empleados.",
-        icon: "M22 12h-4l-3 9L9 3l-3 9H2",
-        adminOnly: true,
-    },
-    {
         id: "personal",
         path: "/personal",
         label: "Personal",
@@ -74,20 +65,22 @@ export const MODULES: readonly AppModule[] = [
         icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm14 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
     },
     {
+        id: "incapacidades",
+        path: "/incapacidades",
+        label: "Incapacidades",
+        description:
+            "Registro y consulta de incapacidades y licencias de los empleados.",
+        icon: "M22 12h-4l-3 9L9 3l-3 9H2",
+        adminOnly: true,
+    },
+
+    {
         id: "prestamos",
         path: "/prestamos",
         label: "Préstamos",
         description: "Gestión de préstamos a empleados.",
         icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
         adminOnly: true,
-    },
-    {
-        id: "reportes",
-        path: "/reportes",
-        label: "Reportes",
-        description: "Generación de reportes e integración contable.",
-        workItem: 8,
-        icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 0v6h6M8 13h8M8 17h5",
     },
     {
         id: "configuracion",

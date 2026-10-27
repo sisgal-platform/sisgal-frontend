@@ -27,12 +27,12 @@ describe('Indicación del módulo activo', () => {
   it('mueve la marca al navegar', async () => {
     const { user } = renderApp({ ruta: '/nomina' })
 
-    await user.click(screen.getByRole('link', { name: 'Reportes' }))
-    await screen.findByRole('heading', { level: 1, name: 'Reportes' })
+    await user.click(screen.getByRole('link', { name: 'Nómina' }))
+    await screen.findByRole('heading', { level: 1, name: 'Nómina' })
 
     const activos = enlacesActivos()
     expect(activos).toHaveLength(1)
-    expect(activos[0]).toHaveTextContent('Reportes')
+    expect(activos[0]).toHaveTextContent('Nómina')
   })
 
   it('no deja el dashboard activo dentro de otro módulo', () => {

@@ -40,8 +40,8 @@ describe("Navegación entre módulos", () => {
         const shellInicial = document.querySelector(".layout");
         const topbarInicial = document.querySelector(".topbar");
 
-        await user.click(screen.getByRole("link", { name: "Reportes" }));
-        await screen.findByRole("heading", { name: "Reportes" });
+        await user.click(screen.getByRole("link", { name: "Nómina" }));
+        await screen.findByRole("heading", { name: "Nómina" });
 
         // Si la app se recargara, estos nodos serían instancias distintas.
         expect(document.querySelector(".layout")).toBe(shellInicial);
@@ -69,8 +69,8 @@ describe("Navegación entre módulos", () => {
         const { user } = renderApp();
         const focusSpy = vi.spyOn(HTMLElement.prototype, "focus");
 
-        await user.click(screen.getByRole("link", { name: "Reportes" }));
-        await screen.findByRole("heading", { name: "Reportes" });
+        await user.click(screen.getByRole("link", { name: "Nómina" }));
+        await screen.findByRole("heading", { name: "Nómina" });
 
         expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
 
@@ -80,8 +80,8 @@ describe("Navegación entre módulos", () => {
     it("respeta el historial del navegador al volver atrás", async () => {
         const { user, router } = renderApp();
 
-        await user.click(screen.getByRole("link", { name: "Reportes" }));
-        expect(router.state.location.pathname).toBe("/reportes");
+        await user.click(screen.getByRole("link", { name: "Nómina" }));
+        expect(router.state.location.pathname).toBe("/nomina");
 
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe("/");
