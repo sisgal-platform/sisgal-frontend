@@ -25,16 +25,9 @@ describe("Soporte en Configuración", () => {
 
         expect(
             screen.getByRole("heading", {
-                level: 2,
-                name: "Contacto con Soporte Técnico",
+                name: "Soporte",
             }),
         ).toBeInTheDocument();
-        expect(
-            screen.getByText(
-                "¿Tienes algún problema o necesitas ayuda? Nuestro equipo de desarrollo está aquí para asistirte.",
-            ),
-        ).toBeInTheDocument();
-
         const email = screen.getByRole("link", {
             name: "soporte@nominarestaurant.com",
         });

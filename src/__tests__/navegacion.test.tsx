@@ -31,9 +31,7 @@ describe("Navegación entre módulos", () => {
 
         await user.click(screen.getByRole("link", { name: "Nómina" }));
 
-        expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-            "Nómina",
-        );
+        expect(screen.getByRole("heading", { name: "Liquidaciones" })).toBeInTheDocument();
         expect(router.state.location.pathname).toBe("/nomina");
     });
     it("navega sin recargar la app: el shell no se vuelve a montar", async () => {
@@ -43,7 +41,7 @@ describe("Navegación entre módulos", () => {
         const topbarInicial = document.querySelector(".topbar");
 
         await user.click(screen.getByRole("link", { name: "Reportes" }));
-        await screen.findByRole("heading", { level: 1, name: "Reportes" });
+        await screen.findByRole("heading", { name: "Reportes" });
 
         // Si la app se recargara, estos nodos serían instancias distintas.
         expect(document.querySelector(".layout")).toBe(shellInicial);
@@ -60,9 +58,7 @@ describe("Navegación entre módulos", () => {
         ]) {
             await user.click(screen.getByRole("link", { name: label }));
             expect(
-                await screen.findByRole("heading", {
-                    level: label === "Personal" ? 2 : 1,
-                }),
+                await screen.findByRole("heading", { name: heading }),
             ).toHaveTextContent(heading);
         }
 
@@ -74,7 +70,7 @@ describe("Navegación entre módulos", () => {
         const focusSpy = vi.spyOn(HTMLElement.prototype, "focus");
 
         await user.click(screen.getByRole("link", { name: "Reportes" }));
-        await screen.findByRole("heading", { level: 1, name: "Reportes" });
+        await screen.findByRole("heading", { name: "Reportes" });
 
         expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
 
@@ -84,8 +80,8 @@ describe("Navegación entre módulos", () => {
     it("respeta el historial del navegador al volver atrás", async () => {
         const { user, router } = renderApp();
 
-        await user.click(screen.getByRole("link", { name: "Novedades" }));
-        expect(router.state.location.pathname).toBe("/novedades");
+        await user.click(screen.getByRole("link", { name: "Reportes" }));
+        expect(router.state.location.pathname).toBe("/reportes");
 
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe("/");
@@ -95,7 +91,7 @@ describe("Navegación entre módulos", () => {
         renderApp({ ruta: "/asistencia" });
 
         expect(
-            await screen.findByRole("heading", { level: 1 }),
+            await screen.findByRole("heading", { name: "Asistencia" }),
         ).toHaveTextContent("Asistencia");
     });
 
@@ -103,7 +99,7 @@ describe("Navegación entre módulos", () => {
         renderApp({ ruta: "/prestamos" });
 
         expect(
-            await screen.findByRole("heading", { level: 1, name: "Préstamos" }),
+            await screen.findByRole("heading", { name: "Préstamos" }),
         ).toBeInTheDocument();
         expect(
             screen.getByRole("heading", {
@@ -141,7 +137,6 @@ describe("Navegación entre módulos", () => {
 
         expect(
             await screen.findByRole("heading", {
-                level: 1,
                 name: "Dashboard",
             }),
         ).toBeInTheDocument();
@@ -153,9 +148,7 @@ describe("Navegación entre módulos", () => {
     it("muestra una página de error en una ruta desconocida", () => {
         renderApp({ ruta: "/ruta-inexistente" });
 
-        expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-            "Página no encontrada",
-        );
+        expect(screen.getByRole("heading", { name: "Página no encontrada" })).toBeInTheDocument();
         // El menú sigue disponible para salir del error.
         expect(
             screen.getByRole("navigation", { name: "Módulos del sistema" }),

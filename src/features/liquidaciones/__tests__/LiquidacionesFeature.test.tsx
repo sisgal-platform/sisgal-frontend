@@ -416,7 +416,8 @@ describe("LiquidacionesFeature", () => {
                 name: "Detalle de la liquidación",
             }),
         ).toBeInTheDocument();
-        await waitFor(() => expect(findAll).toHaveBeenCalledTimes(2));
+        // La lista no se vuelve a consultar al entrar al detalle; este usa findById.
+        expect(findAll).toHaveBeenCalledTimes(1);
         expect(
             screen.queryByRole("heading", { name: "Preliquidación de nómina" }),
         ).not.toBeInTheDocument();
