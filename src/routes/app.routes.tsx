@@ -17,11 +17,16 @@ import { IncapacidadesPage } from "@/pages/incapacidades/IncapacidadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
 import { ReportesPage } from "@/pages/reportes/ReportesPage";
+import { PoliticaTratamientoDatosPage } from "@/pages/politica/PoliticaTratamientoDatosPage";
 
 export const routes: RouteObject[] = [
     {
         path: "/login",
         element: <LoginPage />,
+    },
+    {
+        path: "/politica-tratamiento-datos-personales",
+        element: <PoliticaTratamientoDatosPage />,
     },
     {
         element: <RequireAuth />,
