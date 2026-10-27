@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MODULES } from "../config/modules.catalog";
 import { renderApp } from "../test/render";
@@ -12,9 +12,16 @@ vi.mock("../features/prestamos/services/prestamosService", () => ({
     },
 }));
 
+async function esperarDashboardCargado() {
+    await waitFor(() => {
+        expect(screen.queryByText("...", { exact: true })).not.toBeInTheDocument();
+    });
+}
+
 describe("Navegación entre módulos", () => {
-    it("muestra un enlace por cada módulo del catálogo", () => {
+    it("muestra un enlace por cada módulo del catálogo", async () => {
         renderApp();
+        await esperarDashboardCargado();
 
         const menu = screen.getByRole("navigation", {
             name: "Módulos del sistema",
@@ -28,6 +35,7 @@ describe("Navegación entre módulos", () => {
 
     it("carga el módulo elegido y actualiza la URL", async () => {
         const { user, router } = renderApp();
+        await esperarDashboardCargado();
 
         await user.click(screen.getByRole("link", { name: "Nómina" }));
 
@@ -36,12 +44,13 @@ describe("Navegación entre módulos", () => {
     });
     it("navega sin recargar la app: el shell no se vuelve a montar", async () => {
         const { user } = renderApp();
+        await esperarDashboardCargado();
 
         const shellInicial = document.querySelector(".layout");
         const topbarInicial = document.querySelector(".topbar");
 
         await user.click(screen.getByRole("link", { name: "Nómina" }));
-        await screen.findByRole("heading", { name: "Nómina" });
+        await screen.findByRole("heading", { name: "Liquidaciones" });
 
         // Si la app se recargara, estos nodos serían instancias distintas.
         expect(document.querySelector(".layout")).toBe(shellInicial);
@@ -50,6 +59,7 @@ describe("Navegación entre módulos", () => {
 
     it("permite recorrer varios módulos seguidos", async () => {
         const { user, router } = renderApp();
+        await esperarDashboardCargado();
 
         for (const [label, heading] of [
             ["Asistencia", "Asistencia"],
@@ -67,10 +77,11 @@ describe("Navegación entre módulos", () => {
 
     it("no hace scroll al enfocar el contenido tras navegar", async () => {
         const { user } = renderApp();
+        await esperarDashboardCargado();
         const focusSpy = vi.spyOn(HTMLElement.prototype, "focus");
 
         await user.click(screen.getByRole("link", { name: "Nómina" }));
-        await screen.findByRole("heading", { name: "Nómina" });
+        await screen.findByRole("heading", { name: "Liquidaciones" });
 
         expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
 
@@ -79,11 +90,14 @@ describe("Navegación entre módulos", () => {
 
     it("respeta el historial del navegador al volver atrás", async () => {
         const { user, router } = renderApp();
+        await esperarDashboardCargado();
 
         await user.click(screen.getByRole("link", { name: "Nómina" }));
         expect(router.state.location.pathname).toBe("/nomina");
 
-        await router.navigate(-1);
+        await act(async () => {
+            await router.navigate(-1);
+        });
         expect(router.state.location.pathname).toBe("/");
     });
 
