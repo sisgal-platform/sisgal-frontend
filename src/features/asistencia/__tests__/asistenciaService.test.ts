@@ -9,6 +9,7 @@ import { asistenciaService } from "../services/asistenciaService";
 vi.mock("@/lib/axios", () => ({
     default: {
         get: vi.fn(),
+        post: vi.fn(),
     },
 }));
 
@@ -120,5 +121,34 @@ describe("asistenciaService", () => {
                 porPagina: 10,
             }),
         ).rejects.toBeInstanceOf(ApiError);
+    });
+
+    describe("lector de huella simulado", () => {
+        const lectura = {
+            capturaExitosa: true,
+            huella: "1020304050",
+            idempotencyKey: "3f1c2a5e-8b7d-4c1e-9a6f-2d4b8e9c7a10",
+        };
+
+        it("envía la lectura y devuelve la marcación registrada", async () => {
+            const marcacion = { id: 10, tipo: "ENTRADA" };
+            client.post.mockResolvedValue({ data: marcacion });
+
+            await expect(
+                asistenciaService.registrarMarcacionSimulada(lectura),
+            ).resolves.toEqual(marcacion);
+            expect(client.post).toHaveBeenCalledWith(
+                "/integracion/lector-simulado/marcaciones",
+                lectura,
+            );
+        });
+
+        it("normaliza los rechazos de la marcación a ApiError", async () => {
+            client.post.mockRejectedValue(new Error("fallo"));
+
+            await expect(
+                asistenciaService.registrarMarcacionSimulada(lectura),
+            ).rejects.toBeInstanceOf(ApiError);
+        });
     });
 });

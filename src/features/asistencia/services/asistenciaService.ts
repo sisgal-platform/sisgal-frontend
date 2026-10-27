@@ -6,6 +6,8 @@ import type {
     ConsultaHistorial,
     HistorialAsistencia,
     HistorialAsistenciaQuery,
+    LecturaSimulada,
+    Marcacion,
 } from "../interfaces/types";
 
 function crearQueryHistorial(consulta: ConsultaHistorial): HistorialAsistenciaQuery {
@@ -41,6 +43,21 @@ export const asistenciaService = {
         try {
             const { data } =
                 await apiClient.get<AsistenciaHoy>("/asistencias/hoy");
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    /** Envía la lectura del lector de huella simulado; el backend decide si es entrada o salida. */
+    async registrarMarcacionSimulada(
+        lectura: LecturaSimulada,
+    ): Promise<Marcacion> {
+        try {
+            const { data } = await apiClient.post<Marcacion>(
+                "/integracion/lector-simulado/marcaciones",
+                lectura,
+            );
             return data;
         } catch (error) {
             throw toApiError(error);
