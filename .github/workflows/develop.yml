@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  checks-and-preview:
-    name: Validar y desplegar preview
+  checks-and-production:
+    name: Validar y desplegar a producción
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -38,17 +38,17 @@ jobs:
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Cargar configuración de preview de Vercel
-        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - name: Cargar configuración de producción de Vercel
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Construir aplicación
-        run: vercel build --token="$VERCEL_TOKEN"
+      - name: Construir aplicación de producción
+        run: vercel build --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Desplegar preview en Vercel
-        run: vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+      - name: Desplegar a producción en Vercel
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
