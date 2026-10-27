@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from "react"
-import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
 import { FloatingInput } from "@/components/molecules/FloatingInput"
@@ -94,16 +93,13 @@ export function EmployeeForm({
       return
     }
 
-    if (!esEdicion && !aceptaPolitica) {
-      setErrorPolitica(true)
-      return
-    }
-    setErrorPolitica(false)
+    const requierePolitica = !esEdicion && !aceptaPolitica
+    setErrorPolitica(requierePolitica)
 
     const erroresValidacion = validateEmployeeForm(values)
     setErrors(erroresValidacion)
 
-    if (Object.keys(erroresValidacion).length > 0) {
+    if (Object.keys(erroresValidacion).length > 0 || requierePolitica) {
       return
     }
 
@@ -320,14 +316,14 @@ export function EmployeeForm({
             />
             <span>
               He leído y acepto la{" "}
-              <Link
-                to="/politica-tratamiento-datos-personales"
+              <a
+                href="/politica-tratamiento-datos-personales"
                 target="_blank"
                 rel="noreferrer"
                 className="font-medium text-primary underline underline-offset-4"
               >
                 Política de Tratamiento y Protección de Datos Personales
-              </Link>
+              </a>
               .
             </span>
           </label>

@@ -28,7 +28,7 @@ describe('Indicación del módulo activo', () => {
     const { user } = renderApp({ ruta: '/nomina' })
 
     await user.click(screen.getByRole('link', { name: 'Nómina' }))
-    await screen.findByRole('heading', { level: 1, name: 'Nómina' })
+    await screen.findByRole('heading', { level: 2, name: 'Liquidaciones' })
 
     const activos = enlacesActivos()
     expect(activos).toHaveLength(1)

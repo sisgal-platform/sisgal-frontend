@@ -126,7 +126,7 @@ describe("Servicio de préstamos", () => {
         });
     });
 
-    it("renderiza el tipo de documento del empleado en la tabla", () => {
+    it("renderiza el tipo y número de documento juntos en la tabla", () => {
         render(
             createElement(PrestamosTable, {
                 prestamos: [
@@ -163,10 +163,11 @@ describe("Servicio de préstamos", () => {
         });
         const encabezados = within(tabla).getAllByRole("columnheader");
         expect(encabezados[0]).toHaveTextContent("ID");
+        expect(encabezados[1]).toHaveTextContent("Documento");
+        expect(encabezados[2]).toHaveTextContent("Empleado");
         expect(
             within(tabla).getByText("1", { selector: "tbody td" }),
         ).toBeInTheDocument();
-        expect(screen.getByText("CC")).toBeInTheDocument();
-        expect(screen.getByText("1234567890")).toBeInTheDocument();
+        expect(screen.getByText("CC 1234567890")).toBeInTheDocument();
     });
 });
