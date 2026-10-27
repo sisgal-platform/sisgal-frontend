@@ -10,7 +10,7 @@ export function SectionHeader({
     description,
 }: SectionHeaderProps) {
     return (
-        <header className="space-y-1">
+        <div className="space-y-1">
             {eyebrow ? (
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                     {eyebrow}
@@ -22,6 +22,6 @@ export function SectionHeader({
             {description ? (
                 <p className="text-sm text-slate-600">{description}</p>
             ) : null}
-        </header>
+        </div>
     );
 }

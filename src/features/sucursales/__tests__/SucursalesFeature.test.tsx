@@ -88,7 +88,7 @@ describe("SucursalesFeature", () => {
         await esperarTabla();
 
         await user.click(
-            screen.getByRole("button", { name: "Nueva sucursal" }),
+            screen.getByRole("button", { name: "Crear sucursal" }),
         );
         const dialog = screen.getByRole("alertdialog", {
             name: "Nueva sucursal",

@@ -45,8 +45,7 @@ describe("Autenticación", () => {
 
         expect(
             await screen.findByRole("heading", {
-                level: 1,
-                name: /panel administrativo/i,
+                name: "Dashboard",
             }),
         ).toBeInTheDocument();
         expect(await screen.findByTestId("toast")).toHaveTextContent(

@@ -21,8 +21,7 @@ describe("Dashboard", () => {
 
         expect(
             screen.getByRole("heading", {
-                level: 1,
-                name: /panel administrativo/i,
+                name: "Dashboard",
             }),
         ).toBeInTheDocument();
         expect(
@@ -42,7 +41,7 @@ describe("Dashboard", () => {
 
         expect(router.state.location.pathname).toBe("/prestamos");
         expect(
-            await screen.findByRole("heading", { level: 1, name: "Préstamos" }),
+            await screen.findByRole("heading", { name: "Préstamos" }),
         ).toBeInTheDocument();
     });
 

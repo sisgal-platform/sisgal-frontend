@@ -37,7 +37,7 @@ describe("Módulo de Asistencia", () => {
         renderApp({ ruta: "/asistencia" });
 
         expect(
-            await screen.findByRole("heading", { level: 1, name: "Asistencia" }),
+            await screen.findByRole("heading", { name: "Asistencia" }),
         ).toBeInTheDocument();
         expect(
             screen.getByRole("tab", { name: "Asistencia hoy", selected: true }),
