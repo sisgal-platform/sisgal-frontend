@@ -246,7 +246,7 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
                     className="flex items-center gap-2 border-primary text-primary hover:bg-secondary"
                 >
                     <FileSpreadsheet size={16} aria-hidden="true" />
-                    {exportandoCsv ? "Exportando…" : "Exportar para contabilidad"}
+                    {exportandoCsv ? "Exportando…" : "Exportar CSV"}
                 </Button>
             </div>
 
