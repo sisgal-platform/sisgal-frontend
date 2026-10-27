@@ -26,6 +26,7 @@ export function useEmployees(filters: EmployeeListFilters) {
   }, [filters.search, filters.branchId, filters.positionId, filters.status])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Start async data loading when filters or the reload version change.
     void cargar()
   }, [cargar, version])
 

@@ -78,6 +78,7 @@ export function CreateSucursalDialog({
 
     useEffect(() => {
         if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync controlled dialog/form props into the local editable form.
             setForm(initialForm);
             setError(null);
             setIsSubmitting(false);

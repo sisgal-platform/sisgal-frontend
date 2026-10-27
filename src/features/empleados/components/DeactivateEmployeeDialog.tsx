@@ -13,6 +13,19 @@ import {
 
 import type { Employee } from "../interfaces/types";
 
+function getHttpStatus(error: unknown): number | undefined {
+    if (typeof error !== "object" || error === null || !("response" in error)) {
+        return undefined;
+    }
+
+    const response = error.response;
+    if (typeof response !== "object" || response === null || !("status" in response)) {
+        return undefined;
+    }
+
+    return typeof response.status === "number" ? response.status : undefined;
+}
+
 type DeactivateEmployeeDialogProps = {
     employee: Employee | null;
     open: boolean;
@@ -31,6 +44,7 @@ export function DeactivateEmployeeDialog({
 
     useEffect(() => {
         if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear transient dialog state when the controlled dialog closes.
             setError(null);
             setIsSubmitting(false);
         }
@@ -50,10 +64,10 @@ export function DeactivateEmployeeDialog({
             // Solo cerramos el diálogo si la operación
             // realmente terminó correctamente.
             onOpenChange(false);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error al confirmar desactivación:", error);
 
-            const status = error?.response?.status;
+            const status = getHttpStatus(error);
 
             if (status === 409) {
                 setError(

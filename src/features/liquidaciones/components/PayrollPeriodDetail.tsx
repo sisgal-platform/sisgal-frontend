@@ -71,6 +71,7 @@ export function PayrollPeriodDetail({ payrollPeriodId }: PayrollPeriodDetailProp
             URL.revokeObjectURL(pdfUrlRef.current)
             pdfUrlRef.current = null
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset PDF UI when the route switches to another payroll period.
         setPdf({ status: "inicial" })
     }, [payrollPeriodId])
 

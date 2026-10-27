@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Calculator, Plus, RotateCcw, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
@@ -47,15 +47,13 @@ export function LiquidacionesFeature() {
     const [calculationOpen, setCalculationOpen] = useState(false);
     const navigate = useNavigate();
 
-    const { payrollPeriods, loading, error, reload } = usePayrollPeriods(
-        buildQuery(appliedFilters),
+    const payrollPeriodQuery = useMemo(
+        () => buildQuery(appliedFilters),
+        [appliedFilters],
     );
+    const { payrollPeriods, loading, error, reload } =
+        usePayrollPeriods(payrollPeriodQuery);
     const { employees, loading: employeesLoading } = useActiveEmployees();
-
-    // Cualquier cambio en los filtros aplicados vuelve a la primera página
-    useEffect(() => {
-        setPage(1);
-    }, [appliedFilters]);
 
     const totalPages = Math.max(
         1,
@@ -86,10 +84,12 @@ export function LiquidacionesFeature() {
         }
 
         setPeriodRangeError(null);
+        setPage(1);
         setAppliedFilters(filters);
     }
 
     function clearFilters() {
+        setPage(1);
         setFilters(emptyFilters);
         setAppliedFilters(emptyFilters);
         setPeriodRangeError(null);

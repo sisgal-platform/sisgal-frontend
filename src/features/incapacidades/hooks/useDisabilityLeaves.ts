@@ -47,6 +47,7 @@ export function useDisabilityLeaves(query: DisabilityLeaveQuery) {
         query.status,
         query.startDate,
         query.endDate,
+        query,
         version,
     ])
 

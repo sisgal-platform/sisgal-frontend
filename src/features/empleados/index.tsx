@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
@@ -34,11 +34,6 @@ export function EmpleadosFeature() {
         useState<Employee | null>(null);
     const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
 
-    // Cualquier cambio en los filtros vuelve a la primera página
-    useEffect(() => {
-        setPagina(1);
-    }, [employeeIdFilter, branchId, positionId, status]);
-
     const {
         employees: employeesFetched,
         cargando,
@@ -67,6 +62,7 @@ export function EmpleadosFeature() {
     );
 
     const limpiarFiltros = () => {
+        setPagina(1);
         setEmployeeIdFilter("");
         setBranchId(undefined);
         setPositionId(undefined);
@@ -117,7 +113,10 @@ export function EmpleadosFeature() {
                     <EmployeeCombobox
                         employees={employeesFetched}
                         value={employeeIdFilter}
-                        onChange={setEmployeeIdFilter}
+                        onChange={(value) => {
+                            setPagina(1);
+                            setEmployeeIdFilter(value);
+                        }}
                         loading={cargando}
                         disabled={cargando}
                         placeholder="Buscar nombre o documento"
@@ -130,9 +129,10 @@ export function EmpleadosFeature() {
                         options={branchOptions}
                         allLabel="Todas"
                         value={branchId !== undefined ? String(branchId) : ""}
-                        onChange={(value) =>
-                            setBranchId(value ? Number(value) : undefined)
-                        }
+                        onChange={(value) => {
+                            setPagina(1);
+                            setBranchId(value ? Number(value) : undefined);
+                        }}
                     />
                 </label>
 
@@ -143,9 +143,10 @@ export function EmpleadosFeature() {
                         value={
                             positionId !== undefined ? String(positionId) : ""
                         }
-                        onChange={(value) =>
-                            setPositionId(value ? Number(value) : undefined)
-                        }
+                        onChange={(value) => {
+                            setPagina(1);
+                            setPositionId(value ? Number(value) : undefined);
+                        }}
                     />
                 </label>
 
@@ -153,13 +154,14 @@ export function EmpleadosFeature() {
                     Estado
                     <select
                         value={status ?? ""}
-                        onChange={(event) =>
+                        onChange={(event) => {
+                            setPagina(1);
                             setStatus(
                                 event.target.value
                                     ? (event.target.value as EstadoFiltro)
                                     : undefined,
-                            )
-                        }
+                            );
+                        }}
                         className="h-10 rounded-xl border border-gray-300 bg-surface px-3 text-sm text-text"
                     >
                         <option value="">Todos</option>
@@ -188,6 +190,7 @@ export function EmpleadosFeature() {
             />
 
             <EmployeeEditModal
+                key={empleadoEditando?.id ?? "cerrado"}
                 employee={empleadoEditando}
                 onOpenChange={(open) => {
                     if (!open) setEmpleadoEditando(null);
@@ -196,6 +199,7 @@ export function EmpleadosFeature() {
             />
 
             <DeactivateEmployeeDialog
+                key={`${empleadoADesactivar?.id ?? "ninguno"}-${isDeactivateDialogOpen ? "abierto" : "cerrado"}`}
                 employee={empleadoADesactivar}
                 open={isDeactivateDialogOpen}
                 onOpenChange={(nextOpen) => {
