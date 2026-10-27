@@ -62,6 +62,7 @@ export function PayrollPeriodTable({
                 <caption className="sr-only">Listado de liquidaciones registradas</caption>
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
+                        <th scope="col" className="px-4 py-3">ID</th>
                         <th scope="col" className="px-4 py-3">Empleado</th>
                         <th scope="col" className="px-4 py-3">Período</th>
                         <th scope="col" className="px-4 py-3">Fecha de liquidación</th>
@@ -75,6 +76,9 @@ export function PayrollPeriodTable({
                 <tbody className="divide-y divide-gray-200">
                     {payrollPeriods.map((payrollPeriod) => (
                         <tr key={payrollPeriod.id}>
+                            <td className="px-4 py-3 font-medium text-text">
+                                {payrollPeriod.id}
+                            </td>
                             <td className="px-4 py-3 font-medium text-text">
                                 {payrollPeriod.employeeName}
                             </td>
