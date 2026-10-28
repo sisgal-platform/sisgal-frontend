@@ -92,7 +92,9 @@ src/__tests__/
 - La conexión a Supabase se configura con `VITE_SUPABASE_URL` y
   `VITE_SUPABASE_ANON_KEY` en un archivo `.env` en la raíz. Ver
   `src/supabase/client.ts`.
-- La URL del backend (sisgal-core-service) se configura con `VITE_API_URL`.
+- La URL del backend core (sisgal-core-service) se configura con `VITE_API_URL`.
+- La URL del servicio biométrico (sisgal-biometric-service) se configura con
+  `VITE_API_INTEGRACION_URL`.
   Ver `src/lib/axios.ts`.
 
 Para endurecer el linter con reglas que requieren tipos, ver la
