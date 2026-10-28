@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import apiClient from "@/lib/axios";
+import apiClient, { integrationClient } from "@/lib/axios";
 import { ApiError } from "@/lib/apiError";
 
 import type { HistorialAsistencia } from "../interfaces/types";
@@ -11,9 +11,13 @@ vi.mock("@/lib/axios", () => ({
         get: vi.fn(),
         post: vi.fn(),
     },
+    integrationClient: {
+        post: vi.fn(),
+    },
 }));
 
 const client = vi.mocked(apiClient);
+const integrationClientMock = vi.mocked(integrationClient);
 
 const HISTORIAL: HistorialAsistencia = {
     data: [],
@@ -132,19 +136,19 @@ describe("asistenciaService", () => {
 
         it("envía la lectura y devuelve la marcación registrada", async () => {
             const marcacion = { id: 10, tipo: "ENTRADA" };
-            client.post.mockResolvedValue({ data: marcacion });
+            integrationClientMock.post.mockResolvedValue({ data: marcacion });
 
             await expect(
                 asistenciaService.registrarMarcacionSimulada(lectura),
             ).resolves.toEqual(marcacion);
-            expect(client.post).toHaveBeenCalledWith(
+            expect(integrationClientMock.post).toHaveBeenCalledWith(
                 "/integracion/lector-simulado/marcaciones",
                 lectura,
             );
         });
 
         it("normaliza los rechazos de la marcación a ApiError", async () => {
-            client.post.mockRejectedValue(new Error("fallo"));
+            integrationClientMock.post.mockRejectedValue(new Error("fallo"));
 
             await expect(
                 asistenciaService.registrarMarcacionSimulada(lectura),

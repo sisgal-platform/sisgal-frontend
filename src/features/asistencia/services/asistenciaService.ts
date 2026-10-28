@@ -1,4 +1,4 @@
-import apiClient from "@/lib/axios";
+import apiClient, { integrationClient } from "@/lib/axios";
 import { toApiError } from "@/lib/apiError";
 
 import type {
@@ -54,7 +54,7 @@ export const asistenciaService = {
         lectura: LecturaSimulada,
     ): Promise<Marcacion> {
         try {
-            const { data } = await apiClient.post<Marcacion>(
+            const { data } = await integrationClient.post<Marcacion>(
                 "/integracion/lector-simulado/marcaciones",
                 lectura,
             );
