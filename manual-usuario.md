@@ -156,7 +156,7 @@ Al entrar verás una tabla con todos los empleados y, arriba, filtros para busca
 
 Usa el botón **Limpiar filtros** para quitar todos los filtros de una vez.
 
-La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo y estado (una etiqueta verde "Activo" o gris "Inactivo"). Al final de cada fila hay dos íconos:
+La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo, horario y estado (una etiqueta verde "Activo" o gris "Inactivo"). En **Horario** aparece la jornada laboral vigente del restaurante, con su franja diurna y su franja nocturna; es la misma para todos los empleados y cambia sola cuando se registra una jornada nueva en Parámetros de nómina. Si no hay una jornada vigente, verás un guion (—). Al final de cada fila hay dos íconos:
 
 - **(ícono de ojo)** → ver el detalle del empleado.
 - **(ícono de apagar)** → desactivar al empleado (solo aparece si está activo).

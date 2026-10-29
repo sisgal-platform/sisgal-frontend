@@ -206,6 +206,12 @@ pero respeta `disabled={enviando || soloLectura}` igual que los demás campos
 del formulario (hubo un bug real donde esto se les olvidó y el selector
 quedaba habilitado incluso en modo solo lectura — ya corregido).
 
+La columna "Horario" de `EmployeeTable` (antes "Próximamente") muestra esa misma
+jornada vigente (franja diurna y nocturna) para todos los empleados: `index.tsx`
+la pide una vez con `useVigentWorkdayConfig` y se la pasa a la tabla como
+`workdayConfig`; sin jornada vigente muestra "—". Prueba:
+`empleados/__tests__/EmployeeTable.test.tsx`. Solo frontend, sin cambios de BD.
+
 Se evaluó y se **descartó explícitamente** construir una tabla/lógica de
 horario por empleado separada de `parametros-nomina` — la jornada es global
 de la empresa (con restricción `EXCLUDE USING gist` en BD que impide
