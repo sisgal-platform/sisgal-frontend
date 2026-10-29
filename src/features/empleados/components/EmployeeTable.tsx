@@ -1,6 +1,8 @@
 import { Eye, Power } from "lucide-react";
 
 import { formatCurrencyCOP } from "@/lib/formatters";
+import { formatTimeRange } from "@/features/parametros-nomina/utils/format";
+import type { WorkdayConfig } from "@/features/parametros-nomina/interfaces/types";
 
 import type { Employee } from "../interfaces/types";
 
@@ -19,6 +21,8 @@ const estadoConfig = {
 
 type EmployeeTableProps = {
     employees: Employee[];
+    /** Jornada laboral general vigente; es null si no hay una configurada. */
+    workdayConfig: WorkdayConfig | null;
     cargando: boolean;
     error: string | null;
     onReintentar: () => void;
@@ -28,6 +32,7 @@ type EmployeeTableProps = {
 
 export function EmployeeTable({
     employees,
+    workdayConfig,
     cargando,
     error,
     onReintentar,
@@ -154,7 +159,26 @@ export function EmployeeTable({
                                     {employee.positionName ?? "—"}
                                 </td>
                                 <td className="hidden px-4 py-3 text-text-muted xl:table-cell">
-                                    Próximamente
+                                    {workdayConfig ? (
+                                        <>
+                                            <span className="block">
+                                                Diurna{" "}
+                                                {formatTimeRange(
+                                                    workdayConfig.dayStart,
+                                                    workdayConfig.dayEnd,
+                                                )}
+                                            </span>
+                                            <span className="block">
+                                                Nocturna{" "}
+                                                {formatTimeRange(
+                                                    workdayConfig.nightStart,
+                                                    workdayConfig.nightEnd,
+                                                )}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        "—"
+                                    )}
                                 </td>
                                 <td className="px-4 py-3">
                                     <span
