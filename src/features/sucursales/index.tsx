@@ -61,11 +61,26 @@ export function SucursalesFeature() {
     };
 
     if (loading) {
-        return <div>Cargando sucursales...</div>;
+        return (
+            <p
+                role="status"
+                className="rounded-2xl bg-white p-6 text-text-muted"
+            >
+                Cargando sucursales...
+            </p>
+        );
     }
 
     if (error) {
         return <div>{error}</div>;
+    }
+
+    if (sucursales.length === 0) {
+        return (
+            <p className="rounded-2xl bg-white p-6 text-text-muted">
+                No hay sucursales para mostrar.
+            </p>
+        );
     }
 
     return (
