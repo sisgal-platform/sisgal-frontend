@@ -20,15 +20,8 @@ export function AuthSync() {
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data }) => {
-            console.log("AUTH SYNC - getSession:", data.session);
-
             if (data.session?.user) {
                 login(mapSupabaseUser(data.session.user));
-
-                console.log(
-                    "AUTH SYNC - access token:",
-                    data.session.access_token,
-                );
 
                 if (data.session.access_token) {
                     writeAccessToken(data.session.access_token);
@@ -39,17 +32,9 @@ export function AuthSync() {
             }
         });
 
-        const { data } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log("AUTH SYNC - evento:", event);
-            console.log("AUTH SYNC - sesión:", session);
-
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
                 login(mapSupabaseUser(session.user));
-
-                console.log(
-                    "AUTH SYNC - access token evento:",
-                    session.access_token,
-                );
 
                 if (session.access_token) {
                     writeAccessToken(session.access_token);

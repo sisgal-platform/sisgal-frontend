@@ -234,7 +234,7 @@ describe("LiquidacionesFeature", () => {
 
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación",
+                name: "Detalle de la liquidación #1",
             }),
         ).toBeInTheDocument();
         expect(screen.getByText(/CC 1020304050/)).toBeInTheDocument();
@@ -413,10 +413,11 @@ describe("LiquidacionesFeature", () => {
         await waitFor(() => expect(findById).toHaveBeenLastCalledWith(7));
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación",
+                name: "Detalle de la liquidación #7",
             }),
         ).toBeInTheDocument();
-        await waitFor(() => expect(findAll).toHaveBeenCalledTimes(2));
+        // La lista no se vuelve a consultar al entrar al detalle; este usa findById.
+        expect(findAll).toHaveBeenCalledTimes(1);
         expect(
             screen.queryByRole("heading", { name: "Preliquidación de nómina" }),
         ).not.toBeInTheDocument();
@@ -473,7 +474,7 @@ describe("LiquidacionesFeature", () => {
         resolveConfirmation({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación",
+                name: "Detalle de la liquidación #7",
             }),
         ).toBeInTheDocument();
     });
@@ -486,7 +487,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
 
         const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
         getPdf.mockResolvedValue(blob);
@@ -508,7 +509,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
         getPdf.mockResolvedValue(
             new Blob(["%PDF-1.4"], { type: "application/pdf" }),
         );
@@ -533,7 +534,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
         getPdf.mockRejectedValue(
             new Error("No fue posible determinar la sucursal."),
         );
@@ -553,7 +554,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
         getPdf.mockResolvedValue(
             new Blob(["%PDF-1.4"], { type: "application/pdf" }),
         );
@@ -581,14 +582,14 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
         getCsv.mockResolvedValue(new Blob(["a,b\n1,2\n"], { type: "text/csv" }));
         const clickAnchor = vi
             .spyOn(HTMLAnchorElement.prototype, "click")
             .mockImplementation(() => {});
 
         await user.click(
-            screen.getByRole("button", { name: "Exportar para contabilidad" }),
+            screen.getByRole("button", { name: "Exportar CSV" }),
         );
 
         expect(
@@ -610,13 +611,13 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
         getCsv.mockRejectedValue(
             new Error("La liquidación no tiene conceptos ni totales para exportar."),
         );
 
         await user.click(
-            screen.getByRole("button", { name: "Exportar para contabilidad" }),
+            screen.getByRole("button", { name: "Exportar CSV" }),
         );
 
         expect(

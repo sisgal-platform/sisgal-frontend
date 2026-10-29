@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 
 import { SucursalStatusBadge } from "./SucursalStatusBadge";
 import type { Sucursal } from "../interfaces/types";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Power } from "lucide-react";
 
 interface SucursalTableProps {
     sucursales: Sucursal[];
@@ -36,7 +36,7 @@ export function SucursalTable({
                         {sucursales.map((sucursal) => (
                             <tr
                                 key={sucursal.id}
-                                className="border-t border-slate-200"
+                                className={`border-t border-slate-200 ${sucursal.is_active ? "" : "bg-surface-muted"}`}
                             >
                                 <td className="px-4 py-3 font-medium text-slate-900">
                                     {sucursal.name}
@@ -73,17 +73,24 @@ export function SucursalTable({
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            type="button"
-                                            aria-label={`Inactivar ${sucursal.name}`}
-                                            title={`Inactivar ${sucursal.name}`}
-                                            className="text-text-muted hover:bg-destructive/10 hover:text-destructive"
-                                            onClick={() => onDelete(sucursal)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        {sucursal.is_active && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                type="button"
+                                                aria-label={`Inactivar ${sucursal.name}`}
+                                                title={`Inactivar ${sucursal.name}`}
+                                                className="flex h-9 w-9 items-center justify-center rounded-lg text-error hover:bg-error-light"
+                                                onClick={() =>
+                                                    onDelete(sucursal)
+                                                }
+                                            >
+                                                <Power
+                                                    size={18}
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

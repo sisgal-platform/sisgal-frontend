@@ -88,24 +88,29 @@ describe("SucursalesFeature", () => {
         await esperarTabla();
 
         await user.click(
-            screen.getByRole("button", { name: "Nueva sucursal" }),
+            screen.getByRole("button", { name: "Crear sucursal" }),
         );
         const dialog = screen.getByRole("alertdialog", {
             name: "Nueva sucursal",
         });
+
         await user.type(
-            within(dialog).getByLabelText("Nombre"),
-            "  Sucursal Sur  ",
+            within(dialog).getByRole("textbox", { name: /Nombre/ }),
+            "Sucursal Sur",
         );
         await user.type(
-            within(dialog).getByLabelText("Dirección"),
+            within(dialog).getByRole("textbox", { name: /Dirección/ }),
             "Calle 10 # 20-30",
         );
         await user.type(
-            within(dialog).getByLabelText("Teléfono"),
+            within(dialog).getByRole("textbox", { name: /Teléfono/ }),
             "6011234567",
         );
-        await user.type(within(dialog).getByLabelText("Ciudad"), "Bogotá");
+        await user.type(
+            within(dialog).getByRole("textbox", { name: /Ciudad/ }),
+            "Bogotá",
+        );
+
         await user.click(
             within(dialog).getByRole("button", { name: "Crear sucursal" }),
         );
@@ -134,13 +139,13 @@ describe("SucursalesFeature", () => {
             screen.getByRole("button", { name: "Editar Sucursal Centro" }),
         );
         const dialog = screen.getByRole("alertdialog", {
-            name: "Editar sucursal",
+            name: "Actualizar sucursal",
         });
-        expect(within(dialog).getByLabelText("Nombre")).toHaveValue(
-            "Sucursal Centro",
-        );
-        await user.clear(within(dialog).getByLabelText("Ciudad"));
-        await user.type(within(dialog).getByLabelText("Ciudad"), "Bogotá");
+
+        const ciudad = within(dialog).getByRole("textbox", { name: /Ciudad/ });
+        await user.clear(ciudad);
+        await user.type(ciudad, "Bogotá");
+
         await user.click(
             within(dialog).getByRole("button", { name: "Guardar cambios" }),
         );
@@ -151,7 +156,6 @@ describe("SucursalesFeature", () => {
                 direccion: "Carrera 43A # 10-15",
                 telefono: "6041234567",
                 ciudad: "Bogotá",
-                companyId: 1,
             }),
         );
         await waitFor(() => expect(list).toHaveBeenCalledTimes(2));

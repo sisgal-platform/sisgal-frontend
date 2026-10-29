@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import apiClient from "@/lib/axios";
+import apiClient, { integrationClient } from "@/lib/axios";
 import { ApiError } from "@/lib/apiError";
 
 import type { HistorialAsistencia } from "../interfaces/types";
@@ -9,10 +9,15 @@ import { asistenciaService } from "../services/asistenciaService";
 vi.mock("@/lib/axios", () => ({
     default: {
         get: vi.fn(),
+        post: vi.fn(),
+    },
+    integrationClient: {
+        post: vi.fn(),
     },
 }));
 
 const client = vi.mocked(apiClient);
+const integrationClientMock = vi.mocked(integrationClient);
 
 const HISTORIAL: HistorialAsistencia = {
     data: [],
@@ -120,5 +125,34 @@ describe("asistenciaService", () => {
                 porPagina: 10,
             }),
         ).rejects.toBeInstanceOf(ApiError);
+    });
+
+    describe("lector de huella simulado", () => {
+        const lectura = {
+            capturaExitosa: true,
+            huella: "1020304050",
+            idempotencyKey: "3f1c2a5e-8b7d-4c1e-9a6f-2d4b8e9c7a10",
+        };
+
+        it("envía la lectura y devuelve la marcación registrada", async () => {
+            const marcacion = { id: 10, tipo: "ENTRADA" };
+            integrationClientMock.post.mockResolvedValue({ data: marcacion });
+
+            await expect(
+                asistenciaService.registrarMarcacionSimulada(lectura),
+            ).resolves.toEqual(marcacion);
+            expect(integrationClientMock.post).toHaveBeenCalledWith(
+                "/integracion/lector-simulado/marcaciones",
+                lectura,
+            );
+        });
+
+        it("normaliza los rechazos de la marcación a ApiError", async () => {
+            integrationClientMock.post.mockRejectedValue(new Error("fallo"));
+
+            await expect(
+                asistenciaService.registrarMarcacionSimulada(lectura),
+            ).rejects.toBeInstanceOf(ApiError);
+        });
     });
 });

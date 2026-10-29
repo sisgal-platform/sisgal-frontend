@@ -16,7 +16,6 @@ import { LiquidacionDetallePage } from "@/pages/nomina/LiquidacionDetallePage";
 import { IncapacidadesPage } from "@/pages/incapacidades/IncapacidadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
-import { ReportesPage } from "@/pages/reportes/ReportesPage";
 
 export const routes: RouteObject[] = [
     {
@@ -31,15 +30,27 @@ export const routes: RouteObject[] = [
                 children: [
                     {
                         index: true,
-                        element: <DashboardPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <DashboardPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "asistencia",
-                        element: <AsistenciaPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <AsistenciaPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "nomina",
-                        element: <NominaPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <NominaPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "nomina/liquidaciones/:payrollPeriodId",
@@ -51,23 +62,36 @@ export const routes: RouteObject[] = [
                     },
                     {
                         path: "incapacidades",
-                        element: <IncapacidadesPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <IncapacidadesPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "personal",
-                        element: <PersonalPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <PersonalPage />
+                            </RequireRole>
+                        ),
                     },
+              
                     {
                         path: "prestamos",
-                        element: <PrestamosPage />,
-                    },
-                    {
-                        path: "reportes",
-                        element: <ReportesPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <PrestamosPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "configuracion",
-                        element: <ConfiguracionPage />,
+                        element: (
+                            <RequireRole allowedRoles={["administrador"]}>
+                                <ConfiguracionPage />
+                            </RequireRole>
+                        ),
                     },
                     {
                         path: "*",

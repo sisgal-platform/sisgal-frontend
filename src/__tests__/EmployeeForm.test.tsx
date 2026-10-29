@@ -71,7 +71,9 @@ async function esperarCatalogosCargados() {
   })
 }
 
-async function completarFormularioValido(user: ReturnType<typeof userEvent.setup>) {
+async function completarFormularioValido(
+  user: ReturnType<typeof userEvent.setup>,
+) {
   await esperarCatalogosCargados()
 
   await user.type(campo("Nombres"), "Julián")
@@ -163,6 +165,7 @@ describe("EmployeeForm", () => {
 
     expect(employeesService.create).not.toHaveBeenCalled()
   })
+
 
   it("informa cuando el documento ya está registrado", async () => {
     vi.mocked(employeesService.create).mockRejectedValue({

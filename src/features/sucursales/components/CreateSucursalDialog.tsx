@@ -78,6 +78,7 @@ export function CreateSucursalDialog({
 
     useEffect(() => {
         if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync controlled dialog/form props into the local editable form.
             setForm(initialForm);
             setError(null);
             setIsSubmitting(false);
@@ -134,18 +135,23 @@ export function CreateSucursalDialog({
             setError(null);
             setIsSubmitting(true);
 
-            const payload: CreateSucursalPayload = {
-                nombre,
-                direccion,
-                telefono,
-                ciudad,
-                companyId: 1,
-            };
-
             if (mode === "edit" && sucursal) {
-                await sucursalesService.update(String(sucursal.id), payload);
+                await sucursalesService.update(String(sucursal.id), {
+                    nombre,
+                    direccion,
+                    telefono,
+                    ciudad,
+                });
                 onUpdated?.();
             } else {
+                const payload: CreateSucursalPayload = {
+                    nombre,
+                    direccion,
+                    telefono,
+                    ciudad,
+                    companyId: 1,
+                };
+
                 await sucursalesService.create(payload);
                 onCreated?.();
             }
@@ -193,7 +199,9 @@ export function CreateSucursalDialog({
             <AlertDialogContent className="max-w-xl">
                 <AlertDialogHeader>
                     <AlertDialogTitle>
-                        {mode === "edit" ? "Editar sucursal" : "Nueva sucursal"}
+                        {mode === "edit"
+                            ? "Actualizar sucursal"
+                            : "Nueva sucursal"}
                     </AlertDialogTitle>
 
                     <AlertDialogDescription>
@@ -203,55 +211,89 @@ export function CreateSucursalDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="space-y-2 text-sm text-slate-700 sm:col-span-2">
-                            <span>Nombre</span>
-                            <input
-                                type="text"
-                                value={form.nombre}
-                                onChange={handleChange("nombre")}
-                                placeholder="Sucursal Centro"
-                                required
-                                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
-                            />
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="cargo-nombre"
+                            className="text-sm font-semibold text-text"
+                        >
+                            Nombre{" "}
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
                         </label>
+                        <input
+                            id="cargo-nombre"
+                            type="text"
+                            value={form.nombre}
+                            onChange={handleChange("nombre")}
+                            placeholder="Sucursal Centro"
+                            required
+                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
+                        />
+                    </div>
 
-                        <label className="space-y-2 text-sm text-slate-700 sm:col-span-2">
-                            <span>Dirección</span>
-                            <input
-                                type="text"
-                                value={form.direccion}
-                                onChange={handleChange("direccion")}
-                                placeholder="Carrera 43A # 10-15"
-                                required
-                                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
-                            />
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="cargo-direccion"
+                            className="text-sm font-semibold text-text"
+                        >
+                            Dirección{" "}
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
                         </label>
+                        <input
+                            id="cargo-direccion"
+                            type="text"
+                            value={form.direccion}
+                            onChange={handleChange("direccion")}
+                            placeholder="Carrera 43A # 10-15"
+                            required
+                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
+                        />
+                    </div>
 
-                        <label className="space-y-2 text-sm text-slate-700">
-                            <span>Teléfono</span>
-                            <input
-                                type="tel"
-                                inputMode="numeric"
-                                value={form.telefono}
-                                onChange={handleChange("telefono")}
-                                placeholder="6041234567"
-                                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
-                            />
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="cargo-telefono"
+                            className="text-sm font-semibold text-text"
+                        >
+                            Teléfono
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
                         </label>
+                        <input
+                            id="cargo-telefono"
+                            type="tel"
+                            inputMode="numeric"
+                            value={form.telefono}
+                            onChange={handleChange("telefono")}
+                            placeholder="6041234567"
+                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
+                        />
+                    </div>
 
-                        <label className="space-y-2 text-sm text-slate-700">
-                            <span>Ciudad</span>
-                            <input
-                                type="text"
-                                value={form.ciudad}
-                                onChange={handleChange("ciudad")}
-                                placeholder="Medellín"
-                                required
-                                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
-                            />
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="cargo-ciudad"
+                            className="text-sm font-semibold text-text"
+                        >
+                            Ciudad{" "}
+                            <span aria-hidden="true" className="text-error">
+                                *
+                            </span>
                         </label>
+                        <input
+                            id="cargo-ciudad"
+                            type="text"
+                            value={form.ciudad}
+                            onChange={handleChange("ciudad")}
+                            placeholder="Medellín"
+                            required
+                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none ring-0 transition focus:border-slate-400"
+                        />
                     </div>
 
                     {error && (

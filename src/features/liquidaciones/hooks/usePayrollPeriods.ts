@@ -38,7 +38,7 @@ export function usePayrollPeriods(query: PayrollPeriodQuery) {
         return () => {
             cancelled = true
         }
-    }, [query.employeeId, query.periodStart, query.periodEnd, version])
+    }, [query.employeeId, query.periodStart, query.periodEnd, query, version])
 
     const reload = useCallback(() => setVersion((current) => current + 1), [])
 

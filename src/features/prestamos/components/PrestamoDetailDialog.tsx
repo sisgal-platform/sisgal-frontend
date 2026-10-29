@@ -81,7 +81,7 @@ export function PrestamoDetailDialog({
         <Dialog open={true} onOpenChange={(open) => onOpenChange(open)}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Detalle del préstamo</DialogTitle>
+                    <DialogTitle>Detalle del préstamo #{prestamo.id}</DialogTitle>
                 </DialogHeader>
 
                 {cargando && (
@@ -120,14 +120,10 @@ export function PrestamoDetailDialog({
                                     {detalle.employee.firstName}{" "}
                                     {detalle.employee.lastName}
                                 </Dato>
-                                <Dato label="ID del empleado">
-                                    {detalle.employee.id}
-                                </Dato>
-                                <Dato label="Tipo de documento">
-                                    {detalle.employee.documentType ?? "—"}
-                                </Dato>
-                                <Dato label="Número de documento">
-                                    {detalle.employee.document}
+                                <Dato label="Documento">
+                                    {detalle.employee.documentType
+                                        ? `${detalle.employee.documentType} ${detalle.employee.document}`
+                                        : detalle.employee.document}
                                 </Dato>
                             </dl>
                         </section>
@@ -140,9 +136,6 @@ export function PrestamoDetailDialog({
                                 Condiciones del préstamo
                             </h3>
                             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                                <Dato label="ID del préstamo">
-                                    {detalle.id}
-                                </Dato>
                                 <Dato label="Estado">
                                     <span
                                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${estado?.badgeClassName}`}

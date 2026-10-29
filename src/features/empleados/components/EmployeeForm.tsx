@@ -89,10 +89,11 @@ export function EmployeeForm({
       return
     }
 
+
     const erroresValidacion = validateEmployeeForm(values)
     setErrors(erroresValidacion)
 
-    if (Object.keys(erroresValidacion).length > 0) {
+    if (Object.keys(erroresValidacion).length > 0 ) {
       return
     }
 
