@@ -2,8 +2,8 @@ import { createClient, type AuthError, type User } from '@supabase/supabase-js'
 
 /** Cliente compartido de Supabase, fuente de verdad de la autenticación. */
 export const supabase = createClient(
-  import.meta.env.SUPABASE_URL,
-  import.meta.env.SUPABASE_ANON_KEY,
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
 )
 
 export type SignInResult = {
