@@ -3,11 +3,11 @@ import axios, { type AxiosInstance } from "axios";
 import { readAccessToken } from "@/services/auth/auth.token.storage";
 
 const apiClient = axios.create({
-    baseURL: import.meta.env.API_URL ?? "",
+    baseURL: import.meta.env.VITE_API_URL ?? "",
 });
 
 export const integrationClient = axios.create({
-    baseURL: import.meta.env.API_INTEGRACION_URL ?? "",
+    baseURL: import.meta.env.VITE_API_INTEGRACION_URL ?? "",
 });
 
 function configureAuth(client: AxiosInstance) {
