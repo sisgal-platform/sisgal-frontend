@@ -36,6 +36,7 @@ const EMPLEADO_ACTIVO = {
     positionId: 2,
     branchName: "Centro",
     positionName: "Mesera",
+    workdayConfigId: null,
 };
 
 const EMPLEADO_INACTIVO = {

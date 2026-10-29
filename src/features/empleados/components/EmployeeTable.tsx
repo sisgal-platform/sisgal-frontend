@@ -21,8 +21,8 @@ const estadoConfig = {
 
 type EmployeeTableProps = {
     employees: Employee[];
-    /** Jornada laboral general vigente; es null si no hay una configurada. */
-    workdayConfig: WorkdayConfig | null;
+    /** Versiones de la jornada laboral, para mostrar la que tiene asignada cada empleado. */
+    workdayConfigs: WorkdayConfig[];
     cargando: boolean;
     error: string | null;
     onReintentar: () => void;
@@ -32,7 +32,7 @@ type EmployeeTableProps = {
 
 export function EmployeeTable({
     employees,
-    workdayConfig,
+    workdayConfigs,
     cargando,
     error,
     onReintentar,
@@ -131,6 +131,9 @@ export function EmployeeTable({
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                     {employees.map((employee) => {
+                        const workdayConfig = workdayConfigs.find(
+                            (jornada) => jornada.id === employee.workdayConfigId,
+                        );
                         const estado =
                             estadoConfig[
                                 employee.status === "ACTIVO"

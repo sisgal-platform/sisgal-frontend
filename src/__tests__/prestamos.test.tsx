@@ -43,6 +43,7 @@ const EMPLEADO = {
     positionId: 2,
     branchName: "Centro",
     positionName: "Mesera",
+    workdayConfigId: null,
 };
 
 const PRESTAMO: Prestamo = {

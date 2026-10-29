@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { FloatingInput } from "@/components/molecules/FloatingInput"
 import { FloatingSelect } from "@/components/molecules/FloatingSelect"
+import { formatTimeRange } from "@/features/parametros-nomina/utils/format"
 
 import { useRegisterEmployee } from "../hooks/useRegisterEmployee"
 import { useUpdateEmployee } from "../hooks/useUpdateEmployee"
@@ -67,7 +68,20 @@ export function EmployeeForm({
 
   const { positions, cargando: cargandoCargos } = useActivePositions()
   const { branches, cargando: cargandoSucursales } = useActiveBranches()
-  const { workdayConfig, cargando: cargandoHorario } = useVigentWorkdayConfig()
+  const { workdayConfig, versiones, cargando: cargandoHorario } = useVigentWorkdayConfig()
+
+  // La jornada se guarda aparte del resto de campos: no se valida ni cambia al editar otros datos.
+  const [workdayConfigId, setWorkdayConfigId] = useState(
+    employee?.workdayConfigId ? String(employee.workdayConfigId) : "",
+  )
+
+  // Se puede asignar la vigente; si el empleado conserva una anterior, se lista para no perderla de vista.
+  const jornadasAsignables = versiones.filter(
+    (v) => v.status === "VIGENTE" || v.id === employee?.workdayConfigId,
+  )
+  // Al registrar, la vigente viene preseleccionada; al editar, solo cambia si se elige otra.
+  const jornadaSeleccionada =
+    workdayConfigId || (!esEdicion && workdayConfig ? String(workdayConfig.id) : "")
 
   function handleChange<K extends keyof EmployeeFormValues>(campo: K, valor: string) {
     setValues((prev) => ({ ...prev, [campo]: valor }))
@@ -109,6 +123,10 @@ export function EmployeeForm({
         branchId: Number(values.branchId),
         hireDate: values.hireDate,
       }
+      // Solo se envía si el usuario eligió una jornada distinta a la que ya tenía asignada
+      if (jornadaSeleccionada && Number(jornadaSeleccionada) !== employee.workdayConfigId) {
+        payload.workdayConfigId = Number(jornadaSeleccionada)
+      }
       await updateEmployee(employee.id, payload)
       return
     }
@@ -126,6 +144,7 @@ export function EmployeeForm({
       branchId: Number(values.branchId),
       hireDate: values.hireDate,
     }
+    if (jornadaSeleccionada) payload.workdayConfigId = Number(jornadaSeleccionada)
 
     await registerEmployee(payload)
   }
@@ -277,19 +296,36 @@ export function EmployeeForm({
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <FloatingSelect label="Horario laboral" disabled={enviando || soloLectura}>
-            <option>
-              {cargandoHorario
-                ? "Cargando jornada laboral…"
-                : workdayConfig
-                  ? `Diurna ${workdayConfig.dayStart}–${workdayConfig.dayEnd} · Nocturna ${workdayConfig.nightStart}–${workdayConfig.nightEnd} · máx. ${workdayConfig.maxWeekHours}h/semana`
-                  : "No hay una jornada laboral configurada"}
-            </option>
+          <FloatingSelect
+            label="Horario laboral"
+            value={jornadaSeleccionada}
+            onChange={(e) => setWorkdayConfigId(e.target.value)}
+            disabled={enviando || soloLectura || cargandoHorario}
+          >
+            {cargandoHorario ? (
+              <option value="">Cargando jornada laboral…</option>
+            ) : (
+              <>
+                {(esEdicion || jornadasAsignables.length === 0) && (
+                  <option value="">
+                    {jornadasAsignables.length === 0
+                      ? "No hay una jornada laboral vigente"
+                      : "Sin jornada asignada"}
+                  </option>
+                )}
+                {jornadasAsignables.map((jornada) => (
+                  <option key={jornada.id} value={String(jornada.id)}>
+                    {`Diurna ${formatTimeRange(jornada.dayStart, jornada.dayEnd)} · Nocturna ${formatTimeRange(jornada.nightStart, jornada.nightEnd)} · máx. ${jornada.maxWeekHours}h/semana`}
+                    {jornada.status !== "VIGENTE" && " (anterior)"}
+                  </option>
+                ))}
+              </>
+            )}
           </FloatingSelect>
         </div>
 
         <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-text-muted">
-          Esta es la jornada laboral general de la empresa, configurada en Parámetros de nómina. La asignación de un horario propio por empleado estará disponible en una próxima entrega.
+          Se listan las jornadas laborales vigentes, configuradas en Parámetros de nómina. Cuando se registra una versión nueva de la jornada, los empleados que la tenían asignada pasan a ella automáticamente.
         </p>
       </fieldset>
 

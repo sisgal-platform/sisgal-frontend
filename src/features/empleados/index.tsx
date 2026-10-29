@@ -47,8 +47,8 @@ export function EmpleadosFeature() {
     });
     const { branches } = useActiveBranches();
     const { positions } = useActivePositions();
-    // La jornada es general de la empresa: se pide una sola vez para toda la tabla.
-    const { workdayConfig } = useVigentWorkdayConfig();
+    // Las versiones de la jornada se piden una sola vez; cada fila muestra la que tiene asignada.
+    const { versiones } = useVigentWorkdayConfig();
     const branchOptions = branches.map((branch) => ({
         value: String(branch.id),
         label: branch.name,
@@ -185,7 +185,7 @@ export function EmpleadosFeature() {
 
             <EmployeeTable
                 employees={empleadosPagina}
-                workdayConfig={workdayConfig}
+                workdayConfigs={versiones}
                 cargando={cargando}
                 error={error}
                 onReintentar={recargar}
