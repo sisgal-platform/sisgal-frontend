@@ -41,12 +41,16 @@ describe("CreateSucursalDialog", () => {
 
         render(<CreateSucursalDialog open={true} onOpenChange={vi.fn()} />);
 
-        await user.type(screen.getByLabelText("Nombre"), "Sucursal Centro");
         await user.type(
-            screen.getByLabelText("Dirección"),
+            screen.getByPlaceholderText("Sucursal Centro"),
+            "Sucursal Centro",
+        );
+        await user.type(
+            screen.getByPlaceholderText("Carrera 43A # 10-15"),
             "Carrera 45 # 10-20",
         );
-        await user.type(screen.getByLabelText("Ciudad"), "Bogotá");
+        await user.type(screen.getByPlaceholderText("Medellín"), "Bogotá");
+
         await user.click(
             screen.getByRole("button", { name: "Crear sucursal" }),
         );
@@ -61,12 +65,18 @@ describe("CreateSucursalDialog", () => {
 
         render(<CreateSucursalDialog open={true} onOpenChange={vi.fn()} />);
 
-        await user.type(screen.getByLabelText("Nombre"), "Sucursal Norte");
-        await user.type(screen.getByLabelText("Dirección"), "Av 80 # 40-10");
-        await user.type(screen.getByLabelText("Ciudad"), "Cali");
-        await user.type(screen.getByLabelText("Teléfono"), "ABC123");
+        await user.type(
+            screen.getByPlaceholderText("Sucursal Centro"),
+            "Sucursal Norte",
+        );
+        await user.type(
+            screen.getByPlaceholderText("Carrera 43A # 10-15"),
+            "Av 80 # 40-10",
+        );
+        await user.type(screen.getByPlaceholderText("Medellín"), "Cali");
+        await user.type(screen.getByPlaceholderText("6041234567"), "ABC123");
 
-        expect(screen.getByLabelText("Teléfono")).toHaveValue("123");
+        expect(screen.getByPlaceholderText("6041234567")).toHaveValue("123");
         expect(sucursalesService.create).not.toHaveBeenCalled();
     });
 
@@ -97,12 +107,18 @@ describe("CreateSucursalDialog", () => {
             />,
         );
 
-        await user.type(screen.getByLabelText("Nombre"), " Sucursal Sur ");
         await user.type(
-            screen.getByLabelText("Dirección"),
+            screen.getByRole("textbox", { name: /Nombre/ }),
+            " Sucursal Sur ",
+        );
+        await user.type(
+            screen.getByRole("textbox", { name: /Dirección/ }),
             " Calle 10 # 20-30 ",
         );
-        await user.type(screen.getByLabelText("Ciudad"), " Bogotá ");
+        await user.type(
+            screen.getByRole("textbox", { name: /Ciudad/ }),
+            " Bogotá ",
+        );
         await user.click(
             screen.getByRole("button", { name: "Crear sucursal" }),
         );
@@ -135,13 +151,15 @@ describe("CreateSucursalDialog", () => {
         );
 
         const dialog = screen.getByRole("alertdialog", {
-            name: "Editar sucursal",
+            name: "Actualizar sucursal",
         });
-        expect(within(dialog).getByLabelText("Nombre")).toHaveValue(
-            "Sucursal Centro",
-        );
-        await user.clear(within(dialog).getByLabelText("Ciudad"));
-        await user.type(within(dialog).getByLabelText("Ciudad"), "Cali");
+        expect(
+            within(dialog).getByRole("textbox", { name: /Nombre/ }),
+        ).toHaveValue("Sucursal Centro");
+
+        const ciudad = within(dialog).getByRole("textbox", { name: /Ciudad/ });
+        await user.clear(ciudad);
+        await user.type(ciudad, "Cali");
         await user.click(
             within(dialog).getByRole("button", { name: "Guardar cambios" }),
         );
@@ -151,7 +169,6 @@ describe("CreateSucursalDialog", () => {
             direccion: "Carrera 43A # 10-15",
             telefono: "6041234567",
             ciudad: "Cali",
-            companyId: 1,
         });
         expect(onUpdated).toHaveBeenCalledOnce();
         expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -159,14 +176,27 @@ describe("CreateSucursalDialog", () => {
 
     it("muestra un mensaje genérico cuando falla la creación", async () => {
         const user = userEvent.setup();
+
+        vi.mocked(sucursalesService.create).mockReset();
         vi.mocked(sucursalesService.create).mockRejectedValueOnce(
             new Error("fallo de red"),
         );
 
         render(<CreateSucursalDialog open={true} onOpenChange={vi.fn()} />);
-        await user.type(screen.getByLabelText("Nombre"), "Sucursal Sur");
-        await user.type(screen.getByLabelText("Dirección"), "Calle 10 # 20-30");
-        await user.type(screen.getByLabelText("Ciudad"), "Bogotá");
+
+        await user.type(
+            screen.getByRole("textbox", { name: /Nombre/ }),
+            "Sucursal Sur",
+        );
+        await user.type(
+            screen.getByRole("textbox", { name: /Dirección/ }),
+            "Calle 10 # 20-30",
+        );
+        await user.type(
+            screen.getByRole("textbox", { name: /Ciudad/ }),
+            "Bogotá",
+        );
+
         await user.click(
             screen.getByRole("button", { name: "Crear sucursal" }),
         );
