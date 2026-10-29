@@ -73,7 +73,6 @@ async function esperarCatalogosCargados() {
 
 async function completarFormularioValido(
   user: ReturnType<typeof userEvent.setup>,
-  aceptarPolitica = true,
 ) {
   await esperarCatalogosCargados()
 
@@ -86,7 +85,6 @@ async function completarFormularioValido(
   await user.selectOptions(campo("Sucursal"), "Sucursal Centro")
   await user.type(campo("Salario base"), "1000000")
   fireEvent.change(campo("Fecha de ingreso"), { target: { value: "2025-08-01" } })
-  if (aceptarPolitica) await user.click(screen.getByRole("checkbox"))
 }
 
 beforeEach(() => {
@@ -164,24 +162,10 @@ describe("EmployeeForm", () => {
     expect(screen.getByText("La fecha de ingreso es obligatoria.")).toBeInTheDocument()
     expect(screen.getByText("Selecciona el cargo.")).toBeInTheDocument()
     expect(screen.getByText("Selecciona la sucursal.")).toBeInTheDocument()
-    expect(
-      screen.getByText("Debes aceptar la política de tratamiento de datos para registrar el empleado."),
-    ).toBeInTheDocument()
 
     expect(employeesService.create).not.toHaveBeenCalled()
   })
 
-  it("no registra el empleado si no acepta la política de tratamiento de datos", async () => {
-    const { user } = renderFormulario()
-
-    await completarFormularioValido(user, false)
-    await user.click(screen.getByRole("button", { name: "Registrar empleado" }))
-
-    expect(
-      await screen.findByText("Debes aceptar la política de tratamiento de datos para registrar el empleado."),
-    ).toBeInTheDocument()
-    expect(employeesService.create).not.toHaveBeenCalled()
-  })
 
   it("informa cuando el documento ya está registrado", async () => {
     vi.mocked(employeesService.create).mockRejectedValue({

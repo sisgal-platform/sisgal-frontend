@@ -16,7 +16,6 @@ import { LiquidacionDetallePage } from "@/pages/nomina/LiquidacionDetallePage";
 import { IncapacidadesPage } from "@/pages/incapacidades/IncapacidadesPage";
 import { PersonalPage } from "@/pages/personal/PersonalPage";
 import { PrestamosPage } from "@/pages/prestamos/PrestamosPage";
-import { PoliticaTratamientoDatosPage } from "@/pages/politica/PoliticaTratamientoDatosPage";
 
 export const routes: RouteObject[] = [
     {
@@ -77,10 +76,7 @@ export const routes: RouteObject[] = [
                             </RequireRole>
                         ),
                     },
-                    {
-                        path: "politica-tratamiento-datos-personales",
-                        element: <PoliticaTratamientoDatosPage />,
-                    },
+              
                     {
                         path: "prestamos",
                         element: (
