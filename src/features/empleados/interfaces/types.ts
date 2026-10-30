@@ -17,6 +17,8 @@ export type Employee = {
   positionId: number | null
   branchName: string | null
   positionName: string | null
+  /** Versión de la jornada laboral (workday_config) asignada; null si no tiene. */
+  workdayConfigId: number | null
 }
 
 /** Filtros opcionales del listado. Se envían como query params. */
@@ -40,6 +42,7 @@ export type UpdateEmployeePayload = {
   salaryBase?: number
   positionId?: number
   branchId?: number
+  workdayConfigId?: number
   hireDate?: string
 }
 
@@ -57,6 +60,8 @@ export type RegisterEmployeePayload = {
   salaryBase: number
   positionId: number
   branchId: number
+  /** Si se omite, el backend asigna la jornada vigente. */
+  workdayConfigId?: number
   /** Fecha de ingreso (YYYY-MM-DD); el formulario siempre la envía. */
   hireDate?: string
 }

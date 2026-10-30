@@ -13,6 +13,7 @@ import { EmployeeTable } from "./components/EmployeeTable";
 import { useEmployees } from "./hooks/useEmployees";
 import { useActiveBranches } from "./hooks/useActiveBranches";
 import { useActivePositions } from "./hooks/useActivePositions";
+import { useVigentWorkdayConfig } from "./hooks/useVigentWorkdayConfig";
 import { employeesService } from "./services/employeesService";
 import type { Employee } from "./interfaces/types";
 
@@ -46,6 +47,8 @@ export function EmpleadosFeature() {
     });
     const { branches } = useActiveBranches();
     const { positions } = useActivePositions();
+    // Las versiones de la jornada se piden una sola vez; cada fila muestra la que tiene asignada.
+    const { versiones } = useVigentWorkdayConfig();
     const branchOptions = branches.map((branch) => ({
         value: String(branch.id),
         label: branch.name,
@@ -182,6 +185,7 @@ export function EmpleadosFeature() {
 
             <EmployeeTable
                 employees={empleadosPagina}
+                workdayConfigs={versiones}
                 cargando={cargando}
                 error={error}
                 onReintentar={recargar}

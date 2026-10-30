@@ -156,7 +156,7 @@ Al entrar verás una tabla con todos los empleados y, arriba, filtros para busca
 
 Usa el botón **Limpiar filtros** para quitar todos los filtros de una vez.
 
-La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo y estado (una etiqueta verde "Activo" o gris "Inactivo"). Al final de cada fila hay dos íconos:
+La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo, horario y estado (una etiqueta verde "Activo" o gris "Inactivo"). En **Horario** aparece la jornada laboral asignada a cada empleado, con su franja diurna y su franja nocturna. Si el empleado no tiene una jornada asignada, verás un guion (—). En pantallas pequeñas algunas columnas (salario, cargo, horario) se ocultan para que la tabla quepa; puedes verlas en el detalle del empleado. Al final de cada fila hay dos íconos:
 
 - **(ícono de ojo)** → ver el detalle del empleado.
 - **(ícono de apagar)** → desactivar al empleado (solo aparece si está activo).
@@ -178,7 +178,9 @@ La tabla muestra: nombre, documento, teléfono, salario, sucursal, cargo y estad
 - Sucursal *(obligatorio)*
 - Salario base *(obligatorio, mayor a cero)*
 - Fecha de ingreso *(obligatorio, no puede ser una fecha futura)*
-- Horario laboral — se muestra automáticamente según la jornada configurada para todo el restaurante (ver sección [Configuración](#10-configuración)); no se edita aquí.
+- Horario laboral — lista la jornada laboral vigente, configurada en Parámetros de nómina (ver sección [Configuración](#10-configuración)). Al registrar viene seleccionada; al editar un empleado que no tiene jornada aparece "Sin jornada asignada" y puedes asignarle la vigente.
+
+> **Nota:** cuando se modifica la jornada laboral en Parámetros de nómina, los empleados que tenían asignada la jornada anterior pasan automáticamente a la nueva. Los que no tenían jornada siguen sin ella.
 
 3. Haz clic en **"Registrar empleado"**.
 
@@ -497,7 +499,7 @@ Aquí se configuran las reglas generales con las que el sistema calcula la nómi
 | **Horas y recargos** | Porcentajes de recargo para horas extra, nocturnas, dominicales y festivas |
 | **Descuentos legales** | Porcentajes de salud y pensión que se descuentan a cada empleado |
 
-> **Advertencia:** estos valores aplican para **todo el restaurante**, no se configuran por empleado individual.
+> **Advertencia:** estos valores aplican para **todo el restaurante**, no se configuran por empleado individual. Al modificar la **jornada laboral**, los empleados que tenían asignada la anterior pasan a la nueva desde el momento en que la guardas.
 
 Las tres funcionan con el mismo mecanismo, pensado para no perder el historial de cambios:
 

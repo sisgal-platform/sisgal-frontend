@@ -206,11 +206,30 @@ pero respeta `disabled={enviando || soloLectura}` igual que los demás campos
 del formulario (hubo un bug real donde esto se les olvidó y el selector
 quedaba habilitado incluso en modo solo lectura — ya corregido).
 
-Se evaluó y se **descartó explícitamente** construir una tabla/lógica de
-horario por empleado separada de `parametros-nomina` — la jornada es global
-de la empresa (con restricción `EXCLUDE USING gist` en BD que impide
-jornadas vigentes solapadas), no por empleado; duplicar esa lógica hubiera
-quedado inconsistente con el diseño de Marisol.
+Asignación de jornada por empleado (29/10/2026, rama `feature/horario-empleados`):
+- El selector "Horario laboral" lista la jornada vigente y envía su `id` como
+  `workdayConfigId`. Al registrar viene preseleccionada; al editar solo se envía
+  si se elige una distinta a la que el empleado ya tenía (si no, editar otro dato
+  no le asigna jornada). Si el empleado conserva una versión anterior, también se
+  lista con "(anterior)" para no perderla de vista. El texto usa
+  `formatTimeRange`, igual que la tabla y Parámetros de nómina.
+- `useVigentWorkdayConfig` devuelve también `versiones` (todas las de
+  `findAll()`); `index.tsx` las pasa a `EmployeeTable` como `workdayConfigs` y
+  cada fila muestra la jornada de su `workdayConfigId` ("—" si no tiene).
+- `Employee` tiene `workdayConfigId: number | null`; los payloads de registrar y
+  editar, `workdayConfigId?`.
+- Al registrar una versión nueva de la jornada, el backend mueve a ella a los
+  empleados que tenían la anterior (ver `dev_plan.md` del backend), así que la
+  tabla se actualiza sola.
+- La columna Horario sigue con `hidden xl:table-cell`, como el resto de columnas
+  que se ocultan en pantallas pequeñas.
+- Pruebas: `empleados/__tests__/EmployeeTable.test.tsx` (jornada asignada,
+  versión anterior y sin jornada) y `workdayConfigId: null` en los empleados de
+  ejemplo de otras pruebas.
+
+Se descartó una tabla propia de horarios por empleado: la jornada sigue siendo
+la de `parametros-nomina` (global y versionada, con `EXCLUDE USING gist`); el
+empleado solo guarda qué versión tiene asignada.
 
 ### HU20/HU30 "Consultar liquidaciones" / "Comprobante detallado de nómina" — ✅ Completa y mergeada (PR 37)
 

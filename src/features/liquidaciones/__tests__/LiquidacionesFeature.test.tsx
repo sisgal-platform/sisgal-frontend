@@ -51,6 +51,7 @@ const ANA: Employee = {
     positionId: 1,
     branchName: "Centro",
     positionName: "Mesera",
+    workdayConfigId: null,
 };
 
 const EMPLOYEE_INACTIVE: Employee = {
