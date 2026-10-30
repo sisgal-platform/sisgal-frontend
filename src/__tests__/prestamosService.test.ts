@@ -1,0 +1,173 @@
+import { render, screen, within } from "@testing-library/react";
+import { createElement } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import apiClient from "../lib/axios";
+import { PrestamosTable } from "../features/prestamos/components/PrestamosTable";
+import {
+    normalizarRangoFechas,
+    prestamosService,
+} from "../features/prestamos/services/prestamosService";
+
+vi.mock("../lib/axios", () => ({
+    default: { get: vi.fn(), post: vi.fn() },
+}));
+
+const client = vi.mocked(apiClient);
+
+describe("Servicio de préstamos", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("consulta los indicadores de préstamos activos", async () => {
+        const indicadores = {
+            cantidadPrestamosActivos: 12,
+            montoTotalPrestamosActivos: 15000000,
+        };
+        client.get.mockResolvedValue({ data: indicadores });
+
+        await expect(prestamosService.obtenerIndicadores()).resolves.toEqual(
+            indicadores,
+        );
+        expect(client.get).toHaveBeenCalledWith("/prestamos/indicadores");
+    });
+
+    it("crea un préstamo con el empleado y las condiciones seleccionadas", async () => {
+        const payload = {
+            employeeId: 7,
+            totalAmount: 1200000,
+            totalInstallments: 6,
+            grantedAt: "2026-10-02",
+            periodicity: "MENSUAL" as const,
+        };
+        const prestamo = { id: 3, ...payload };
+        client.post.mockResolvedValue({ data: prestamo });
+
+        await expect(prestamosService.crear(payload)).resolves.toEqual(
+            prestamo,
+        );
+        expect(client.post).toHaveBeenCalledWith("/prestamos", payload);
+    });
+
+    it("consulta un préstamo por su id", async () => {
+        const prestamo = { id: 11 };
+        client.get.mockResolvedValue({ data: prestamo });
+
+        await expect(prestamosService.obtenerPorId(11)).resolves.toEqual(
+            prestamo,
+        );
+        expect(client.get).toHaveBeenCalledWith("/prestamos/11");
+    });
+
+    it("consulta los préstamos usando los filtros de la pantalla", async () => {
+        const prestamos = [{ id: 1 }];
+        client.get.mockResolvedValue({ data: prestamos });
+
+        await expect(
+            prestamosService.obtenerTodos({
+                busqueda: "María Pérez",
+                estado: "ACTIVO",
+                fechaDesde: "2026-01-10",
+                fechaHasta: "2026-01-15",
+            }),
+        ).resolves.toEqual(prestamos);
+
+        expect(client.get).toHaveBeenCalledWith("/prestamos", {
+            params: {
+                nombreEmpleado: "María Pérez",
+                estado: "ACTIVO",
+                fechaDesde: "2026-01-10",
+                fechaHasta: "2026-01-15",
+            },
+        });
+    });
+
+    it("envía la búsqueda numérica como documento exacto", async () => {
+        client.get.mockResolvedValue({ data: [] });
+
+        await prestamosService.obtenerTodos({
+            busqueda: "123456789",
+            estado: "",
+            fechaDesde: "",
+            fechaHasta: "",
+        });
+
+        expect(client.get).toHaveBeenCalledWith("/prestamos", {
+            params: { documento: "123456789" },
+        });
+    });
+
+    it("filtra por el id único del empleado seleccionado", async () => {
+        client.get.mockResolvedValue({ data: [] });
+
+        await prestamosService.obtenerTodos({
+            busqueda: "",
+            empleadoId: 7,
+            estado: "",
+            fechaDesde: "",
+            fechaHasta: "",
+        });
+
+        expect(client.get).toHaveBeenCalledWith("/prestamos", {
+            params: { empleadoId: 7 },
+        });
+    });
+
+    it("normaliza un rango de fechas cuando la fecha final es anterior a la inicial", () => {
+        expect(
+            normalizarRangoFechas({
+                fechaDesde: "2026-02-10",
+                fechaHasta: "2026-02-01",
+            }),
+        ).toEqual({
+            fechaDesde: "2026-02-01",
+            fechaHasta: "2026-02-10",
+        });
+    });
+
+    it("renderiza el tipo y número de documento juntos en la tabla", () => {
+        render(
+            createElement(PrestamosTable, {
+                prestamos: [
+                    {
+                        id: 1,
+                        employee: {
+                            id: 7,
+                            firstName: "Ana",
+                            lastName: "Ruiz",
+                            documentType: "CC",
+                            document: "1234567890",
+                        },
+                        totalAmount: 3000000,
+                        installmentAmount: 250000,
+                        totalInstallments: 12,
+                        pendingInstallments: 10,
+                        outstandingBalance: 1250000,
+                        grantedAt: "2026-01-10T00:00:00.000Z",
+                        periodicity: "MENSUAL",
+                        status: "ACTIVO",
+                        createdAt: "2026-01-10T00:00:00.000Z",
+                        updatedAt: "2026-02-10T00:00:00.000Z",
+                    },
+                ],
+                cargando: false,
+                error: null,
+                onReintentar: () => undefined,
+                onVerDetalle: () => undefined,
+            }),
+        );
+
+        const tabla = screen.getByRole("table", {
+            name: "Listado de préstamos otorgados",
+        });
+        const encabezados = within(tabla).getAllByRole("columnheader");
+        expect(encabezados[0]).toHaveTextContent("ID");
+        expect(encabezados[1]).toHaveTextContent("Documento");
+        expect(encabezados[2]).toHaveTextContent("Empleado");
+        expect(
+            within(tabla).getByText("1", { selector: "tbody td" }),
+        ).toBeInTheDocument();
+        expect(screen.getByText("CC 1234567890")).toBeInTheDocument();
+    });
+});

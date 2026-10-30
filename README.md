@@ -27,13 +27,16 @@ la aplicación ni pierde el estado de sesión.
 ```
 src/
   modules/catalog.ts    Catálogo de módulos: menú y rutas salen de aquí
-  routes.tsx            Rutas derivadas del catálogo
+  routes.tsx            Rutas derivadas del catálogo + rutas de auth
+  auth/                 Autenticación con Supabase (login, guards, sesión)
+  supabase/client.ts    Cliente de Supabase (createClient)
+  toast/                Notificaciones flotantes (useToast / ToastProvider)
   components/
     AppLayout.tsx       Barra superior, menú lateral y área de contenido
     NavMenu.tsx         Menú principal (aria-current en el módulo activo)
     RouteAnnouncer.tsx  Anuncio y foco al cambiar de ruta
   session/              Estado de sesión persistido en sessionStorage
-  pages/                Marco de cada módulo
+  pages/                Marco de cada módulo + LoginPage
 ```
 
 ### Agregar un módulo
@@ -41,13 +44,23 @@ src/
 Basta con añadir una entrada a `MODULES` en `src/modules/catalog.ts`. El menú y
 el enrutador se derivan del mismo arreglo, así que no pueden desincronizarse.
 
-### Estado de sesión
+### Autenticación y sesión
 
-`SessionProvider` conserva el usuario, el momento de inicio y el último módulo
-visitado. El estado vive en contexto de React durante la navegación y se
-persiste en `sessionStorage`, de modo que sobrevive a una recarga. La
-autenticación real llega con el Feature #19 ("Métodos de autenticación"); por
-ahora se abre una sesión de administrador de demostración al arrancar.
+La autenticación se hace directo contra Supabase (`@supabase/supabase-js`), sin
+backend intermedio. El flujo es:
+
+1. `LoginPage` llama a `supabase.auth.signInWithPassword`.
+2. Al autenticarse, se mapea el `User` de Supabase a la sesión interna (`nombre`
+   desde `user_metadata`, `rol` desde `app_metadata.role`).
+3. `AuthSync` rehidrata la sesión al arrancar (`getSession`) y se suscribe a
+   `onAuthStateChange` para sincronizar login, logout y refresco de token.
+4. `RequireAuth` redirige a `/login` cuando no hay sesión; el logout llama a
+   `supabase.auth.signOut()`.
+
+Las rutas protegidas son las del shell (`AppLayout`); `/login` es pública.
+
+Los errores de login (credenciales inválidas, rate limit, campos vacíos) se
+muestran como notificación flotante vía `useToast()`.
 
 ### Accesibilidad
 
@@ -71,9 +84,18 @@ src/__tests__/
   modulo-activo → indicación del módulo actual
   sesion      → persistencia, rehidratación y cierre de sesión
   accesibilidad → foco, anuncios, landmarks y teclado
+  autenticacion → login (éxito + errores), toast y guard
 ```
 
 ## Notas de configuración
+
+- La conexión a Supabase se configura con `VITE_SUPABASE_URL` y
+  `VITE_SUPABASE_ANON_KEY` en un archivo `.env` en la raíz. Ver
+  `src/supabase/client.ts`.
+- La URL del backend core (sisgal-core-service) se configura con `VITE_API_URL`.
+- La URL del servicio biométrico (sisgal-biometric-service) se configura con
+  `VITE_API_INTEGRACION_URL`.
+  Ver `src/lib/axios.ts`.
 
 Para endurecer el linter con reglas que requieren tipos, ver la
 [guía de configuración type-aware de typescript-eslint](https://typescript-eslint.io/getting-started/typed-linting/).
