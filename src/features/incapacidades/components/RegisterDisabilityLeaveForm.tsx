@@ -4,16 +4,21 @@ import { Button } from "@/components/ui/button";
 import { FloatingInput } from "@/components/molecules/FloatingInput";
 import { FloatingSelect } from "@/components/molecules/FloatingSelect";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
+import { dateToInputValue } from "@/lib/formatters";
 
 import { useRegisterDisabilityLeave } from "../hooks/useRegisterDisabilityLeave";
+import { useUpdateDisabilityLeave } from "../hooks/useUpdateDisabilityLeave";
 import { useActiveEmployees } from "../hooks/useActiveEmployees";
 import {
     DISABILITY_TYPES,
+    type DisabilityLeave,
     type DisabilityType,
     type RegisterDisabilityLeavePayload,
 } from "../interfaces/types";
 
 type RegisterDisabilityLeaveFormProps = {
+    /** Si se recibe, el formulario edita ese registro en vez de crear uno nuevo. */
+    disabilityLeave?: DisabilityLeave;
     onSuccess: () => void;
 };
 
@@ -36,6 +41,18 @@ const EMPTY_DISABILITY_LEAVE_FORM: DisabilityLeaveFormValues = {
     startDate: "",
     endDate: "",
 };
+
+function toFormValues(
+    disabilityLeave: DisabilityLeave,
+): DisabilityLeaveFormValues {
+    return {
+        employeeId: String(disabilityLeave.employeeId),
+        type: disabilityLeave.type,
+        otherTypeDescription: disabilityLeave.otherTypeDescription ?? "",
+        startDate: dateToInputValue(disabilityLeave.startDate),
+        endDate: dateToInputValue(disabilityLeave.endDate),
+    };
+}
 
 /** Cantidad de días del período, contando ambos extremos. Null si las fechas no son válidas. */
 function calculateDays(startDate: string, endDate: string): number | null {
@@ -98,20 +115,25 @@ function validateDisabilityLeaveForm(
 }
 
 export function RegisterDisabilityLeaveForm({
+    disabilityLeave,
     onSuccess,
 }: RegisterDisabilityLeaveFormProps) {
     const [values, setValues] = useState<DisabilityLeaveFormValues>(
-        EMPTY_DISABILITY_LEAVE_FORM,
+        disabilityLeave
+            ? toFormValues(disabilityLeave)
+            : EMPTY_DISABILITY_LEAVE_FORM,
     );
     const [errors, setErrors] = useState<DisabilityLeaveFormErrors>({});
 
-    const { registerDisabilityLeave, submitting } = useRegisterDisabilityLeave(
-        () => {
+    const { registerDisabilityLeave, submitting: registering } =
+        useRegisterDisabilityLeave(() => {
             setValues(EMPTY_DISABILITY_LEAVE_FORM);
             setErrors({});
             onSuccess();
-        },
-    );
+        });
+    const { updateDisabilityLeave, submitting: updating } =
+        useUpdateDisabilityLeave(onSuccess);
+    const submitting = registering || updating;
 
     const { employees, loading: employeesLoading } = useActiveEmployees();
     const employeeOptions = employees.filter(
@@ -145,14 +167,23 @@ export function RegisterDisabilityLeaveForm({
             return;
         }
 
-        const payload: RegisterDisabilityLeavePayload = {
-            employeeId: Number(values.employeeId),
+        const period = {
             type: values.type as DisabilityType,
             startDate: values.startDate,
             endDate: values.endDate,
             ...(isOther
                 ? { otherTypeDescription: values.otherTypeDescription.trim() }
                 : {}),
+        };
+
+        if (disabilityLeave) {
+            await updateDisabilityLeave(disabilityLeave.id, period);
+            return;
+        }
+
+        const payload: RegisterDisabilityLeavePayload = {
+            employeeId: Number(values.employeeId),
+            ...period,
         };
 
         await registerDisabilityLeave(payload);
@@ -175,27 +206,36 @@ export function RegisterDisabilityLeaveForm({
                             *
                         </span>
                     </label>
-                    <EmployeeCombobox
-                        id="incapacidad-empleado"
-                        employees={employeeOptions}
-                        value={values.employeeId}
-                        onChange={(value) => handleChange("employeeId", value)}
-                        onBlur={() => handleBlur("employeeId")}
-                        loading={employeesLoading}
-                        disabled={submitting || employeesLoading}
-                        placeholder={
-                            employeesLoading
-                                ? "Cargando empleados…"
-                                : "Buscar nombre o documento"
-                        }
-                        allLabel="Selecciona un empleado"
-                        aria-invalid={Boolean(errors.employeeId)}
-                        aria-describedby={
-                            errors.employeeId
-                                ? "incapacidad-empleado-error"
-                                : undefined
-                        }
-                    />
+                    {disabilityLeave ? (
+                        <input
+                            id="incapacidad-empleado"
+                            readOnly
+                            value={disabilityLeave.employeeName}
+                            className="h-11 rounded-xl border border-gray-300 bg-secondary px-3 text-base text-text"
+                        />
+                    ) : (
+                        <EmployeeCombobox
+                            id="incapacidad-empleado"
+                            employees={employeeOptions}
+                            value={values.employeeId}
+                            onChange={(value) => handleChange("employeeId", value)}
+                            onBlur={() => handleBlur("employeeId")}
+                            loading={employeesLoading}
+                            disabled={submitting || employeesLoading}
+                            placeholder={
+                                employeesLoading
+                                    ? "Cargando empleados…"
+                                    : "Buscar nombre o documento"
+                            }
+                            allLabel="Selecciona un empleado"
+                            aria-invalid={Boolean(errors.employeeId)}
+                            aria-describedby={
+                                errors.employeeId
+                                    ? "incapacidad-empleado-error"
+                                    : undefined
+                            }
+                        />
+                    )}
                     {errors.employeeId && (
                         <p
                             id="incapacidad-empleado-error"
@@ -279,7 +319,11 @@ export function RegisterDisabilityLeaveForm({
                     disabled={submitting}
                     className="bg-primary hover:bg-primary-light"
                 >
-                    {submitting ? "Registrando…" : "Registrar incapacidad"}
+                    {submitting && (disabilityLeave ? "Guardando…" : "Registrando…")}
+                    {!submitting &&
+                        (disabilityLeave
+                            ? "Guardar cambios"
+                            : "Registrar incapacidad")}
                 </Button>
             </div>
         </form>

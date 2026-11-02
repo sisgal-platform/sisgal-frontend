@@ -1,3 +1,5 @@
+import { Pencil, Trash2 } from "lucide-react"
+
 import type { DisabilityLeave } from "../interfaces/types"
 import { formatDateCO } from "@/lib/formatters"
 
@@ -17,6 +19,8 @@ type DisabilityLeaveTableProps = Readonly<{
     loading: boolean
     error: string | null
     onRetry: () => void
+    onEdit: (disabilityLeave: DisabilityLeave) => void
+    onDelete: (disabilityLeave: DisabilityLeave) => void
 }>
 
 export function DisabilityLeaveTable({
@@ -24,6 +28,8 @@ export function DisabilityLeaveTable({
     loading,
     error,
     onRetry,
+    onEdit,
+    onDelete,
 }: DisabilityLeaveTableProps) {
     if (error) {
         return (
@@ -64,7 +70,7 @@ export function DisabilityLeaveTable({
             className="overflow-x-auto rounded-2xl border border-gray-200 bg-surface shadow-sm"
             aria-busy={loading}
         >
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
                 <caption className="sr-only">
                     Listado de incapacidades y licencias registradas
                 </caption>
@@ -78,6 +84,7 @@ export function DisabilityLeaveTable({
                         <th scope="col" className="px-4 py-3">Fecha fin</th>
                         <th scope="col" className="px-4 py-3 text-right">Días</th>
                         <th scope="col" className="px-4 py-3">Tipo</th>
+                        <th scope="col" className="px-4 py-3 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -116,6 +123,26 @@ export function DisabilityLeaveTable({
                                     {disabilityLeave.type === "Otros" && disabilityLeave.otherTypeDescription
                                         ? disabilityLeave.otherTypeDescription
                                         : disabilityLeave.type}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3 text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => onEdit(disabilityLeave)}
+                                        aria-label={`Editar la incapacidad de ${disabilityLeave.employeeName}`}
+                                        title="Editar"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-primary hover:bg-secondary"
+                                    >
+                                        <Pencil size={18} aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDelete(disabilityLeave)}
+                                        aria-label={`Eliminar la incapacidad de ${disabilityLeave.employeeName}`}
+                                        title="Eliminar"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-error hover:bg-error-light"
+                                    >
+                                        <Trash2 size={18} aria-hidden="true" />
+                                    </button>
                                 </td>
                             </tr>
                         )

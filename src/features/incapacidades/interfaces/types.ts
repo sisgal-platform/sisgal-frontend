@@ -67,3 +67,9 @@ export type RegisterDisabilityLeavePayload = {
     startDate: string;
     endDate: string;
 };
+
+/** Espejo exacto de UpdateDisabilityLeaveDto (backend). */
+export type UpdateDisabilityLeavePayload = Omit<
+    RegisterDisabilityLeavePayload,
+    "employeeId"
+>;
