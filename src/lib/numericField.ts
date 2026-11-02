@@ -18,12 +18,23 @@ export type NumericFieldOptions = {
 
 const DECIMAL_SEPARATOR = ",";
 const THOUSANDS_SEPARATOR = ".";
+const THOUSANDS_WITH_COMMA = /^\d{1,3}(?:[.,]\d{3})*,\d{3}$/;
 
 /** Convierte lo que escribe el usuario ("1.250,5") al valor del formulario ("1250.5"). */
 export function parseNumericText(
     text: string,
     { maxDecimals = 2, dotIsDecimal = false }: NumericFieldOptions = {},
 ): string {
+    // En pesos, "600,000" usa la coma como separador de miles: leerla como
+    // decimal y recortar los dígitos cambiaría el valor.
+    if (
+        !dotIsDecimal &&
+        maxDecimals < 3 &&
+        THOUSANDS_WITH_COMMA.test(text.replace(/[^\d.,]/g, ""))
+    ) {
+        return text.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    }
+
     const normalized = dotIsDecimal ? text.replaceAll(".", ",") : text;
     const [integer, ...decimalParts] = normalized
         .replace(/[^\d,]/g, "")

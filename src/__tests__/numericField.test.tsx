@@ -38,6 +38,24 @@ describe("parseNumericText", () => {
         expect(parseNumericText(texto)).toBe(valor);
     });
 
+    it.each([
+        ["600,000", "600000"],
+        ["1,250,000", "1250000"],
+        ["1.250,000", "1250000"],
+        ["$ 600,000", "600000"],
+    ])("lee la coma de %s como separador de miles", (texto, valor) => {
+        expect(parseNumericText(texto)).toBe(valor);
+    });
+
+    it("mantiene la coma como decimal con uno o dos dígitos", () => {
+        expect(parseNumericText("600,5")).toBe("600.5");
+        expect(parseNumericText("600,50")).toBe("600.50");
+    });
+
+    it("no lee la coma como miles en porcentajes", () => {
+        expect(parseNumericText("4,255", { dotIsDecimal: true })).toBe("4.25");
+    });
+
     it("ignora el punto como decimal en valores en pesos", () => {
         expect(parseNumericText("1.25")).toBe("125");
     });
@@ -66,6 +84,23 @@ describe("formatNumericValue", () => {
 });
 
 describe("useNumericField", () => {
+    it.each([
+        ["600,000", "600.000", "600000"],
+        ["1,250,000", "1.250.000", "1250000"],
+    ])(
+        "conserva el valor al escribir %s con comas de miles",
+        async (teclas, texto, valor) => {
+            const user = userEvent.setup();
+            render(<Campo />);
+            const input = screen.getByLabelText<HTMLInputElement>("Campo");
+
+            await user.type(input, teclas);
+
+            expect(input.value).toBe(texto);
+            expect(screen.getByRole("status").textContent).toBe(valor);
+        },
+    );
+
     it("agrega los separadores mientras se escribe y conserva el valor sin formato", async () => {
         const user = userEvent.setup();
         render(<Campo />);
