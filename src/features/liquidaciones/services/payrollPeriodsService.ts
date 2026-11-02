@@ -92,6 +92,45 @@ export const payrollPeriodsService = {
         }
     },
 
+    // Cómo quedaría una liquidación guardada al recalcularla; no guarda nada
+    async previewUpdate(
+        id: number,
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollPreliquidation> {
+        try {
+            const { data } = await apiClient.post<PayrollPreliquidation>(
+                `/liquidaciones/${id}/preliquidacion`,
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async update(
+        id: number,
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollPeriodDetail> {
+        try {
+            const { data } = await apiClient.put<PayrollPeriodDetail>(
+                `/liquidaciones/${id}`,
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async remove(id: number): Promise<void> {
+        try {
+            await apiClient.delete(`/liquidaciones/${id}`);
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
     // Comprobante de pago en PDF; responseType "blob" porque la respuesta es binaria, no JSON
     async getPdf(id: number): Promise<Blob> {
         try {

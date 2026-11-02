@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
-import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
+import {
+    dateToInputValue,
+    formatCurrencyCOP,
+    formatDateCO,
+} from "@/lib/formatters";
 
 import { Button } from "@/components/ui/button";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
@@ -18,25 +22,36 @@ import {
 import { payrollPeriodsService } from "../services/payrollPeriodsService";
 import type {
     PayrollLine,
+    PayrollPeriod,
     PayrollPreliquidation,
     PayrollPreliquidationRequest,
 } from "../interfaces/types";
 import { ConceptName, LoanObservations } from "./PayrollConceptDetails";
 
 type PayrollPreliquidationDialogProps = Readonly<{
+    /** Si se recibe, recalcula esa liquidación guardada en vez de generar una nueva. */
+    payrollPeriod?: PayrollPeriod;
     onOpenChange: (open: boolean) => void;
     onConfirmed: (payrollPeriodId: number) => void;
 }>;
 
 export function PayrollPreliquidationDialog({
+    payrollPeriod,
     onOpenChange,
     onConfirmed,
 }: PayrollPreliquidationDialogProps) {
-    const [periodStart, setPeriodStart] = useState("");
-    const [periodEnd, setPeriodEnd] = useState("");
-    const [employeeId, setEmployeeId] = useState("");
+    const editing = Boolean(payrollPeriod);
+    const [periodStart, setPeriodStart] = useState(
+        dateToInputValue(payrollPeriod?.periodStart),
+    );
+    const [periodEnd, setPeriodEnd] = useState(
+        dateToInputValue(payrollPeriod?.periodEnd),
+    );
+    const [employeeId, setEmployeeId] = useState(
+        payrollPeriod ? String(payrollPeriod.employeeId) : "",
+    );
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loadingEmployees, setLoadingEmployees] = useState(true);
+    const [loadingEmployees, setLoadingEmployees] = useState(!editing);
     const [employeesError, setEmployeesError] = useState<string | null>(null);
     const [employeeLoadVersion, setEmployeeLoadVersion] = useState(0);
     const [preview, setPreview] = useState<PayrollPreliquidation | null>(null);
@@ -45,6 +60,9 @@ export function PayrollPreliquidationDialog({
     const [confirming, setConfirming] = useState(false);
 
     useEffect(() => {
+        // Al editar, el empleado de la liquidación no se puede cambiar.
+        if (editing) return;
+
         let active = true;
 
         async function loadEmployees() {
@@ -77,7 +95,7 @@ export function PayrollPreliquidationDialog({
         return () => {
             active = false;
         };
-    }, [employeeLoadVersion]);
+    }, [editing, employeeLoadVersion]);
 
     function updatePeriod(field: "start" | "end", value: string) {
         if (field === "start") setPeriodStart(value);
@@ -93,14 +111,14 @@ export function PayrollPreliquidationDialog({
     }
 
     function buildRequest(): PayrollPreliquidationRequest | null {
-        if (!employeeId) {
+        if (!editing && !employeeId) {
             setError("Selecciona un empleado activo.");
             return null;
         }
         const selectedEmployee = employees.find(
             (employee) => String(employee.id) === employeeId,
         );
-        if (selectedEmployee?.status !== "ACTIVO") {
+        if (!editing && selectedEmployee?.status !== "ACTIVO") {
             setError("Selecciona un empleado activo disponible.");
             return null;
         }
@@ -125,10 +143,15 @@ export function PayrollPreliquidationDialog({
         setError(null);
         try {
             setPreview(
-                await payrollPeriodsService.generatePreliquidation(
-                    Number(employeeId),
-                    request,
-                ),
+                payrollPeriod
+                    ? await payrollPeriodsService.previewUpdate(
+                          payrollPeriod.id,
+                          request,
+                      )
+                    : await payrollPeriodsService.generatePreliquidation(
+                          Number(employeeId),
+                          request,
+                      ),
             );
         } catch (cause) {
             setPreview(null);
@@ -151,12 +174,13 @@ export function PayrollPreliquidationDialog({
         setConfirming(true);
         setError(null);
         try {
-            const payrollPeriod =
-                await payrollPeriodsService.confirmPreliquidation({
-                    ...request,
-                    employeeId: preview.employeeId,
-                });
-            onConfirmed(payrollPeriod.id);
+            const saved = payrollPeriod
+                ? await payrollPeriodsService.update(payrollPeriod.id, request)
+                : await payrollPeriodsService.confirmPreliquidation({
+                      ...request,
+                      employeeId: preview.employeeId,
+                  });
+            onConfirmed(saved.id);
         } catch (cause) {
             setError(
                 cause instanceof Error
@@ -170,21 +194,31 @@ export function PayrollPreliquidationDialog({
 
     let generateButtonLabel = "Generar preliquidación";
     if (preview) generateButtonLabel = "Recalcular";
+    if (editing) generateButtonLabel = "Recalcular";
     if (loading) generateButtonLabel = "Calculando…";
+
+    let confirmButtonLabel = "Confirmar liquidación";
+    if (editing) confirmButtonLabel = "Guardar cambios";
+    if (confirming) confirmButtonLabel = editing ? "Guardando…" : "Generando…";
 
     return (
         <Dialog open onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
                 <DialogHeader>
                     <div className="flex flex-wrap items-center gap-3">
-                        <DialogTitle>Preliquidación de nómina</DialogTitle>
+                        <DialogTitle>
+                            {editing
+                                ? "Editar liquidación"
+                                : "Preliquidación de nómina"}
+                        </DialogTitle>
                         <span className="inline-flex rounded-full bg-warning-light px-2.5 py-1 text-xs font-semibold text-warning-dark">
                             Preliquidación
                         </span>
                     </div>
                     <DialogDescription>
-                        Revisa los cálculos antes de guardar la liquidación
-                        definitiva.
+                        {editing
+                            ? "Se recalcula con el período indicado y los datos actuales de asistencia, novedades y parámetros. Los préstamos recuperan lo descontado antes del nuevo cálculo."
+                            : "Revisa los cálculos antes de guardar la liquidación definitiva."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -195,22 +229,30 @@ export function PayrollPreliquidationDialog({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <label className="flex flex-col gap-1 text-sm text-text-muted">
                             <span>Empleado</span>
-                            <EmployeeCombobox
-                                id="preliquidacion-empleado"
-                                employees={employees}
-                                value={employeeId}
-                                onChange={updateEmployee}
-                                loading={loadingEmployees}
-                                disabled={
-                                    loadingEmployees ||
-                                    loading ||
-                                    confirming ||
-                                    employees.length === 0 ||
-                                    Boolean(employeesError)
-                                }
-                                placeholder="Buscar nombre o documento"
-                                allLabel="Selecciona un empleado"
-                            />
+                            {payrollPeriod ? (
+                                <input
+                                    readOnly
+                                    value={payrollPeriod.employeeName}
+                                    className="h-10 rounded-xl border border-gray-300 bg-secondary px-3 text-sm text-text"
+                                />
+                            ) : (
+                                <EmployeeCombobox
+                                    id="preliquidacion-empleado"
+                                    employees={employees}
+                                    value={employeeId}
+                                    onChange={updateEmployee}
+                                    loading={loadingEmployees}
+                                    disabled={
+                                        loadingEmployees ||
+                                        loading ||
+                                        confirming ||
+                                        employees.length === 0 ||
+                                        Boolean(employeesError)
+                                    }
+                                    placeholder="Buscar nombre o documento"
+                                    allLabel="Selecciona un empleado"
+                                />
+                            )}
                         </label>
                         <label className="flex flex-col gap-1 text-sm text-text-muted">
                             <span>Período desde</span>
@@ -254,7 +296,8 @@ export function PayrollPreliquidationDialog({
                             </button>
                         </div>
                     )}
-                    {!loadingEmployees &&
+                    {!editing &&
+                        !loadingEmployees &&
                         !employeesError &&
                         employees.length === 0 && (
                             <p className="text-sm text-text-muted">
@@ -269,7 +312,7 @@ export function PayrollPreliquidationDialog({
                             loading ||
                             confirming ||
                             loadingEmployees ||
-                            employees.length === 0 ||
+                            (!editing && employees.length === 0) ||
                             Boolean(employeesError)
                         }
                         className="flex items-center gap-2"
@@ -313,7 +356,7 @@ export function PayrollPreliquidationDialog({
                                 className="animate-spin"
                             />
                         )}
-                        {confirming ? "Generando…" : "Confirmar liquidación"}
+                        {confirmButtonLabel}
                     </Button>
                 </DialogFooter>
             </DialogContent>

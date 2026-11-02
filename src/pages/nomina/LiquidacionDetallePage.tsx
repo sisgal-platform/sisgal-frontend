@@ -8,10 +8,6 @@ export function LiquidacionDetallePage() {
     const navigate = useNavigate();
     const { payrollPeriodId } = useParams();
     const id = Number(payrollPeriodId);
-    const tituloDetalle =
-        Number.isSafeInteger(id) && id > 0
-            ? `Detalle de la liquidación #${id}`
-            : "Detalle de la liquidación";
 
     return (
         <section className="space-y-6 p-4">
@@ -25,7 +21,7 @@ export function LiquidacionDetallePage() {
                     Volver a liquidaciones
                 </button>
                 <SectionHeader
-                    title={tituloDetalle}
+                    title="Detalle de la liquidación"
                     description="Información y conceptos del comprobante de pago."
                 />
             </div>

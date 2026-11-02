@@ -3,15 +3,19 @@ import { Plus, RotateCcw, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
-import { formatCurrencyCOP } from "@/lib/formatters";
+import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
+import { useToast } from "@/toast/hooks/useToast";
 
 import { PayrollPeriodTable } from "./components/PayrollPeriodTable";
 import { PayrollPreliquidationDialog } from "./components/PayrollPreliquidationDialog";
 import { useActiveEmployees } from "./hooks/useActiveEmployees";
 import { usePayrollPeriods } from "./hooks/usePayrollPeriods";
+import { payrollPeriodsService } from "./services/payrollPeriodsService";
 import type {
+    PayrollPeriod,
     PayrollPeriodFilterValues,
     PayrollPeriodQuery,
 } from "./interfaces/types";
@@ -43,6 +47,14 @@ export function LiquidacionesFeature() {
     );
     const [page, setPage] = useState(1);
     const [preliquidationOpen, setPreliquidationOpen] = useState(false);
+    const [editingPeriod, setEditingPeriod] = useState<PayrollPeriod | null>(
+        null,
+    );
+    const [deletingPeriod, setDeletingPeriod] = useState<PayrollPeriod | null>(
+        null,
+    );
+    const [deleting, setDeleting] = useState(false);
+    const { showToast } = useToast();
     const navigate = useNavigate();
 
     const payrollPeriodQuery = useMemo(
@@ -57,7 +69,9 @@ export function LiquidacionesFeature() {
         1,
         Math.ceil(payrollPeriods.length / PAGE_SIZE),
     );
-    const pageStart = (page - 1) * PAGE_SIZE;
+    // Al eliminar la última liquidación de una página se pasa a la anterior.
+    const currentPage = Math.min(page, totalPages);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
     const pageItems = payrollPeriods.slice(pageStart, pageStart + PAGE_SIZE);
 
     // Total de neto a pagar sobre el mismo listado filtrado que se muestra en la tabla
@@ -65,6 +79,27 @@ export function LiquidacionesFeature() {
         () => payrollPeriods.reduce((sum, item) => sum + item.netPay, 0),
         [payrollPeriods],
     );
+
+    async function deletePayrollPeriod() {
+        if (!deletingPeriod) return;
+
+        setDeleting(true);
+        try {
+            await payrollPeriodsService.remove(deletingPeriod.id);
+            showToast("Liquidación eliminada correctamente.", "success");
+            reload();
+        } catch (cause) {
+            showToast(
+                cause instanceof Error
+                    ? cause.message
+                    : "No fue posible eliminar la liquidación.",
+                "error",
+            );
+        } finally {
+            setDeleting(false);
+            setDeletingPeriod(null);
+        }
+    }
 
     function applyFilters(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -197,6 +232,8 @@ export function LiquidacionesFeature() {
                 onViewDetail={(payrollPeriod) =>
                     navigate(`/nomina/liquidaciones/${payrollPeriod.id}`)
                 }
+                onEdit={setEditingPeriod}
+                onDelete={setDeletingPeriod}
             />
 
             {payrollPeriods.length > 0 && (
@@ -211,27 +248,53 @@ export function LiquidacionesFeature() {
             {payrollPeriods.length > PAGE_SIZE && (
                 <div className="flex items-center justify-between text-sm text-text-muted">
                     <span>
-                        Página {page} de {totalPages}
+                        Página {currentPage} de {totalPages}
                     </span>
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            disabled={page <= 1}
-                            onClick={() => setPage((current) => current - 1)}
+                            disabled={currentPage <= 1}
+                            onClick={() => setPage(currentPage - 1)}
                             className="rounded-lg border border-gray-300 px-3 py-1 disabled:opacity-40"
                         >
                             Anterior
                         </button>
                         <button
                             type="button"
-                            disabled={page >= totalPages}
-                            onClick={() => setPage((current) => current + 1)}
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setPage(currentPage + 1)}
                             className="rounded-lg border border-gray-300 px-3 py-1 disabled:opacity-40"
                         >
                             Siguiente
                         </button>
                     </div>
                 </div>
+            )}
+
+            {editingPeriod && (
+                <PayrollPreliquidationDialog
+                    key={editingPeriod.id}
+                    payrollPeriod={editingPeriod}
+                    onOpenChange={(open) => {
+                        if (!open) setEditingPeriod(null);
+                    }}
+                    onConfirmed={(payrollPeriodId) =>
+                        navigate(`/nomina/liquidaciones/${payrollPeriodId}`, {
+                            flushSync: true,
+                        })
+                    }
+                />
+            )}
+
+            {deletingPeriod && (
+                <ConfirmDialog
+                    title="Eliminar liquidación"
+                    message={`Se eliminará la liquidación de ${deletingPeriod.employeeName} del ${formatDateCO(deletingPeriod.periodStart)} al ${formatDateCO(deletingPeriod.periodEnd)}. Si descontó cuotas de préstamos, cada préstamo recupera ese saldo. Esta acción no se puede deshacer.`}
+                    confirmLabel="Eliminar"
+                    busy={deleting}
+                    onConfirm={() => void deletePayrollPeriod()}
+                    onCancel={() => setDeletingPeriod(null)}
+                />
             )}
 
             {preliquidationOpen && (

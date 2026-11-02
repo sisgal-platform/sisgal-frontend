@@ -9,6 +9,8 @@ vi.mock("@/lib/axios", () => ({
     default: {
         get: vi.fn(),
         post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
     },
 }));
 
@@ -190,5 +192,23 @@ describe("payrollPeriodsService", () => {
                 "La liquidación no tiene conceptos ni totales para exportar.",
             );
         });
+    });
+
+    it("previsualiza, actualiza y elimina una liquidación guardada", async () => {
+        const request = { periodStart: "2026-09-01", periodEnd: "2026-09-15" };
+        client.post.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL });
+        client.put.mockResolvedValue({ data: PAYROLL_PERIOD_DETAIL });
+        client.delete.mockResolvedValue({ data: undefined });
+
+        await payrollPeriodsService.previewUpdate(1, request);
+        await payrollPeriodsService.update(1, request);
+        await payrollPeriodsService.remove(1);
+
+        expect(client.post).toHaveBeenCalledWith(
+            "/liquidaciones/1/preliquidacion",
+            request,
+        );
+        expect(client.put).toHaveBeenCalledWith("/liquidaciones/1", request);
+        expect(client.delete).toHaveBeenCalledWith("/liquidaciones/1");
     });
 });
