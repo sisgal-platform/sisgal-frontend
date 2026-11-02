@@ -232,4 +232,21 @@ describe("modal de creación de préstamos", () => {
             screen.getByRole("dialog", { name: "Crear préstamo" }),
         ).toBeInTheDocument();
     });
+
+    it("ofrece la periodicidad semanal y muestra el valor con separadores", async () => {
+        const { user } = renderModal();
+        const dialog = await abrirModal(user);
+
+        await user.selectOptions(
+            within(dialog).getByLabelText(/Periodicidad/),
+            "SEMANAL",
+        );
+        expect(
+            within(dialog).getByText("Se descuenta una cuota cada domingo."),
+        ).toBeInTheDocument();
+
+        const valor = within(dialog).getByLabelText(/Valor del préstamo/);
+        await user.type(valor, "1250000,5");
+        expect(valor).toHaveValue("1.250.000,5");
+    });
 });

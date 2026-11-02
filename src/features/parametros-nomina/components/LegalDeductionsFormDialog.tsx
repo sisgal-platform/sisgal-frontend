@@ -4,6 +4,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { fechaActual } from "@/features/asistencia/utils/fechas";
 import { ApiError } from "@/lib/apiError";
 import { formatDateCO } from "@/lib/formatters";
+import { useNumericField } from "@/lib/numericField";
 
 import { LEGAL_DEDUCTION_TYPES } from "../constants/legalDeductionTypes";
 import { getErrorMessage } from "../hooks/useWorkdayConfig";
@@ -326,21 +327,16 @@ export function LegalDeductionsFormDialog({
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {LEGAL_DEDUCTION_TYPES.map(({ type, label }) => (
-                        <FieldInput
+                        <PercentageField
                             key={type}
                             id={`descuento-${type}`}
                             label={`${label} (%)`}
-                            type="number"
-                            inputMode="decimal"
-                            min={0}
-                            max={MAX_PERCENTAGE}
-                            step={0.01}
                             value={percentages[type]}
                             error={errors.percentages[type]}
-                            onChange={(event) =>
+                            onValueChange={(value) =>
                                 setPercentages((current) => ({
                                     ...current,
-                                    [type]: event.target.value,
+                                    [type]: value,
                                 }))
                             }
                             onBlur={() => handlePercentageBlur(type)}
@@ -387,4 +383,23 @@ export function LegalDeductionsFormDialog({
             </form>
         </Modal>
     );
+}
+
+type PercentageFieldProps = {
+    id: string;
+    label: string;
+    value: string;
+    error?: string;
+    onValueChange: (value: string) => void;
+    onBlur: () => void;
+};
+
+function PercentageField({
+    value,
+    onValueChange,
+    ...props
+}: PercentageFieldProps) {
+    const field = useNumericField(value, onValueChange, { dotIsDecimal: true });
+
+    return <FieldInput {...props} {...field} />;
 }

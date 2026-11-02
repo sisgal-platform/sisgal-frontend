@@ -2,6 +2,7 @@ import apiClient from "@/lib/axios";
 import { toApiError } from "@/lib/apiError";
 
 import type {
+    ActualizarPrestamoPayload,
     FiltrosPrestamos,
     CrearPrestamoPayload,
     Prestamo,
@@ -74,6 +75,29 @@ export const prestamosService = {
                 payload,
             );
             return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async actualizar(
+        id: number,
+        payload: ActualizarPrestamoPayload,
+    ): Promise<Prestamo> {
+        try {
+            const { data } = await apiClient.patch<Prestamo>(
+                `/prestamos/${id}`,
+                payload,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async eliminar(id: number): Promise<void> {
+        try {
+            await apiClient.delete(`/prestamos/${id}`);
         } catch (error) {
             throw toApiError(error);
         }

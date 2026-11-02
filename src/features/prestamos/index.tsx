@@ -1,12 +1,21 @@
 import { useState, type SubmitEvent } from "react";
 import { RotateCcw, Search, TrendingDown, WalletCards } from "lucide-react";
 
-import { formatCurrencyCOP, formatNumberCO } from "@/lib/formatters";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import {
+    formatCurrencyCOP,
+    formatDateCO,
+    formatNumberCO,
+} from "@/lib/formatters";
+import { useToast } from "@/toast/hooks/useToast";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
 import { useEmployees } from "@/features/empleados/hooks/useEmployees";
 
 import { PrestamoIndicadorCard } from "./components/PrestamoIndicadorCard";
-import { CreatePrestamoModal } from "./components/CreatePrestamoModal";
+import {
+    CreatePrestamoModal,
+    PrestamoFormDialog,
+} from "./components/CreatePrestamoModal";
 import { PrestamoDetailDialog } from "./components/PrestamoDetailDialog";
 import { PrestamosTable } from "./components/PrestamosTable";
 import { ESTADOS_PRESTAMO } from "./estadosPrestamo";
@@ -17,7 +26,10 @@ import type {
     Prestamo,
     PrestamosIndicadores,
 } from "./interfaces/types";
-import { normalizarRangoFechas } from "./services/prestamosService";
+import {
+    normalizarRangoFechas,
+    prestamosService,
+} from "./services/prestamosService";
 import { SectionHeader } from "@/components/atoms";
 
 const filtrosVacios: FiltrosPrestamos = {
@@ -51,6 +63,13 @@ export function PrestamosFeature() {
     const [prestamoDetalle, setPrestamoDetalle] = useState<Prestamo | null>(
         null,
     );
+    const [prestamoEdicion, setPrestamoEdicion] = useState<Prestamo | null>(
+        null,
+    );
+    const [prestamoEliminacion, setPrestamoEliminacion] =
+        useState<Prestamo | null>(null);
+    const [eliminando, setEliminando] = useState(false);
+    const { showToast } = useToast();
     const {
         indicadores: datos,
         cargando,
@@ -64,6 +83,32 @@ export function PrestamosFeature() {
         error: empleadosError,
         recargar: recargarEmpleados,
     } = useEmployees({});
+
+    function recargarPrestamos() {
+        listado.recargar();
+        recargar();
+    }
+
+    async function eliminarPrestamo() {
+        if (!prestamoEliminacion) return;
+
+        setEliminando(true);
+        try {
+            await prestamosService.eliminar(prestamoEliminacion.id);
+            showToast("Préstamo eliminado correctamente.", "success");
+            recargarPrestamos();
+        } catch (causa) {
+            showToast(
+                causa instanceof Error
+                    ? causa.message
+                    : "No fue posible eliminar el préstamo.",
+                "error",
+            );
+        } finally {
+            setEliminando(false);
+            setPrestamoEliminacion(null);
+        }
+    }
 
     function aplicarFiltros(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -164,12 +209,7 @@ export function PrestamosFeature() {
                     >
                         Listado de préstamos
                     </h2>
-                    <CreatePrestamoModal
-                        onSuccess={() => {
-                            listado.recargar();
-                            recargar();
-                        }}
-                    />
+                    <CreatePrestamoModal onSuccess={recargarPrestamos} />
                 </div>
 
                 <form
@@ -315,6 +355,8 @@ export function PrestamosFeature() {
                     error={listado.error}
                     onReintentar={listado.recargar}
                     onVerDetalle={setPrestamoDetalle}
+                    onEditar={setPrestamoEdicion}
+                    onEliminar={setPrestamoEliminacion}
                 />
             </section>
 
@@ -325,6 +367,29 @@ export function PrestamosFeature() {
                     onOpenChange={(open) => {
                         if (!open) setPrestamoDetalle(null);
                     }}
+                />
+            )}
+
+            {prestamoEdicion && (
+                <PrestamoFormDialog
+                    key={prestamoEdicion.id}
+                    prestamo={prestamoEdicion}
+                    onClose={() => setPrestamoEdicion(null)}
+                    onSuccess={() => {
+                        setPrestamoEdicion(null);
+                        recargarPrestamos();
+                    }}
+                />
+            )}
+
+            {prestamoEliminacion && (
+                <ConfirmDialog
+                    title="Eliminar préstamo"
+                    message={`Se eliminará el préstamo de ${prestamoEliminacion.employee.firstName} ${prestamoEliminacion.employee.lastName} por ${formatCurrencyCOP(prestamoEliminacion.totalAmount)}, otorgado el ${formatDateCO(prestamoEliminacion.grantedAt)}. Esta acción no se puede deshacer.`}
+                    confirmLabel="Eliminar"
+                    busy={eliminando}
+                    onConfirm={() => void eliminarPrestamo()}
+                    onCancel={() => setPrestamoEliminacion(null)}
                 />
             )}
         </section>

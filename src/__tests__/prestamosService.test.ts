@@ -10,7 +10,7 @@ import {
 } from "../features/prestamos/services/prestamosService";
 
 vi.mock("../lib/axios", () => ({
-    default: { get: vi.fn(), post: vi.fn() },
+    default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 
 const client = vi.mocked(apiClient);
@@ -147,6 +147,7 @@ describe("Servicio de préstamos", () => {
                         grantedAt: "2026-01-10T00:00:00.000Z",
                         periodicity: "MENSUAL",
                         status: "ACTIVO",
+                        hasDiscounts: false,
                         createdAt: "2026-01-10T00:00:00.000Z",
                         updatedAt: "2026-02-10T00:00:00.000Z",
                     },
@@ -155,6 +156,8 @@ describe("Servicio de préstamos", () => {
                 error: null,
                 onReintentar: () => undefined,
                 onVerDetalle: () => undefined,
+                onEditar: () => undefined,
+                onEliminar: () => undefined,
             }),
         );
 
@@ -162,12 +165,23 @@ describe("Servicio de préstamos", () => {
             name: "Listado de préstamos otorgados",
         });
         const encabezados = within(tabla).getAllByRole("columnheader");
-        expect(encabezados[0]).toHaveTextContent("ID");
-        expect(encabezados[1]).toHaveTextContent("Documento");
-        expect(encabezados[2]).toHaveTextContent("Empleado");
-        expect(
-            within(tabla).getByText("1", { selector: "tbody td" }),
-        ).toBeInTheDocument();
+        expect(encabezados[0]).toHaveTextContent("Documento");
+        expect(encabezados[1]).toHaveTextContent("Empleado");
         expect(screen.getByText("CC 1234567890")).toBeInTheDocument();
+    });
+
+    it("actualiza y elimina un préstamo", async () => {
+        client.patch.mockResolvedValue({ data: { id: 1 } });
+        client.delete.mockResolvedValue({ data: undefined });
+
+        await expect(
+            prestamosService.actualizar(1, { periodicity: "SEMANAL" }),
+        ).resolves.toEqual({ id: 1 });
+        await prestamosService.eliminar(1);
+
+        expect(client.patch).toHaveBeenCalledWith("/prestamos/1", {
+            periodicity: "SEMANAL",
+        });
+        expect(client.delete).toHaveBeenCalledWith("/prestamos/1");
     });
 });

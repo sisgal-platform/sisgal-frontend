@@ -18,6 +18,11 @@ export const PERIODICIDADES_PRESTAMO: ConfiguracionPeriodicidadPrestamo[] = [
         descripcion:
             "Se descuenta una cuota el día 15 y otra el último día de cada mes.",
     },
+    {
+        value: "SEMANAL",
+        label: "Semanal",
+        descripcion: "Se descuenta una cuota cada domingo.",
+    },
 ];
 
 export function obtenerEtiquetaPeriodicidadPrestamo(periodicidad: string) {

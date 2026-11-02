@@ -5,9 +5,11 @@ import { Modal } from "@/components/molecules/Modal";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
 import { employeesService } from "@/features/empleados/services/employeesService";
 import type { Employee } from "@/features/empleados/interfaces/types";
+import { dateToInputValue } from "@/lib/formatters";
+import { useNumericField } from "@/lib/numericField";
 import { useToast } from "@/toast/hooks/useToast";
 
-import type { PeriodicidadPrestamo } from "../interfaces/types";
+import type { PeriodicidadPrestamo, Prestamo } from "../interfaces/types";
 import { PERIODICIDADES_PRESTAMO } from "../periodicidadesPrestamo";
 import { prestamosService } from "../services/prestamosService";
 
@@ -36,7 +38,7 @@ export function CreatePrestamoModal({ onSuccess }: CreatePrestamoModalProps) {
                 Crear préstamo
             </button>
             {open && (
-                <CreatePrestamoDialog
+                <PrestamoFormDialog
                     onClose={() => setOpen(false)}
                     onSuccess={() => {
                         setOpen(false);
@@ -48,26 +50,42 @@ export function CreatePrestamoModal({ onSuccess }: CreatePrestamoModalProps) {
     );
 }
 
-type CreatePrestamoDialogProps = {
+type PrestamoFormDialogProps = {
+    /** Si se recibe, el formulario edita ese préstamo en vez de crear uno nuevo. */
+    prestamo?: Prestamo;
     onClose: () => void;
     onSuccess: () => void;
 };
 
-function CreatePrestamoDialog({
+export function PrestamoFormDialog({
+    prestamo,
     onClose,
     onSuccess,
-}: CreatePrestamoDialogProps) {
+}: PrestamoFormDialogProps) {
+    // Con cuotas descontadas, solo se puede cambiar la periodicidad.
+    const soloPeriodicidad = Boolean(prestamo?.hasDiscounts);
+    const prestamoEmployeeId = prestamo?.employee.id;
     const { showToast } = useToast();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loadingEmployees, setLoadingEmployees] = useState(true);
     const [employeesError, setEmployeesError] = useState<string | null>(null);
     const [loadVersion, setLoadVersion] = useState(0);
-    const [employeeId, setEmployeeId] = useState("");
-    const [totalAmount, setTotalAmount] = useState("");
-    const [totalInstallments, setTotalInstallments] = useState("");
-    const [grantedAt, setGrantedAt] = useState("");
-    const [periodicity, setPeriodicity] =
-        useState<PeriodicidadPrestamo>("MENSUAL");
+    const [employeeId, setEmployeeId] = useState(
+        prestamo ? String(prestamo.employee.id) : "",
+    );
+    const [totalAmount, setTotalAmount] = useState(
+        prestamo ? String(prestamo.totalAmount) : "",
+    );
+    const [totalInstallments, setTotalInstallments] = useState(
+        prestamo ? String(prestamo.totalInstallments) : "",
+    );
+    const [grantedAt, setGrantedAt] = useState(
+        dateToInputValue(prestamo?.grantedAt),
+    );
+    const [periodicity, setPeriodicity] = useState<PeriodicidadPrestamo>(
+        prestamo?.periodicity ?? "MENSUAL",
+    );
+    const totalAmountField = useNumericField(totalAmount, setTotalAmount);
     const [errors, setErrors] = useState<Errores>({});
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
@@ -80,13 +98,18 @@ function CreatePrestamoDialog({
             setEmployeesError(null);
 
             try {
-                const result = await employeesService.list({
-                    status: "ACTIVO",
-                });
+                // Al editar, el empleado del préstamo se conserva aunque ya esté inactivo.
+                const result = await employeesService.list(
+                    prestamoEmployeeId === undefined
+                        ? { status: "ACTIVO" }
+                        : {},
+                );
                 if (active) {
                     setEmployees(
                         result.filter(
-                            (employee) => employee.status === "ACTIVO",
+                            (employee) =>
+                                employee.status === "ACTIVO" ||
+                                employee.id === prestamoEmployeeId,
                         ),
                     );
                 }
@@ -105,7 +128,7 @@ function CreatePrestamoDialog({
         return () => {
             active = false;
         };
-    }, [loadVersion]);
+    }, [loadVersion, prestamoEmployeeId]);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -131,20 +154,30 @@ function CreatePrestamoDialog({
 
         setSubmitting(true);
         try {
-            await prestamosService.crear({
+            const payload = {
                 employeeId: Number(employeeId),
                 totalAmount: amount,
                 totalInstallments: installments,
                 grantedAt,
                 periodicity,
-            });
-            showToast("Préstamo creado correctamente.", "success");
+            };
+
+            if (prestamo) {
+                await prestamosService.actualizar(
+                    prestamo.id,
+                    soloPeriodicidad ? { periodicity } : payload,
+                );
+                showToast("Préstamo actualizado correctamente.", "success");
+            } else {
+                await prestamosService.crear(payload);
+                showToast("Préstamo creado correctamente.", "success");
+            }
             onSuccess();
         } catch (error) {
             setSubmitError(
                 error instanceof Error
                     ? error.message
-                    : "No fue posible crear el préstamo.",
+                    : "No fue posible guardar el préstamo.",
             );
         } finally {
             setSubmitting(false);
@@ -152,18 +185,27 @@ function CreatePrestamoDialog({
     }
 
     const busy = submitting || loadingEmployees;
+    const titulo = prestamo ? "Editar préstamo" : "Crear préstamo";
     let employeePlaceholder = "Buscar nombre o documento";
     if (loadingEmployees) employeePlaceholder = "Cargando empleados…";
     else if (employees.length === 0)
         employeePlaceholder = "No hay empleados activos";
 
     return (
-        <Modal title="Crear préstamo" onClose={submitting ? () => {} : onClose}>
+        <Modal title={titulo} onClose={submitting ? () => {} : onClose}>
             <form
                 noValidate
                 onSubmit={handleSubmit}
                 className="flex flex-col gap-4"
             >
+                {soloPeriodicidad && (
+                    <p className="rounded-xl bg-warning-light px-3 py-2 text-sm text-warning-dark">
+                        Este préstamo ya tiene cuotas descontadas: solo se puede
+                        cambiar la periodicidad. Para corregir los demás datos,
+                        elimina primero las liquidaciones que lo descontaron.
+                    </p>
+                )}
+
                 <div className="flex flex-col gap-1">
                     <label
                         htmlFor="prestamo-empleado"
@@ -179,7 +221,9 @@ function CreatePrestamoDialog({
                         employees={employees}
                         value={employeeId}
                         onChange={setEmployeeId}
-                        disabled={busy || employees.length === 0}
+                        disabled={
+                            busy || soloPeriodicidad || employees.length === 0
+                        }
                         loading={loadingEmployees}
                         placeholder={employeePlaceholder}
                         allLabel="Selecciona un empleado"
@@ -239,14 +283,8 @@ function CreatePrestamoDialog({
                         </label>
                         <input
                             id="prestamo-valor"
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={totalAmount}
-                            onChange={(event) =>
-                                setTotalAmount(event.target.value)
-                            }
-                            disabled={submitting}
+                            {...totalAmountField}
+                            disabled={submitting || soloPeriodicidad}
                             aria-invalid={errors.totalAmount ? true : undefined}
                             aria-describedby={
                                 errors.totalAmount
@@ -284,7 +322,7 @@ function CreatePrestamoDialog({
                             onChange={(event) =>
                                 setTotalInstallments(event.target.value)
                             }
-                            disabled={submitting}
+                            disabled={submitting || soloPeriodicidad}
                             aria-invalid={
                                 errors.totalInstallments ? true : undefined
                             }
@@ -324,7 +362,7 @@ function CreatePrestamoDialog({
                             onChange={(event) =>
                                 setGrantedAt(event.target.value)
                             }
-                            disabled={submitting}
+                            disabled={submitting || soloPeriodicidad}
                             aria-invalid={errors.grantedAt ? true : undefined}
                             aria-describedby={
                                 errors.grantedAt
@@ -411,7 +449,9 @@ function CreatePrestamoDialog({
                         }
                         className="h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {submitting ? "Guardando…" : "Crear préstamo"}
+                        {submitting && "Guardando…"}
+                        {!submitting &&
+                            (prestamo ? "Guardar cambios" : "Crear préstamo")}
                     </button>
                 </div>
             </form>

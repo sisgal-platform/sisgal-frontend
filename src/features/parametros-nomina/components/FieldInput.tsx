@@ -1,10 +1,11 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 type FieldInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
     id: string;
     label: string;
     error?: string;
     hint?: string;
+    ref?: Ref<HTMLInputElement>;
 };
 
 /** Campo obligatorio con su etiqueta y el mensaje de validación junto a él. */

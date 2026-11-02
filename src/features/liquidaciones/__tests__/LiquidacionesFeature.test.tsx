@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
@@ -25,6 +31,9 @@ const confirmPreliquidation = vi.spyOn(
     payrollPeriodsService,
     "confirmPreliquidation",
 );
+const previewUpdate = vi.spyOn(payrollPeriodsService, "previewUpdate");
+const updatePayrollPeriod = vi.spyOn(payrollPeriodsService, "update");
+const removePayrollPeriod = vi.spyOn(payrollPeriodsService, "remove");
 const getPdf = vi.spyOn(payrollPeriodsService, "getPdf");
 const getCsv = vi.spyOn(payrollPeriodsService, "getCsv");
 const listEmployees = vi.spyOn(employeesService, "list");
@@ -165,6 +174,11 @@ beforeEach(() => {
     confirmPreliquidation
         .mockReset()
         .mockResolvedValue({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
+    previewUpdate.mockReset().mockResolvedValue(PRELIQUIDATION_ANA);
+    updatePayrollPeriod
+        .mockReset()
+        .mockResolvedValue({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 1 });
+    removePayrollPeriod.mockReset().mockResolvedValue(undefined);
     getPdf.mockReset();
     getCsv.mockReset();
     listEmployees.mockReset().mockResolvedValue([ANA]);
@@ -235,7 +249,7 @@ describe("LiquidacionesFeature", () => {
 
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación #1",
+                name: "Detalle de la liquidación",
             }),
         ).toBeInTheDocument();
         expect(screen.getByText(/CC 1020304050/)).toBeInTheDocument();
@@ -414,7 +428,7 @@ describe("LiquidacionesFeature", () => {
         await waitFor(() => expect(findById).toHaveBeenLastCalledWith(7));
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación #7",
+                name: "Detalle de la liquidación",
             }),
         ).toBeInTheDocument();
         // La lista no se vuelve a consultar al entrar al detalle; este usa findById.
@@ -475,7 +489,7 @@ describe("LiquidacionesFeature", () => {
         resolveConfirmation({ ...PAYROLL_PERIOD_DETAIL_ANA, id: 7 });
         expect(
             await screen.findByRole("heading", {
-                name: "Detalle de la liquidación #7",
+                name: "Detalle de la liquidación",
             }),
         ).toBeInTheDocument();
     });
@@ -488,7 +502,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
 
         const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
         getPdf.mockResolvedValue(blob);
@@ -510,7 +524,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
         getPdf.mockResolvedValue(
             new Blob(["%PDF-1.4"], { type: "application/pdf" }),
         );
@@ -535,7 +549,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
         getPdf.mockRejectedValue(
             new Error("No fue posible determinar la sucursal."),
         );
@@ -555,7 +569,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
         getPdf.mockResolvedValue(
             new Blob(["%PDF-1.4"], { type: "application/pdf" }),
         );
@@ -583,7 +597,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
         getCsv.mockResolvedValue(new Blob(["a,b\n1,2\n"], { type: "text/csv" }));
         const clickAnchor = vi
             .spyOn(HTMLAnchorElement.prototype, "click")
@@ -612,7 +626,7 @@ describe("LiquidacionesFeature", () => {
                 name: "Ver detalle de la liquidación de Ana Barros",
             }),
         );
-        await screen.findByRole("heading", { name: "Detalle de la liquidación #1" });
+        await screen.findByRole("heading", { name: "Detalle de la liquidación" });
         getCsv.mockRejectedValue(
             new Error("La liquidación no tiene conceptos ni totales para exportar."),
         );
@@ -649,5 +663,134 @@ describe("LiquidacionesFeature", () => {
 
         expect(await screen.findByText("fallo de red")).toBeInTheDocument();
         consoleError.mockRestore();
+    });
+
+    it("no ofrece calcular la nómina de todos los empleados", async () => {
+        renderFeature();
+        await esperarTabla();
+
+        expect(
+            screen.queryByRole("button", { name: "Calcular nómina" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Generar liquidación" }),
+        ).toBeInTheDocument();
+    });
+
+    it("no muestra la columna de identificador", async () => {
+        renderFeature();
+        await esperarTabla();
+
+        expect(
+            screen.queryByRole("columnheader", { name: "ID" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("edita una liquidación recalculándola con el período indicado", async () => {
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "Editar la liquidación de Ana Barros",
+            }),
+        );
+        const dialog = screen.getByRole("dialog", {
+            name: "Editar liquidación",
+        });
+
+        // El empleado no se puede cambiar y el período viene precargado.
+        expect(within(dialog).getByLabelText("Empleado")).toHaveValue(
+            "Ana Barros",
+        );
+        expect(within(dialog).getByLabelText("Período desde")).toHaveValue(
+            "2026-09-01",
+        );
+        expect(
+            within(dialog).getByRole("button", { name: "Guardar cambios" }),
+        ).toBeDisabled();
+
+        fireEvent.change(within(dialog).getByLabelText("Período hasta"), {
+            target: { value: "2026-09-15" },
+        });
+        await user.click(
+            within(dialog).getByRole("button", { name: "Recalcular" }),
+        );
+
+        await waitFor(() =>
+            expect(previewUpdate).toHaveBeenCalledWith(1, {
+                periodStart: "2026-09-01",
+                periodEnd: "2026-09-15",
+            }),
+        );
+        expect(generatePreliquidation).not.toHaveBeenCalled();
+
+        await user.click(
+            await within(dialog).findByRole("button", {
+                name: "Guardar cambios",
+            }),
+        );
+
+        await waitFor(() =>
+            expect(updatePayrollPeriod).toHaveBeenCalledWith(1, {
+                periodStart: "2026-09-01",
+                periodEnd: "2026-09-15",
+            }),
+        );
+        expect(confirmPreliquidation).not.toHaveBeenCalled();
+        await waitFor(() =>
+            expect(screen.getByTestId("current-route")).toHaveTextContent(
+                "/nomina/liquidaciones/1",
+            ),
+        );
+    });
+
+    it("elimina una liquidación tras confirmar y recarga el listado", async () => {
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "Eliminar la liquidación de Ana Barros",
+            }),
+        );
+        const dialog = screen.getByRole("dialog", {
+            name: "Eliminar liquidación",
+        });
+        expect(
+            within(dialog).getByText(/cada préstamo recupera ese saldo/),
+        ).toBeInTheDocument();
+
+        await user.click(
+            within(dialog).getByRole("button", { name: "Eliminar" }),
+        );
+
+        await waitFor(() =>
+            expect(removePayrollPeriod).toHaveBeenCalledWith(1),
+        );
+        await waitFor(() => expect(findAll).toHaveBeenCalledTimes(2));
+    });
+
+    it("muestra el motivo si la liquidación no se puede eliminar", async () => {
+        removePayrollPeriod.mockRejectedValue(
+            new Error("Un préstamo tiene descuentos posteriores."),
+        );
+        const user = renderFeature();
+        await esperarTabla();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "Eliminar la liquidación de Ana Barros",
+            }),
+        );
+        await user.click(
+            within(
+                screen.getByRole("dialog", { name: "Eliminar liquidación" }),
+            ).getByRole("button", { name: "Eliminar" }),
+        );
+
+        expect(
+            await screen.findByText("Un préstamo tiene descuentos posteriores."),
+        ).toBeInTheDocument();
     });
 });

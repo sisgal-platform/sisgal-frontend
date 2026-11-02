@@ -107,7 +107,7 @@ function renderFeature() {
 
 async function esperarTabla() {
     return screen.findByRole("table", {
-        name: "Historial de asistencia en orden cronológico",
+        name: "Historial de asistencia, de la entrada más reciente a la más antigua",
     });
 }
 
@@ -550,8 +550,8 @@ describe("Historial de asistencia (HU04)", () => {
         });
     });
 
-    describe("CA08 – Orden cronológico", () => {
-        it("conserva el orden cronológico que entrega el backend", async () => {
+    describe("CA08 – Orden", () => {
+        it("conserva el orden que entrega el backend", async () => {
             consultarHistorial.mockResolvedValue(
                 crearHistorial([
                     { ...REGISTRO_COMPLETO, id: 1 },

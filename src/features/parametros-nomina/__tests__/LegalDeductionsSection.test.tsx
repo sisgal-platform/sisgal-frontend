@@ -252,7 +252,7 @@ describe("Parámetros de nómina: descuentos legales (HU37)", () => {
             });
             const salud = within(dialog).getByLabelText(/^Salud \(%\)/);
 
-            expect(salud).toHaveValue(4);
+            expect(salud).toHaveValue("4");
 
             fireEvent.change(salud, { target: { value: "4.5" } });
             fireEvent.change(within(dialog).getByLabelText(/Vigente desde/), {

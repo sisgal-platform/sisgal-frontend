@@ -1,7 +1,7 @@
 import type { Prestamo } from "../interfaces/types";
 import { obtenerConfiguracionEstadoPrestamo } from "../estadosPrestamo";
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters";
-import { Eye } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 type PrestamosTableProps = Readonly<{
     prestamos: Prestamo[];
@@ -9,6 +9,8 @@ type PrestamosTableProps = Readonly<{
     error: string | null;
     onReintentar: () => void;
     onVerDetalle: (prestamo: Prestamo) => void;
+    onEditar: (prestamo: Prestamo) => void;
+    onEliminar: (prestamo: Prestamo) => void;
 }>;
 
 export function PrestamosTable({
@@ -17,6 +19,8 @@ export function PrestamosTable({
     error,
     onReintentar,
     onVerDetalle,
+    onEditar,
+    onEliminar,
 }: PrestamosTableProps) {
     if (error) {
         return (
@@ -64,9 +68,6 @@ export function PrestamosTable({
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
                         <th scope="col" className="px-4 py-3">
-                            ID
-                        </th>
-                        <th scope="col" className="px-4 py-3">
                             Documento
                         </th>
                         <th scope="col" className="px-4 py-3">
@@ -97,12 +98,10 @@ export function PrestamosTable({
                         const estado = obtenerConfiguracionEstadoPrestamo(
                             prestamo.status,
                         );
+                        const empleado = `${prestamo.employee.firstName} ${prestamo.employee.lastName}`;
 
                         return (
                             <tr key={prestamo.id}>
-                                <td className="px-4 py-3 font-medium text-text">
-                                    {prestamo.id}
-                                </td>
                                 <td className="px-4 py-3 text-text-muted">
                                     {prestamo.employee.documentType
                                         ? `${prestamo.employee.documentType} ${prestamo.employee.document}`
@@ -135,15 +134,33 @@ export function PrestamosTable({
                                 <td className="px-4 py-3 text-text-muted">
                                     {formatDateCO(prestamo.updatedAt)}
                                 </td>
-                                <td className="px-4 py-3 text-right">
+                                <td className="whitespace-nowrap px-4 py-3 text-right">
                                     <button
                                         type="button"
                                         onClick={() => onVerDetalle(prestamo)}
-                                        aria-label={`Ver detalle del préstamo ${prestamo.id}`}
+                                        aria-label={`Ver detalle del préstamo de ${empleado}`}
                                         title="Ver detalle"
                                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-primary hover:bg-secondary"
                                     >
                                         <Eye size={18} aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onEditar(prestamo)}
+                                        aria-label={`Editar el préstamo de ${empleado}`}
+                                        title="Editar"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-primary hover:bg-secondary"
+                                    >
+                                        <Pencil size={18} aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onEliminar(prestamo)}
+                                        aria-label={`Eliminar el préstamo de ${empleado}`}
+                                        title="Eliminar"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-error hover:bg-error-light"
+                                    >
+                                        <Trash2 size={18} aria-hidden="true" />
                                     </button>
                                 </td>
                             </tr>

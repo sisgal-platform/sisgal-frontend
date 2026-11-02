@@ -91,25 +91,3 @@ export type PayrollConfirmationRequest = PayrollPreliquidationRequest & {
 };
 
 export type PayrollPreliquidation = PayrollPeriodDetail;
-
-/** Espejo exacto de PayrollCalculationErrorResponseDto (backend). */
-export type PayrollCalculationError = {
-    employeeId: number;
-    employeeName: string;
-    employeeDocumentType: string;
-    employeeDocument: string;
-    causes: string[];
-};
-
-/** Espejo exacto de PayrollCalculationResponseDto (backend). */
-export type PayrollCalculation = {
-    periodStart: string;
-    periodEnd: string;
-    status: "COMPLETADO" | "CON_ERRORES";
-    totalEmployees: number;
-    totalEarnings: number;
-    totalDeductions: number;
-    totalNetPay: number;
-    results: PayrollPreliquidation[];
-    errors: PayrollCalculationError[];
-};

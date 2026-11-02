@@ -4,7 +4,6 @@ import apiClient from "@/lib/axios";
 import { ApiError, toApiError } from "@/lib/apiError";
 
 import type {
-    PayrollCalculation,
     PayrollConfirmationRequest,
     PayrollPeriod,
     PayrollPeriodDetail,
@@ -76,21 +75,6 @@ export const payrollPeriodsService = {
         }
     },
 
-    // Nómina del período para todos los empleados activos; no guarda la liquidación
-    async calculatePayroll(
-        request: PayrollPreliquidationRequest,
-    ): Promise<PayrollCalculation> {
-        try {
-            const { data } = await apiClient.post<PayrollCalculation>(
-                "/nomina/calcular",
-                request,
-            );
-            return data;
-        } catch (error) {
-            throw toApiError(error);
-        }
-    },
-
     async confirmPreliquidation(
         request: PayrollConfirmationRequest,
     ): Promise<PayrollPeriodDetail> {
@@ -103,6 +87,45 @@ export const payrollPeriodsService = {
                 },
             );
             return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    // Cómo quedaría una liquidación guardada al recalcularla; no guarda nada
+    async previewUpdate(
+        id: number,
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollPreliquidation> {
+        try {
+            const { data } = await apiClient.post<PayrollPreliquidation>(
+                `/liquidaciones/${id}/preliquidacion`,
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async update(
+        id: number,
+        request: PayrollPreliquidationRequest,
+    ): Promise<PayrollPeriodDetail> {
+        try {
+            const { data } = await apiClient.put<PayrollPeriodDetail>(
+                `/liquidaciones/${id}`,
+                request,
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
+    async remove(id: number): Promise<void> {
+        try {
+            await apiClient.delete(`/liquidaciones/${id}`);
         } catch (error) {
             throw toApiError(error);
         }

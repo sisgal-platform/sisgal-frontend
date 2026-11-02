@@ -1,4 +1,4 @@
-import { Eye } from "lucide-react"
+import { Eye, Pencil, Trash2 } from "lucide-react"
 
 import { formatCurrencyCOP, formatDateCO } from "@/lib/formatters"
 
@@ -10,6 +10,8 @@ type PayrollPeriodTableProps = Readonly<{
     error: string | null
     onRetry: () => void
     onViewDetail: (payrollPeriod: PayrollPeriod) => void
+    onEdit: (payrollPeriod: PayrollPeriod) => void
+    onDelete: (payrollPeriod: PayrollPeriod) => void
 }>
 
 export function PayrollPeriodTable({
@@ -18,6 +20,8 @@ export function PayrollPeriodTable({
     error,
     onRetry,
     onViewDetail,
+    onEdit,
+    onDelete,
 }: PayrollPeriodTableProps) {
     if (error) {
         return (
@@ -62,7 +66,6 @@ export function PayrollPeriodTable({
                 <caption className="sr-only">Listado de liquidaciones registradas</caption>
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>
-                        <th scope="col" className="px-4 py-3">ID</th>
                         <th scope="col" className="px-4 py-3">Empleado</th>
                         <th scope="col" className="px-4 py-3">Período</th>
                         <th scope="col" className="px-4 py-3">Fecha de liquidación</th>
@@ -70,15 +73,12 @@ export function PayrollPeriodTable({
                         <th scope="col" className="px-4 py-3 text-right">Total deducciones</th>
                         <th scope="col" className="px-4 py-3 text-right">Neto a pagar</th>
                         <th scope="col" className="px-4 py-3">Estado</th>
-                        <th scope="col" className="px-4 py-3 text-right">Detalle</th>
+                        <th scope="col" className="px-4 py-3 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                     {payrollPeriods.map((payrollPeriod) => (
                         <tr key={payrollPeriod.id}>
-                            <td className="px-4 py-3 font-medium text-text">
-                                {payrollPeriod.id}
-                            </td>
                             <td className="px-4 py-3 font-medium text-text">
                                 {payrollPeriod.employeeName}
                             </td>
@@ -103,14 +103,33 @@ export function PayrollPeriodTable({
                                     {payrollPeriod.status}
                                 </span>
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="whitespace-nowrap px-4 py-3 text-right">
                                 <button
                                     type="button"
                                     onClick={() => onViewDetail(payrollPeriod)}
                                     aria-label={`Ver detalle de la liquidación de ${payrollPeriod.employeeName}`}
+                                    title="Ver detalle"
                                     className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-secondary"
                                 >
                                     <Eye size={18} aria-hidden="true" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onEdit(payrollPeriod)}
+                                    aria-label={`Editar la liquidación de ${payrollPeriod.employeeName}`}
+                                    title="Editar"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-secondary"
+                                >
+                                    <Pencil size={18} aria-hidden="true" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onDelete(payrollPeriod)}
+                                    aria-label={`Eliminar la liquidación de ${payrollPeriod.employeeName}`}
+                                    title="Eliminar"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full text-error hover:bg-error-light"
+                                >
+                                    <Trash2 size={18} aria-hidden="true" />
                                 </button>
                             </td>
                         </tr>

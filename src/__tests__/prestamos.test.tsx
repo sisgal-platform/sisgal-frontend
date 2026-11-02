@@ -21,6 +21,8 @@ const obtenerTodos = vi.spyOn(prestamosService, "obtenerTodos");
 const obtenerIndicadores = vi.spyOn(prestamosService, "obtenerIndicadores");
 const obtenerPorId = vi.spyOn(prestamosService, "obtenerPorId");
 const crearPrestamo = vi.spyOn(prestamosService, "crear");
+const actualizarPrestamo = vi.spyOn(prestamosService, "actualizar");
+const eliminarPrestamo = vi.spyOn(prestamosService, "eliminar");
 const listarEmpleados = vi.spyOn(employeesService, "list");
 
 const INDICADORES: PrestamosIndicadores = {
@@ -63,6 +65,7 @@ const PRESTAMO: Prestamo = {
     grantedAt: "2026-03-10T00:00:00.000Z",
     periodicity: "QUINCENAL",
     status: "ACTIVO",
+    hasDiscounts: false,
     createdAt: "2026-03-10T00:00:00.000Z",
     updatedAt: "2026-04-10T00:00:00.000Z",
 };
@@ -94,6 +97,8 @@ beforeEach(() => {
     obtenerIndicadores.mockReset().mockResolvedValue(INDICADORES);
     obtenerPorId.mockReset().mockResolvedValue(PRESTAMO);
     crearPrestamo.mockReset().mockResolvedValue({} as Prestamo);
+    actualizarPrestamo.mockReset().mockResolvedValue(PRESTAMO);
+    eliminarPrestamo.mockReset().mockResolvedValue(undefined);
     listarEmpleados.mockReset().mockResolvedValue([EMPLEADO]);
 });
 
@@ -221,12 +226,12 @@ describe("PrestamosFeature", () => {
 
         await user.click(
             await screen.findByRole("button", {
-                name: "Ver detalle del préstamo 11",
+                name: "Ver detalle del préstamo de Ana Ruiz",
             }),
         );
 
         const dialog = await screen.findByRole("dialog", {
-            name: "Detalle del préstamo #11",
+            name: "Detalle del préstamo de Ana Ruiz",
         });
         expect(obtenerPorId).toHaveBeenCalledWith(11);
         expect(within(dialog).getByText("Ana Ruiz")).toBeInTheDocument();
@@ -260,11 +265,11 @@ describe("PrestamosFeature", () => {
 
         await user.click(
             await screen.findByRole("button", {
-                name: "Ver detalle del préstamo 11",
+                name: "Ver detalle del préstamo de Ana Ruiz",
             }),
         );
         const dialog = await screen.findByRole("dialog", {
-            name: "Detalle del préstamo #11",
+            name: "Detalle del préstamo de Ana Ruiz",
         });
         const alerta = await within(dialog).findByRole("alert");
         expect(alerta).toHaveTextContent("Detalle no disponible");
@@ -322,5 +327,187 @@ describe("PrestamosFeature", () => {
             expect(obtenerIndicadores).toHaveBeenCalledTimes(2);
         });
         expect(listarEmpleados).toHaveBeenCalledWith({ status: "ACTIVO" });
+    });
+
+    it("no muestra la columna de identificador", async () => {
+        obtenerTodos.mockResolvedValue([PRESTAMO]);
+        renderPrestamos();
+
+        await screen.findByRole("cell", { name: "Ana Ruiz" });
+
+        expect(
+            screen.queryByRole("columnheader", { name: "ID" }),
+        ).not.toBeInTheDocument();
+    });
+
+    describe("edición", () => {
+        const SIN_DESCUENTOS: Prestamo = {
+            ...PRESTAMO,
+            pendingInstallments: 10,
+            outstandingBalance: 2500000,
+            hasDiscounts: false,
+        };
+
+        async function abrirEdicion(prestamo: Prestamo) {
+            obtenerTodos.mockResolvedValue([prestamo]);
+            const user = renderPrestamos();
+
+            await user.click(
+                await screen.findByRole("button", {
+                    name: "Editar el préstamo de Ana Ruiz",
+                }),
+            );
+            const dialog = screen.getByRole("dialog", {
+                name: "Editar préstamo",
+            });
+            await within(dialog).findByRole("combobox", { name: /Empleado/ });
+
+            return { user, dialog };
+        }
+
+        it("precarga el préstamo y guarda todos los datos si no tiene descuentos", async () => {
+            const { user, dialog } = await abrirEdicion(SIN_DESCUENTOS);
+            const valor = within(dialog).getByLabelText(/Valor del préstamo/);
+
+            expect(valor).toHaveValue("2.500.000");
+            expect(
+                within(dialog).getByLabelText(/Fecha de entrega/),
+            ).toHaveValue("2026-03-10");
+
+            await user.clear(valor);
+            await user.type(valor, "3000000");
+            await user.selectOptions(
+                within(dialog).getByLabelText(/Periodicidad/),
+                "SEMANAL",
+            );
+            await waitFor(() =>
+                expect(
+                    within(dialog).getByRole("button", {
+                        name: "Guardar cambios",
+                    }),
+                ).toBeEnabled(),
+            );
+            await user.click(
+                within(dialog).getByRole("button", { name: "Guardar cambios" }),
+            );
+
+            await waitFor(() =>
+                expect(actualizarPrestamo).toHaveBeenCalledWith(11, {
+                    employeeId: EMPLEADO.id,
+                    totalAmount: 3000000,
+                    totalInstallments: 10,
+                    grantedAt: "2026-03-10",
+                    periodicity: "SEMANAL",
+                }),
+            );
+            await waitFor(() =>
+                expect(obtenerTodos).toHaveBeenCalledTimes(2),
+            );
+        });
+
+        it("con descuentos solo permite cambiar la periodicidad", async () => {
+            const { user, dialog } = await abrirEdicion({
+                ...PRESTAMO,
+                hasDiscounts: true,
+            });
+
+            expect(
+                within(dialog).getByText(/ya tiene cuotas descontadas/),
+            ).toBeInTheDocument();
+            expect(
+                within(dialog).getByLabelText(/Valor del préstamo/),
+            ).toBeDisabled();
+            expect(
+                within(dialog).getByLabelText(/Total de cuotas/),
+            ).toBeDisabled();
+            expect(
+                within(dialog).getByLabelText(/Fecha de entrega/),
+            ).toBeDisabled();
+
+            await user.selectOptions(
+                within(dialog).getByLabelText(/Periodicidad/),
+                "MENSUAL",
+            );
+            await waitFor(() =>
+                expect(
+                    within(dialog).getByRole("button", {
+                        name: "Guardar cambios",
+                    }),
+                ).toBeEnabled(),
+            );
+            await user.click(
+                within(dialog).getByRole("button", { name: "Guardar cambios" }),
+            );
+
+            await waitFor(() =>
+                expect(actualizarPrestamo).toHaveBeenCalledWith(11, {
+                    periodicity: "MENSUAL",
+                }),
+            );
+        });
+    });
+
+    describe("eliminación", () => {
+        async function pedirEliminacion() {
+            obtenerTodos.mockResolvedValue([PRESTAMO]);
+            const user = renderPrestamos();
+
+            await user.click(
+                await screen.findByRole("button", {
+                    name: "Eliminar el préstamo de Ana Ruiz",
+                }),
+            );
+
+            return {
+                user,
+                dialog: screen.getByRole("dialog", {
+                    name: "Eliminar préstamo",
+                }),
+            };
+        }
+
+        it("elimina tras confirmar y recarga el listado y los indicadores", async () => {
+            const { user, dialog } = await pedirEliminacion();
+
+            await user.click(
+                within(dialog).getByRole("button", { name: "Eliminar" }),
+            );
+
+            await waitFor(() =>
+                expect(eliminarPrestamo).toHaveBeenCalledWith(11),
+            );
+            await waitFor(() => {
+                expect(obtenerTodos).toHaveBeenCalledTimes(2);
+                expect(obtenerIndicadores).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        it("no elimina si se cancela", async () => {
+            const { user, dialog } = await pedirEliminacion();
+
+            await user.click(
+                within(dialog).getByRole("button", { name: "Cancelar" }),
+            );
+
+            expect(eliminarPrestamo).not.toHaveBeenCalled();
+            expect(
+                screen.queryByRole("dialog", { name: "Eliminar préstamo" }),
+            ).not.toBeInTheDocument();
+        });
+
+        it("muestra el motivo si el préstamo tiene cuotas descontadas", async () => {
+            eliminarPrestamo.mockRejectedValue(
+                new Error("El préstamo tiene cuotas descontadas."),
+            );
+            const { user, dialog } = await pedirEliminacion();
+
+            await user.click(
+                within(dialog).getByRole("button", { name: "Eliminar" }),
+            );
+
+            expect(
+                await screen.findByText("El préstamo tiene cuotas descontadas."),
+            ).toBeInTheDocument();
+        });
     });
 });
