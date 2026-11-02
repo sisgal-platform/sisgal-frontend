@@ -112,52 +112,6 @@ describe("payrollPeriodsService", () => {
         });
     });
 
-    it("calcula la nómina del período enviando solo las fechas", async () => {
-        const calculation = {
-            periodStart: "2026-09-01",
-            periodEnd: "2026-09-30",
-            status: "COMPLETADO",
-            totalEmployees: 1,
-            totalEarnings: 1800000,
-            totalDeductions: 150000,
-            totalNetPay: 1650000,
-            results: [PAYROLL_PERIOD_DETAIL],
-            errors: [],
-        };
-        client.post.mockResolvedValue({ data: calculation });
-        const request = {
-            periodStart: "2026-09-01",
-            periodEnd: "2026-09-30",
-        };
-
-        await expect(
-            payrollPeriodsService.calculatePayroll(request),
-        ).resolves.toEqual(calculation);
-        expect(client.post).toHaveBeenCalledWith("/nomina/calcular", request);
-    });
-
-    it("normaliza el error del backend al calcular la nómina", async () => {
-        client.post.mockRejectedValue({
-            isAxiosError: true,
-            response: {
-                status: 422,
-                data: {
-                    message:
-                        "No existe una jornada laboral vigente con horas diarias válidas al 30/09/2026.",
-                },
-            },
-        });
-
-        await expect(
-            payrollPeriodsService.calculatePayroll({
-                periodStart: "2026-09-01",
-                periodEnd: "2026-09-30",
-            }),
-        ).rejects.toThrow(
-            "No existe una jornada laboral vigente con horas diarias válidas al 30/09/2026.",
-        );
-    });
-
     describe("getPdf", () => {
         it("descarga el comprobante como blob", async () => {
             const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });

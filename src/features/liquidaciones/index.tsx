@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Calculator, Plus, RotateCcw, Search } from "lucide-react";
+import { Plus, RotateCcw, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
 import { formatCurrencyCOP } from "@/lib/formatters";
 
-import { PayrollCalculationDialog } from "./components/PayrollCalculationDialog";
 import { PayrollPeriodTable } from "./components/PayrollPeriodTable";
 import { PayrollPreliquidationDialog } from "./components/PayrollPreliquidationDialog";
 import { useActiveEmployees } from "./hooks/useActiveEmployees";
@@ -44,7 +43,6 @@ export function LiquidacionesFeature() {
     );
     const [page, setPage] = useState(1);
     const [preliquidationOpen, setPreliquidationOpen] = useState(false);
-    const [calculationOpen, setCalculationOpen] = useState(false);
     const navigate = useNavigate();
 
     const payrollPeriodQuery = useMemo(
@@ -105,15 +103,6 @@ export function LiquidacionesFeature() {
                 />
 
                 <div className="flex flex-wrap gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setCalculationOpen(true)}
-                        className="flex items-center gap-2"
-                    >
-                        <Calculator size={18} aria-hidden="true" />
-                        Calcular nómina
-                    </Button>
                     <Button
                         type="button"
                         onClick={() => setPreliquidationOpen(true)}
@@ -243,10 +232,6 @@ export function LiquidacionesFeature() {
                         </button>
                     </div>
                 </div>
-            )}
-
-            {calculationOpen && (
-                <PayrollCalculationDialog onOpenChange={setCalculationOpen} />
             )}
 
             {preliquidationOpen && (
