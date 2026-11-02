@@ -33,7 +33,10 @@ export function SucursalTable({
                     </thead>
 
                     <tbody>
-                        {sucursales.map((sucursal) => (
+                        {/* El servicio las entrega por nombre, el orden que necesitan los selectores. */}
+                        {[...sucursales]
+                            .sort((a, b) => b.id - a.id)
+                            .map((sucursal) => (
                             <tr
                                 key={sucursal.id}
                                 className={`border-t border-slate-200 ${sucursal.is_active ? "" : "bg-surface-muted"}`}

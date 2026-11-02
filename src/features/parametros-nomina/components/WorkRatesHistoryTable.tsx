@@ -8,7 +8,7 @@ import { formatMultiplier, formatSurcharge } from "../utils/format";
 import { ValidityStatusBadge } from "./ValidityStatusBadge";
 
 type WorkRatesHistoryTableProps = {
-    /** Versiones por tipo de hora y, dentro de cada tipo, de la más reciente a la más antigua. */
+    /** Versiones de la vigencia más reciente a la más antigua. */
     rates: WorkRate[];
     loading: boolean;
 };

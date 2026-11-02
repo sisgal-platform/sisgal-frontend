@@ -79,7 +79,7 @@ export function HistorialTable({
         >
             <table className="w-full min-w-[640px] text-left text-sm">
                 <caption className="sr-only">
-                    Historial de asistencia en orden cronológico
+                    Historial de asistencia, de la entrada más reciente a la más antigua
                 </caption>
                 <thead className="bg-secondary text-xs uppercase tracking-wide text-text-muted">
                     <tr>

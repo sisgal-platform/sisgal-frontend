@@ -207,7 +207,8 @@ function ListadoCargos({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {cargos.map((cargo) => {
+          {/* El servicio los entrega por nombre, el orden que necesitan los selectores. */}
+          {[...cargos].sort((a, b) => b.id - a.id).map((cargo) => {
             const estado = estadoConfig[cargo.is_active ? 'activo' : 'inactivo']
 
             return (

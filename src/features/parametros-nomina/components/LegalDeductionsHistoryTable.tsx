@@ -11,7 +11,7 @@ import { formatPercentage } from "../utils/format";
 import { ValidityStatusBadge } from "./ValidityStatusBadge";
 
 type LegalDeductionsHistoryTableProps = {
-    /** Versiones por descuento y, dentro de cada uno, de la más reciente a la más antigua. */
+    /** Versiones de la vigencia más reciente a la más antigua. */
     deductions: LegalDeduction[];
     loading: boolean;
 };
