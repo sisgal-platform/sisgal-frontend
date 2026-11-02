@@ -81,7 +81,10 @@ export function PrestamoDetailDialog({
         <Dialog open={true} onOpenChange={(open) => onOpenChange(open)}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Detalle del préstamo #{prestamo.id}</DialogTitle>
+                    <DialogTitle>
+                        Detalle del préstamo de {prestamo.employee.firstName}{" "}
+                        {prestamo.employee.lastName}
+                    </DialogTitle>
                 </DialogHeader>
 
                 {cargando && (

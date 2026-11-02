@@ -4,7 +4,7 @@ export type PrestamosIndicadores = {
 };
 
 /** Cada cuánto se descuenta una cuota en la liquidación. */
-export type PeriodicidadPrestamo = "MENSUAL" | "QUINCENAL";
+export type PeriodicidadPrestamo = "MENSUAL" | "QUINCENAL" | "SEMANAL";
 
 export type CrearPrestamoPayload = {
     employeeId: number;
@@ -13,6 +13,8 @@ export type CrearPrestamoPayload = {
     grantedAt: string;
     periodicity: PeriodicidadPrestamo;
 };
+
+export type ActualizarPrestamoPayload = Partial<CrearPrestamoPayload>;
 
 export type EstadoPrestamo = "ACTIVO" | "SALDADO" | "CANCELADO";
 
@@ -36,6 +38,8 @@ export type Prestamo = {
     grantedAt: string;
     periodicity: PeriodicidadPrestamo;
     status: EstadoPrestamo;
+    /** Si ya se descontó alguna cuota: solo se puede cambiar la periodicidad. */
+    hasDiscounts: boolean;
     createdAt: string;
     updatedAt: string;
 };
