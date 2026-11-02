@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes, useId } from "react"
+import { type InputHTMLAttributes, type Ref, useId } from "react"
 
 type FloatingInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "placeholder"> & {
   id?: string
@@ -7,6 +7,7 @@ type FloatingInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "pl
   error?: string
   /** Símbolo fijo antes del valor, por ejemplo "$" para salario. */
   prefix?: string
+  ref?: Ref<HTMLInputElement>
 }
 
 /**

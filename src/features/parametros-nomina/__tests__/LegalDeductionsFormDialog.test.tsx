@@ -97,8 +97,8 @@ describe("LegalDeductionsFormDialog", () => {
                 PENSION_RATE: deduction("PENSION_RATE", 4.25, 2),
             });
 
-            expect(field(SALUD)).toHaveValue(4);
-            expect(field(PENSION)).toHaveValue(4.25);
+            expect(field(SALUD)).toHaveValue("4");
+            expect(field(PENSION)).toHaveValue("4,25");
             expect(field(VALID_FROM)).toHaveValue("");
         });
     });
@@ -119,14 +119,6 @@ describe("LegalDeductionsFormDialog", () => {
 
         it.each([
             ["100.01", "El porcentaje no puede superar el 100 %."],
-            [
-                "4.555",
-                "El porcentaje debe ser un número sin signo, con máximo dos decimales.",
-            ],
-            [
-                "-1",
-                "El porcentaje debe ser un número sin signo, con máximo dos decimales.",
-            ],
         ])("rechaza un porcentaje de %s %%", async (value, message) => {
             const user = renderDialog();
 
@@ -137,6 +129,16 @@ describe("LegalDeductionsFormDialog", () => {
             expect(field(SALUD)).toHaveAccessibleDescription(message);
             expect(field(SALUD)).toHaveAttribute("aria-invalid", "true");
             expect(confirmation()).not.toBeInTheDocument();
+        });
+
+        it("ignora el signo y los decimales de más mientras se escribe", () => {
+            renderDialog();
+
+            setValue(SALUD, "-1");
+            expect(field(SALUD)).toHaveValue("1");
+
+            setValue(SALUD, "4.555");
+            expect(field(SALUD)).toHaveValue("4,55");
         });
 
         it("acepta los límites del rango permitido", async () => {
@@ -327,7 +329,7 @@ describe("LegalDeductionsFormDialog", () => {
             delete latest.PENSION_RATE;
             const user = renderDialog(latest);
 
-            expect(field(PENSION)).toHaveValue(null);
+            expect(field(PENSION)).toHaveValue("");
 
             setValue(PENSION, "4");
             setValue(VALID_FROM, FUTURE_DATE);
@@ -352,7 +354,7 @@ describe("LegalDeductionsFormDialog", () => {
             await review(user);
             await user.click(screen.getByRole("button", { name: "Volver" }));
 
-            expect(field(SALUD)).toHaveValue(4.5);
+            expect(field(SALUD)).toHaveValue("4,5");
             expect(field(VALID_FROM)).toHaveValue(FUTURE_DATE);
             expect(register).not.toHaveBeenCalled();
         });
@@ -392,7 +394,7 @@ describe("LegalDeductionsFormDialog", () => {
                 "No fue posible conectar con el servidor. Intenta de nuevo.",
             );
             // Los valores diligenciados se conservan para reintentar.
-            expect(field(SALUD)).toHaveValue(4.5);
+            expect(field(SALUD)).toHaveValue("4,5");
             expect(onRegistered).not.toHaveBeenCalled();
         });
     });

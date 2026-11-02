@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { FloatingInput } from "@/components/molecules/FloatingInput"
 import { FloatingSelect } from "@/components/molecules/FloatingSelect"
 import { formatTimeRange } from "@/features/parametros-nomina/utils/format"
+import { useNumericField } from "@/lib/numericField"
 
 import { useRegisterEmployee } from "../hooks/useRegisterEmployee"
 import { useUpdateEmployee } from "../hooks/useUpdateEmployee"
@@ -86,6 +87,10 @@ export function EmployeeForm({
   function handleChange<K extends keyof EmployeeFormValues>(campo: K, valor: string) {
     setValues((prev) => ({ ...prev, [campo]: valor }))
   }
+
+  const salaryField = useNumericField(values.salaryBase, (valor) =>
+    handleChange("salaryBase", valor),
+  )
 
   // Valida solo el campo que perdió el foco, para no mostrar errores de los
   // demás antes de que el usuario haya llegado a ellos.
@@ -271,12 +276,8 @@ export function EmployeeForm({
           <FloatingInput
             label="Salario base"
             required
-            type="number"
-            min="0.01"
-            step="0.01"
             prefix="$"
-            value={values.salaryBase}
-            onChange={(e) => handleChange("salaryBase", e.target.value)}
+            {...salaryField}
             onBlur={() => handleBlur("salaryBase")}
             disabled={enviando || soloLectura}
             error={errors.salaryBase}
