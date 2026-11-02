@@ -47,11 +47,11 @@ describe('Accesibilidad de la navegación', () => {
   it('permite navegar con el teclado', async () => {
     const { user, router } = renderApp()
 
-    screen.getByRole('link', { name: 'Reportes' }).focus()
+    screen.getByRole('link', { name: 'Nómina' }).focus()
     await user.keyboard('{Enter}')
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/reportes')
+      expect(router.state.location.pathname).toBe('/nomina')
     })
   })
 
