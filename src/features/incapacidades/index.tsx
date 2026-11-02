@@ -2,16 +2,22 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Activity, CalendarDays, RotateCcw, Search } from "lucide-react";
 
 import { SectionHeader } from "@/components/atoms/SectionHeader";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Combobox } from "@/components/ui/combobox";
 import { EmployeeCombobox } from "@/features/empleados/components/EmployeeCombobox";
-import { formatNumberCO } from "@/lib/formatters";
+import { formatDateCO, formatNumberCO } from "@/lib/formatters";
+import { useToast } from "@/toast";
 import { useActivePositions } from "@/features/empleados/hooks/useActivePositions";
 
 import { DisabilityLeaveIndicatorCard } from "./components/DisabilityLeaveIndicatorCard";
 import { DisabilityLeaveTable } from "./components/DisabilityLeaveTable";
-import { RegisterDisabilityLeaveModal } from "./components/RegisterDisabilityLeaveModal";
+import {
+    EditDisabilityLeaveModal,
+    RegisterDisabilityLeaveModal,
+} from "./components/RegisterDisabilityLeaveModal";
 import { useActiveEmployees } from "./hooks/useActiveEmployees";
 import { useDisabilityLeaves } from "./hooks/useDisabilityLeaves";
+import { disabilityLeavesService } from "./services/disabilityLeavesService";
 import type {
     DisabilityLeave,
     DisabilityLeaveFilterValues,
@@ -78,6 +84,10 @@ export function IncapacidadesFeature() {
     const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
     const [dateRangeError, setDateRangeError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    const [editing, setEditing] = useState<DisabilityLeave | null>(null);
+    const [deleting, setDeleting] = useState<DisabilityLeave | null>(null);
+    const [removing, setRemoving] = useState(false);
+    const { showToast } = useToast();
 
     const disabilityLeaveQuery = useMemo(
         () => buildQuery(appliedFilters),
@@ -101,8 +111,31 @@ export function IncapacidadesFeature() {
         1,
         Math.ceil(disabilityLeaves.length / PAGE_SIZE),
     );
-    const pageStart = (page - 1) * PAGE_SIZE;
+    // Al eliminar el último registro de una página se pasa a la anterior.
+    const currentPage = Math.min(page, totalPages);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
     const pageItems = disabilityLeaves.slice(pageStart, pageStart + PAGE_SIZE);
+
+    async function removeDisabilityLeave() {
+        if (!deleting) return;
+
+        setRemoving(true);
+        try {
+            await disabilityLeavesService.remove(deleting.id);
+            showToast("Incapacidad eliminada correctamente.", "success");
+            reload();
+        } catch (cause) {
+            showToast(
+                cause instanceof Error
+                    ? cause.message
+                    : "No se pudo eliminar la incapacidad.",
+                "error",
+            );
+        } finally {
+            setRemoving(false);
+            setDeleting(null);
+        }
+    }
 
     function applyFilters(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -272,32 +305,57 @@ export function IncapacidadesFeature() {
                 loading={loading}
                 error={error}
                 onRetry={reload}
+                onEdit={setEditing}
+                onDelete={setDeleting}
             />
 
             {disabilityLeaves.length > PAGE_SIZE && (
                 <div className="flex items-center justify-between text-sm text-text-muted">
                     <span>
-                        Página {page} de {totalPages}
+                        Página {currentPage} de {totalPages}
                     </span>
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            disabled={page <= 1}
-                            onClick={() => setPage((current) => current - 1)}
+                            disabled={currentPage <= 1}
+                            onClick={() => setPage(currentPage - 1)}
                             className="rounded-lg border border-gray-300 px-3 py-1 disabled:opacity-40"
                         >
                             Anterior
                         </button>
                         <button
                             type="button"
-                            disabled={page >= totalPages}
-                            onClick={() => setPage((current) => current + 1)}
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setPage(currentPage + 1)}
                             className="rounded-lg border border-gray-300 px-3 py-1 disabled:opacity-40"
                         >
                             Siguiente
                         </button>
                     </div>
                 </div>
+            )}
+
+            {editing && (
+                <EditDisabilityLeaveModal
+                    key={editing.id}
+                    disabilityLeave={editing}
+                    onClose={() => setEditing(null)}
+                    onSuccess={() => {
+                        setEditing(null);
+                        reload();
+                    }}
+                />
+            )}
+
+            {deleting && (
+                <ConfirmDialog
+                    title="Eliminar incapacidad"
+                    message={`Se eliminará la incapacidad de ${deleting.employeeName} del ${formatDateCO(deleting.startDate)} al ${formatDateCO(deleting.endDate)}. Esta acción no se puede deshacer.`}
+                    confirmLabel="Eliminar"
+                    busy={removing}
+                    onConfirm={() => void removeDisabilityLeave()}
+                    onCancel={() => setDeleting(null)}
+                />
             )}
         </section>
     );
