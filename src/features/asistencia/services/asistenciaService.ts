@@ -3,6 +3,7 @@ import { toApiError } from "@/lib/apiError";
 
 import type {
     AsistenciaHoy,
+    ActualizarHoraSalidaResponse,
     ConsultaHistorial,
     HistorialAsistencia,
     HistorialAsistenciaQuery,
@@ -25,6 +26,22 @@ function crearQueryHistorial(consulta: ConsultaHistorial): HistorialAsistenciaQu
 }
 
 export const asistenciaService = {
+    async actualizarHoraSalida(
+        id: number,
+        empleadoId: number,
+        horaSalida: string,
+    ): Promise<ActualizarHoraSalidaResponse> {
+        try {
+            const { data } = await apiClient.patch<ActualizarHoraSalidaResponse>(
+                `/asistencias/${id}/salida`,
+                { empleadoId, horaSalida },
+            );
+            return data;
+        } catch (error) {
+            throw toApiError(error);
+        }
+    },
+
     async consultarHistorial(
         consulta: ConsultaHistorial,
     ): Promise<HistorialAsistencia> {

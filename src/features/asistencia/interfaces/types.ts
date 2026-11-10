@@ -22,6 +22,16 @@ export type RegistroAsistencia = {
     status: EstadoRegistroAsistencia;
 };
 
+/** Espejo de ActualizarHoraSalidaResponseDto. */
+export type ActualizarHoraSalidaResponse = {
+    id: number;
+    empleadoId: number;
+    checkIn: string;
+    checkOut: string;
+    workedMinutes: number;
+    status: "COMPLETO";
+};
+
 /** Espejo de AttendanceHistoryResponseDto. */
 export type HistorialAsistencia = {
     data: RegistroAsistencia[];
