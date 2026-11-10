@@ -1,3 +1,9 @@
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
+import { CompletarHoraSalidaDialog } from "./CompletarHoraSalidaDialog";
 import type {
     EstadoRegistroAsistencia,
     RegistroAsistencia,
@@ -30,6 +36,7 @@ type HistorialTableProps = Readonly<{
     cargando: boolean;
     error: string | null;
     onReintentar: () => void;
+    onActualizar: () => void;
 }>;
 
 export function HistorialTable({
@@ -37,7 +44,11 @@ export function HistorialTable({
     cargando,
     error,
     onReintentar,
+    onActualizar,
 }: HistorialTableProps) {
+    const [registroSeleccionado, setRegistroSeleccionado] = useState<RegistroAsistencia | null>(null);
+    const [actualizacionExitosa, setActualizacionExitosa] = useState(false);
+
     if (error) {
         return (
             <div
@@ -73,11 +84,20 @@ export function HistorialTable({
     }
 
     return (
-        <div
-            className="overflow-x-auto rounded-2xl border border-gray-200 bg-surface shadow-sm"
-            aria-busy={cargando}
-        >
-            <table className="w-full min-w-[640px] text-left text-sm">
+        <>
+            {actualizacionExitosa && (
+                <p
+                    role="status"
+                    className="rounded-xl border border-success-light bg-success-light/40 px-4 py-3 text-sm font-medium text-success-dark"
+                >
+                    Hora de salida actualizada correctamente.
+                </p>
+            )}
+            <div
+                className="overflow-x-auto rounded-2xl border border-gray-200 bg-surface shadow-sm"
+                aria-busy={cargando}
+            >
+                <table className="w-full min-w-[640px] text-left text-sm">
                 <caption className="sr-only">
                     Historial de asistencia, de la entrada más reciente a la más antigua
                 </caption>
@@ -156,9 +176,26 @@ export function HistorialTable({
                                             )}
                                         </>
                                     ) : (
-                                        <span className="font-medium text-warning-dark">
-                                            Sin salida
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-warning-dark">
+                                                Sin salida
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                title={`Completar hora de salida de ${registro.employee.firstName} ${registro.employee.lastName}`}
+                                                aria-label={`Completar hora de salida de ${registro.employee.firstName} ${registro.employee.lastName}`}
+                                                disabled={cargando}
+                                                className="size-8 text-primary hover:bg-primary/10 hover:text-primary"
+                                                onClick={() => {
+                                                    setActualizacionExitosa(false);
+                                                    setRegistroSeleccionado(registro);
+                                                }}
+                                            >
+                                                <Pencil aria-hidden="true" />
+                                            </Button>
+                                        </div>
                                     )}
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-3 text-text-muted">
@@ -179,7 +216,19 @@ export function HistorialTable({
                         );
                     })}
                 </tbody>
-            </table>
-        </div>
+                </table>
+            </div>
+            <CompletarHoraSalidaDialog
+                registro={registroSeleccionado}
+                onOpenChange={(open) => {
+                    if (!open) setRegistroSeleccionado(null);
+                }}
+                onUpdated={() => {
+                    setRegistroSeleccionado(null);
+                    setActualizacionExitosa(true);
+                    onActualizar();
+                }}
+            />
+        </>
     );
 }

@@ -91,6 +91,7 @@ export function HistorialAsistencia() {
                 cargando={cargando}
                 error={error}
                 onReintentar={recargar}
+                onActualizar={recargar}
             />
 
             {!error && historial && historial.total > 0 && (
